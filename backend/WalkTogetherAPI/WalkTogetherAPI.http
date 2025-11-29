@@ -1,0 +1,6 @@
+@WalkTogetherAPI_HostAddress = http://localhost:5067
+
+GET {{WalkTogetherAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
