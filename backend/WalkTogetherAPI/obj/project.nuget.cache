@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "GVFnbgVRXTs=",
+  "dgSpecHash": "US+/wkcZA9c=",
   "success": true,
-  "projectFilePath": "C:\\Users\\ARTEMIS\\source\\repos\\WalkTogetherAPI\\WalkTogetherAPI\\WalkTogetherAPI.csproj",
+  "projectFilePath": "C:\\Users\\ARTEMIS\\WalkTogether\\backend\\WalkTogetherAPI\\WalkTogetherAPI.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\ARTEMIS\\.nuget\\packages\\mediatr\\13.1.0\\mediatr.13.1.0.nupkg.sha512",
     "C:\\Users\\ARTEMIS\\.nuget\\packages\\mediatr.contracts\\2.0.1\\mediatr.contracts.2.0.1.nupkg.sha512",

@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using WalkTogether.Domain.Entities;
+using Route = WalkTogether.Domain.Entities.Route;
 
 namespace WalkTogether.Data
 {
