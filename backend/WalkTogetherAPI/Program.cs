@@ -5,12 +5,12 @@ using System.Reflection;
 var builder = WebApplication.CreateBuilder(args);
 
 // 1. DB Context Ekleme (PostgreSQL)
-// appsettings.json dosyasýndaki "DefaultConnection" okunur.
+// appsettings.json dosyasï¿½ndaki "DefaultConnection" okunur.
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// 2. MediatR Kaydý (CQRS için)
-// Mevcut Assembly'deki tüm Handler'larý otomatik bulur.
+// 2. MediatR Kaydï¿½ (CQRS iï¿½in)
+// Mevcut Assembly'deki tï¿½m Handler'larï¿½ otomatik bulur.
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
 
 // 3. Controller ve Swagger
@@ -20,21 +20,21 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// 4. VERÝTABANI OLUÞTURMA (Otomatik Migration)
-// Uygulama her baþladýðýnda veritabanýný kontrol eder ve günceller.
+// 4. VERï¿½TABANI OLUï¿½TURMA (Otomatik Migration)
+// Uygulama her baï¿½ladï¿½ï¿½ï¿½nda veritabanï¿½nï¿½ kontrol eder ve gï¿½nceller.
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     try
     {
         var context = services.GetRequiredService<AppDbContext>();
-        // Yazdýðýmýz Initializer'ý çaðýrýyoruz
-        DbInitializer.Initialize(context);
+        // Yazdï¿½ï¿½ï¿½mï¿½z Initializer'ï¿½ asenkron olarak Ã§aÄŸÄ±rÄ±yoruz
+        await WalkTogether.Data.DbInitializer.InitializeAsync(context);
     }
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "Veritabaný oluþturulurken bir hata meydana geldi.");
+        logger.LogError(ex, "Veritabanï¿½ oluï¿½turulurken bir hata meydana geldi.");
     }
 }
 

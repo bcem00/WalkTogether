@@ -1,52 +1,93 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Npgsql;
+﻿using System;
+using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
+using Microsoft.EntityFrameworkCore;
 
 namespace WalkTogether.Data
 {
     public static class DbInitializer
     {
-        public static void Initialize(AppDbContext context)
+        /// <summary>
+        /// Initialize database synchronously: kept for compatibility but prefers async version.
+        /// </summary>
+        public static void Initialize(AppDbContext context, string? queriesFolder = null)
         {
-            // 1. Bekleyen migration'ları uygula (Tabloları oluşturur)
-            context.Database.Migrate(); // Corrected casing for 'Migrate'
+            // Delegate to async method and wait (note: calling .GetAwaiter().GetResult() to preserve original sync behaviour)
+            InitializeAsync(context, queriesFolder).GetAwaiter().GetResult();
+        }
 
-            // 2. Özel SQL Nesnelerini (Function, Trigger, Sequence) oluştur
-            // Eğer bunlar zaten varsa hata vermemesi için "CREATE OR REPLACE" kullanıyoruz.
+        /// <summary>
+        /// Initialize database asynchronously: apply migrations and execute raw SQL scripts found in the Queries folder.
+        /// </summary>
+        public static async System.Threading.Tasks.Task InitializeAsync(AppDbContext context, string? queriesFolder = null)
+        {
+            // 1) Apply pending migrations
+            await context.Database.MigrateAsync();
 
-            // Örnek: Elite User <Fonksiyonu (Cursor kullanımı)
-            var createFuncSql = @"
-                    CREATE OR REPLACE FUNCTION check_elite_users(min_points INT) 
-                    RETURNS TEXT AS $$
-                    DECLARE 
-                        user_rec RECORD;
-                        user_cursor CURSOR FOR SELECT * FROM ""Users"" WHERE ""TotalPoints"" > min_points;
-                        counter INT := 0;
-                    BEGIN
-                        OPEN user_cursor;
-                        LOOP
-                            FETCH user_cursor INTO user_rec;
-                            EXIT WHEN NOT FOUND;
-                            counter := counter + 1;
-                        END LOOP;
-                        CLOSE user_cursor;
-                        RETURN 'Elite kullanıcı sayısı: ' || counter;
-                    END;
-                    $$ LANGUAGE plpgsql;
-                ";
+            // 2) Find the Queries folder (allowing a few common locations so it works both in dev and deployed apps)
+            string? folder = null;
+            if (!string.IsNullOrWhiteSpace(queriesFolder) && Directory.Exists(queriesFolder))
+                folder = queriesFolder;
 
-            context.Database.ExecuteSqlRaw(createFuncSql);
+            var candidates = new[]
+            {
+                Path.Combine(Directory.GetCurrentDirectory(), "Queries"),
+                Path.Combine(AppContext.BaseDirectory, "Queries"),
+                Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "Queries")),
+                Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "Queries")),
+            };
 
-            // Örnek: Rota Sequence (İleride Route tablosu gelince işe yarayacak)
-            // Sequence yoksa oluştur
-            var createSeqSql = @"
-                    DO $$ 
-                    BEGIN 
-                        IF NOT EXISTS (SELECT 1 FROM pg_class WHERE relname = 'route_seq') THEN 
-                            CREATE SEQUENCE route_seq START 1000 INCREMENT 1; 
-                        END IF; 
-                    END $$;
-                ";
-            context.Database.ExecuteSqlRaw(createSeqSql);
+            if (folder == null)
+            {
+                folder = candidates.FirstOrDefault(Directory.Exists);
+            }
+
+            if (string.IsNullOrWhiteSpace(folder))
+            {
+                Console.WriteLine("DbInitializer: no Queries folder found — skipping raw SQL execution.");
+                return;
+            }
+
+            Console.WriteLine($"DbInitializer: executing SQL scripts from '{folder}'");
+
+            var sqlFiles = Directory.GetFiles(folder, "*.sql").OrderBy(p => p).ToArray();
+            if (!sqlFiles.Any())
+            {
+                Console.WriteLine("DbInitializer: no .sql files found in Queries folder.");
+                return;
+            }
+
+            // Execute files inside a transaction so partial runs don't leave DB half-updated.
+            await using var transaction = await context.Database.BeginTransactionAsync();
+            try
+            {
+                foreach (var file in sqlFiles)
+                {
+                    Console.WriteLine($"DbInitializer: executing {Path.GetFileName(file)}");
+                    var sql = await File.ReadAllTextAsync(file);
+
+                    // Split by lines that contain only GO (common batch separator from SSMS/SQL Server tools)
+                    var batches = Regex.Split(sql, "^\\s*GO\\s*$", RegexOptions.Multiline | RegexOptions.IgnoreCase);
+
+                    foreach (var batch in batches)
+                    {
+                        if (string.IsNullOrWhiteSpace(batch))
+                            continue;
+
+                        await context.Database.ExecuteSqlRawAsync(batch);
+                    }
+                }
+
+                await transaction.CommitAsync();
+                Console.WriteLine("DbInitializer: SQL scripts executed successfully.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"DbInitializer ERROR: {ex.Message}");
+                try { await transaction.RollbackAsync(); } catch { }
+                throw; // rethrow so the app startup sees the error
+            }
         }
     }
 }
