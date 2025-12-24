@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using WalkTogether.Domain.Entities;
+using Route = WalkTogether.Domain.Entities.Route;
 
 namespace WalkTogether.Data
 {
@@ -17,21 +18,19 @@ namespace WalkTogether.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Table mappings (optional but keeps DB names consistent with diagram)
             modelBuilder.Entity<User>().ToTable("users");
             modelBuilder.Entity<Event>().ToTable("events");
             modelBuilder.Entity<Route>().ToTable("routes");
             modelBuilder.Entity<Destination>().ToTable("destinations");
             modelBuilder.Entity<Attendance>().ToTable("attendances");
 
-            // User (1) <- (M) Event (Creator)
             modelBuilder.Entity<Event>()
                 .HasOne(e => e.Creator)
                 .WithMany(u => u.CreatedEvents)
                 .HasForeignKey(e => e.CreatorId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Event (1) <- (M) Attendance
+   
             modelBuilder.Entity<Attendance>()
                 .HasOne(a => a.Event)
                 .WithMany(e => e.Attendances)

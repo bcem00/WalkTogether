@@ -17,11 +17,12 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.Get
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddScoped<AuthService>();
+builder.Services.AddHttpClient<WalkTogetherAPI.Services.GoogleRoutesService>();
 
 var app = builder.Build();
 
-// 4. VER�TABANI OLU�TURMA (Otomatik Migration)
-// Uygulama her ba�lad���nda veritaban�n� kontrol eder ve g�nceller.
+
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;

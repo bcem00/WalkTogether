@@ -35,6 +35,19 @@ namespace WalkTogether.Domain.Entities
         [Column("creation_date")]
         public DateTimeOffset CreationDate { get; set; }
 
+        [Column("route_polyline")]
+        public string? RoutePolyline { get; set; }
+
+        // JSON string storing the list of stops (Lat/Lng) for editing later
+        [Column("waypoints_json")]
+        public string? WaypointsJson { get; set; }
+
+        [Column("total_distance_meters")]
+        public int? TotalDistanceMeters { get; set; }
+
+        [Column("estimated_duration_seconds")]
+        public int? EstimatedDurationSeconds { get; set; }
+
         public ICollection<Attendance>? Attendances { get; set; }
     }
 }

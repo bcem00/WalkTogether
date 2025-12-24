@@ -1,7 +1,8 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
+using System.Data;
 
 namespace WalkTogether.Domain.Entities
 {
@@ -45,7 +46,12 @@ namespace WalkTogether.Domain.Entities
         [Column("has_badge")]
         public bool HasBadge { get; set; } = false;
 
-        // Navigation properties
+
+        [Required]
+        [Column("role_id")]
+        public Guid RoleId { get; set; }
+
+
         public ICollection<Event>? CreatedEvents { get; set; }
         public ICollection<Attendance>? Attendances { get; set; }
     }
