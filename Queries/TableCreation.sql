@@ -54,3 +54,22 @@ CREATE TABLE attendances (
     -- Bir kullanıcı aynı etkinliğe iki kere katılamasın diye ek koruma:
     UNIQUE(user_id, event_id)
 );
+
+
+-- 7. SYSTEM_LOGS Tablosus
+CREATE TABLE system_logs (
+    log_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID REFERENCES users(user_id) ON DELETE SET NULL, -- İşlemi yapan kim?
+    action_type VARCHAR(50) NOT NULL, -- 'INSERT', 'UPDATE', 'DELETE', 'LOGIN_ATTEMPT'
+    table_name VARCHAR(50), -- Hangi tablo etkilendi?
+    record_id UUID, -- Etkilenen satırın ID'si
+    old_data JSONB, -- Değişimden önceki veri
+    new_data JSONB, -- Değişimden sonraki veri
+    ip_address VARCHAR(45), -- İşlemin yapıldığı IP
+    severity VARCHAR(10) DEFAULT 'INFO', -- 'INFO', 'WARN', 'ERROR', 'CRITICAL'
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Hızlı arama için indeksler
+CREATE INDEX idx_logs_user_id ON system_logs(user_id);
+CREATE INDEX idx_logs_created_at ON system_logs(created_at);
