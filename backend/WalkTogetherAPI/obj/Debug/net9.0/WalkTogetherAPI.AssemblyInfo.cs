@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("WalkTogetherAPI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4e182967aeeac8b4d165229ba015fe1a87b907c8")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+87ab6815311a4b6d20adebbb67a4addad7f304d9")]
 [assembly: System.Reflection.AssemblyProductAttribute("WalkTogetherAPI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("WalkTogetherAPI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

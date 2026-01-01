@@ -18,7 +18,7 @@ BEGIN
     JOIN routes r ON e.route_id = r.route_id
     LEFT JOIN attendances a ON e.event_id = a.event_id
     GROUP BY e.event_id, e.title, e.start_date
-    -- Aggregate sonucuna göre filtreleme (Ödev/Proje gereksinimi):
+
     HAVING MAX(r.distance) BETWEEN p_min_dist AND p_max_dist;
 END;
 $$;
