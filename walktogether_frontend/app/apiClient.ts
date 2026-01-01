@@ -5,7 +5,7 @@ interface ApiResponse<T> {
   error?: string;
 }
 
-// Generic fetch wrapper
+
 async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {}
