@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 using WalkTogether.Data;
+using WalkTogetherAPI.DTO;
 using WalkTogetherAPI.DTO.GoogleRoutes;
 using WalkTogetherAPI.Services;
 

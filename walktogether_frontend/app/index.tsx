@@ -17,7 +17,7 @@ export default function LoginScreen() {
     } else {
       console.log("Kayıt olunuyor:", username, email, password);
       alert("Hesabınız oluşturuldu! Şimdi giriş yapabilirsiniz.");
-      setIsLogin(true); // Kayıt sonrası giriş ekranına at
+      setIsLogin(true); 
     }
   };
 

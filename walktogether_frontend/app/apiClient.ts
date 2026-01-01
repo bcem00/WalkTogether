@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://localhost:7230'; // Adjust if needed (backend URL)
+const API_BASE_URL = 'https://localhost:5067'; // Adjust if needed (backend URL)
 
 interface ApiResponse<T> {
   data?: T;
@@ -31,7 +31,7 @@ async function apiRequest<T>(
   }
 }
 
-// Auth endpoints
+
 export const authApi = {
   register: async (userData: { firstName: string; lastName: string; username: string; email: string; password: string }) => {
     return apiRequest<{ message: string; userId: string }>('/api/users/register', {
@@ -108,5 +108,5 @@ export const eventsApi = {
   },
 };
 
-// Export default for convenience
+
 export default { auth: authApi, events: eventsApi };

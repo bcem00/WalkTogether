@@ -22,7 +22,7 @@ export default function ProfileScreen() {
       const result = await authApi.login({ identifier: form.identifier, password: form.password });
       if (result.data) {
         Alert.alert('Success', 'Logged in successfully!');
-        // Store token here, e.g., AsyncStorage.setItem('token', result.data.token);
+  
       } else {
         Alert.alert('Error', result.error || 'Login failed');
       }

@@ -90,7 +90,6 @@ C:\Users\ARTEMIS\WalkTogether\backend\WalkTogetherAPI\obj\Debug\net9.0\staticweb
 C:\Users\ARTEMIS\WalkTogether\backend\WalkTogetherAPI\obj\Debug\net9.0\staticwebassets.build.json.cache
 C:\Users\ARTEMIS\WalkTogether\backend\WalkTogetherAPI\obj\Debug\net9.0\staticwebassets.development.json
 C:\Users\ARTEMIS\WalkTogether\backend\WalkTogetherAPI\obj\Debug\net9.0\staticwebassets.build.endpoints.json
-C:\Users\ARTEMIS\WalkTogether\backend\WalkTogetherAPI\obj\Debug\net9.0\staticwebassets.upToDateCheck.txt
 C:\Users\ARTEMIS\WalkTogether\backend\WalkTogetherAPI\obj\Debug\net9.0\WalkToge.CBD6FE1F.Up2Date
 C:\Users\ARTEMIS\WalkTogether\backend\WalkTogetherAPI\obj\Debug\net9.0\WalkTogetherAPI.genruntimeconfig.cache
 C:\Users\ARTEMIS\WalkTogether\backend\WalkTogetherAPI\obj\Debug\net9.0\ref\WalkTogetherAPI.dll
