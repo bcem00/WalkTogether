@@ -37,4 +37,16 @@ namespace WalkTogetherAPI.DTO
         public double longitude { get; set; }
         public int order_in_route { get; set; }
     }
+
+    public class JoinEventRequest
+    {
+        public Guid UserId { get; set; }
+        public string InviteCode { get; set; }
+    }
+
+    public class LeaveEventRequest
+    {
+        public Guid UserId { get; set; }
+        public Guid EventId { get; set; }
+    }
 }

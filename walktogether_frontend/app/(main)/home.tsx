@@ -1,88 +1,92 @@
 import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { eventsApi } from '../apiClient';
 
-// 1. MOCK DATA: Sanki veritabanından gelmiş gibi davranan örnek veriler
-const MOCK_EVENTS = [
-  {
-    id: '1',
-    title: 'Sabah Sahil Yürüyüşü',
-    start: 'Bebek Sahil',
-    end: 'Emirgan',
-    date: '25.12.2025 - 08:30',
-    host: 'Caner',
-    stops: 3
-  },
-  {
-    id: '2',
-    title: 'Belgrad Ormanı Doğa Koşusu',
-    start: 'Neşet Suyu',
-    end: 'Bahçeköy Girişi',
-    date: '26.12.2025 - 10:00',
-    host: 'Merve',
-    stops: 5
-  },
-  {
-    id: '3',
-    title: 'Caddebostan Akşam Turu',
-    start: 'Kadıköy',
-    end: 'Bostancı',
-    date: '27.12.2025 - 19:30',
-    host: 'Ali',
-    stops: 2
-  }
-];
+interface Event {
+  event_id: string;
+  title: string;
+  description: string;
+  start_date: string;
+  invitation_code: string;
+  creator_full_name: string;
+  creator_username: string;
+  route_distance_meters: number;
+  participant_count: number;
+}
 
 export default function HomeScreen() {
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // 2. RENDER ITEM: Her bir kartın nasıl görüneceğini belirleyen yapı
-  const renderEventCard = ({ item }: { item: any }) => (
+  useEffect(() => {
+    loadEvents();
+  }, []);
+
+  const loadEvents = async () => {
+    const result = await eventsApi.getUpcomingEvents();
+    if (result.data) {
+      setEvents(result.data);
+    } else {
+      Alert.alert('Error', 'Failed to load events: ' + result.error);
+    }
+    setLoading(false);
+  };
+
+  const handleJoin = (event: Event) => {
+    // For now, just alert. In a real app, you'd need user ID and call join API
+    Alert.alert('Join Event', `Joining ${event.title} with code: ${event.invitation_code}`);
+  };
+
+  const renderEventCard = ({ item }: { item: Event }) => (
     <View style={styles.card}>
       <View style={styles.cardHeader}>
         <Text style={styles.eventTitle}>{item.title}</Text>
         <View style={styles.badge}>
-          <Text style={styles.badgeText}>{item.stops} Durak</Text>
+          <Text style={styles.badgeText}>{item.participant_count} Participants</Text>
         </View>
       </View>
 
-      <View style={styles.routeInfo}>
-        <View style={styles.routeLine}>
-          <Ionicons name="location" size={16} color="#007AFF" />
-          <Text style={styles.routeText}>{item.start}</Text>
-        </View>
-        <View style={styles.connector} />
-        <View style={styles.routeLine}>
-          <Ionicons name="flag" size={16} color="#FF3B30" />
-          <Text style={styles.routeText}>{item.end}</Text>
-        </View>
-      </View>
+      <Text style={styles.description}>{item.description}</Text>
 
       <View style={styles.footer}>
         <View style={styles.footerInfo}>
           <Ionicons name="calendar-outline" size={14} color="#666" />
-          <Text style={styles.footerText}>{item.date}</Text>
+          <Text style={styles.footerText}>{new Date(item.start_date).toLocaleString()}</Text>
         </View>
-        <TouchableOpacity 
+        <View style={styles.footerInfo}>
+          <Ionicons name="person-outline" size={14} color="#666" />
+          <Text style={styles.footerText}>{item.creator_full_name}</Text>
+        </View>
+        <TouchableOpacity
           style={styles.joinButton}
-          onPress={() => Alert.alert("Katıl", `${item.title} etkinliğine katıldınız!`)}
+          onPress={() => handleJoin(item)}
         >
-          <Text style={styles.joinButtonText}>Katıl</Text>
+          <Text style={styles.joinButtonText}>Join</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.headerTitle}>Loading events...</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      <Text style={styles.headerTitle}>Yakındaki Etkinlikler</Text>
-      
-      {/* 3. FLATLIST: Listeleme motoru */}
+      <Text style={styles.headerTitle}>Upcoming Events</Text>
+
       <FlatList
-        data={MOCK_EVENTS}
+        data={events}
         renderItem={renderEventCard}
-        keyExtractor={item => item.id}
+        keyExtractor={item => item.event_id}
         contentContainerStyle={{ padding: 20 }}
         showsVerticalScrollIndicator={false}
+        ListEmptyComponent={<Text style={styles.emptyText}>No upcoming events</Text>}
       />
     </View>
   );
@@ -96,7 +100,6 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     padding: 16,
     marginBottom: 15,
-    // Gölge ayarları
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -107,13 +110,11 @@ const styles = StyleSheet.create({
   eventTitle: { fontSize: 18, fontWeight: '700', color: '#333', flex: 1 },
   badge: { backgroundColor: '#E3F2FD', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
   badgeText: { color: '#007AFF', fontSize: 12, fontWeight: 'bold' },
-  routeInfo: { marginVertical: 10 },
-  routeLine: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  routeText: { fontSize: 14, color: '#555' },
-  connector: { width: 1, height: 10, backgroundColor: '#ddd', marginLeft: 7, marginVertical: 2 },
+  description: { fontSize: 14, color: '#555', marginBottom: 10 },
   footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 15, borderTopWidth: 1, borderTopColor: '#f0f0f0', paddingTop: 12 },
-  footerInfo: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  footerInfo: { flexDirection: 'row', alignItems: 'center', gap: 5, flex: 1 },
   footerText: { fontSize: 12, color: '#888' },
   joinButton: { backgroundColor: '#007AFF', paddingHorizontal: 20, paddingVertical: 8, borderRadius: 8 },
-  joinButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 14 }
+  joinButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 14 },
+  emptyText: { textAlign: 'center', fontSize: 16, color: '#666', marginTop: 50 },
 });

@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { Alert, FlatList, Keyboard, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { eventsApi } from '../apiClient';
 
 // MOCK DATA: Mevcut arkadaşlarımız
 const INITIAL_FRIENDS = [
@@ -12,6 +13,8 @@ const INITIAL_FRIENDS = [
 export default function FriendsScreen() {
   const [friends, setFriends] = useState(INITIAL_FRIENDS);
   const [searchUsername, setSearchUsername] = useState('');
+  const [inviteCode, setInviteCode] = useState('');
+  const [userId, setUserId] = useState(''); // In real app, get from auth context
 
   // ARKADAŞ EKLEME
   const handleAddFriend = () => {
@@ -30,6 +33,22 @@ export default function FriendsScreen() {
     setSearchUsername('');
     Keyboard.dismiss(); 
     Alert.alert("Başarılı", `${searchUsername} arkadaş olarak eklendi!`);
+  };
+
+  // ETKİNLİĞE KATILMA
+  const handleJoinEvent = async () => {
+    if (!userId || !inviteCode.trim()) {
+      Alert.alert("Hata", "Lütfen kullanıcı ID'nizi ve davet kodunu girin.");
+      return;
+    }
+
+    const result = await eventsApi.joinEvent(userId, inviteCode);
+    if (result.data) {
+      Alert.alert("Başarılı", "Etkinliğe katıldınız!");
+      setInviteCode('');
+    } else {
+      Alert.alert("Hata", result.error || "Katılma başarısız");
+    }
   };
 
   // ARKADAŞ SİLME 
@@ -73,6 +92,29 @@ export default function FriendsScreen() {
 
   return (
     <View style={styles.container}>
+      {/* ETKİNLİĞE KATILMA BÖLÜMÜ */}
+      <View style={styles.addSection}>
+        <Text style={styles.sectionTitle}>Etkinliğe Katıl</Text>
+        <View style={styles.inputContainer}>
+          <TextInput 
+            style={styles.input}
+            placeholder="Kullanıcı ID'niz"
+            value={userId}
+            onChangeText={setUserId}
+          />
+          <TextInput 
+            style={styles.input}
+            placeholder="Davet kodu"
+            value={inviteCode}
+            onChangeText={setInviteCode}
+            autoCapitalize="none"
+          />
+          <TouchableOpacity style={styles.addBtn} onPress={handleJoinEvent}>
+            <Ionicons name="enter" size={24} color="white" />
+          </TouchableOpacity>
+        </View>
+      </View>
+
       {/* ARKADAŞ EKLEME BÖLÜMÜ */}
       <View style={styles.addSection}>
         <Text style={styles.sectionTitle}>Yeni Arkadaş Ekle</Text>

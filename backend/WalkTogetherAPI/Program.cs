@@ -18,6 +18,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<EventService>();
 builder.Services.AddHttpClient<WalkTogetherAPI.Services.GoogleRoutesService>();
 
 var app = builder.Build();
