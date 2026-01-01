@@ -1,0 +1,33 @@
+# Use the official PostgreSQL image
+FROM postgres:16-alpine
+
+# Set environment variables for database initialization
+ENV POSTGRES_DB=walktogether
+ENV POSTGRES_USER=walktogether_user
+ENV POSTGRES_PASSWORD=walktogether_password
+
+# Create a directory for initialization scripts
+RUN mkdir -p /docker-entrypoint-initdb.d
+
+# Copy initialization scripts in the correct order
+# TablesInit.sql should run first as it creates the schema
+COPY Queries/TablesInit.sql /docker-entrypoint-initdb.d/01-init-tables.sql
+
+# Note: TableCreation.sql is kept as a backup/alternative schema
+# Uncomment the line below if you want to use it instead of TablesInit.sql
+# COPY Queries/TableCreation.sql /docker-entrypoint-initdb.d/02-create-tables.sql
+
+# Copy any function files if needed (optional)
+# COPY Queries/Functions/*.sql /docker-entrypoint-initdb.d/
+
+# The default entrypoint from the base PostgreSQL image will automatically
+# execute all .sql files in /docker-entrypoint-initdb.d/ in alphabetical order
+# when the database is first initialized (when the data directory is empty)
+
+# Expose PostgreSQL port
+EXPOSE 5432
+
+# Health check to ensure database is ready
+HEALTHCHECK --interval=10s --timeout=5s --retries=5 \
+  CMD pg_isready -U walktogether_user -d walktogether || exit 1
+
