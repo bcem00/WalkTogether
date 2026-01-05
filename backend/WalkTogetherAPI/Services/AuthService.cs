@@ -25,7 +25,7 @@ public class AuthService
         // DÜZELTİLEN KISIM BURASI:
         string passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
 
-        var sql = "SELECT * FROM auth_register(@p0, @p1, @p2, @p3, @p4)";
+        var sql = "SELECT auth_register(@p0, @p1, @p2, @p3, @p4) AS \"Value\"";
 
         try
         {

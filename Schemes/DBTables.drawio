@@ -1,6 +1,6 @@
 <mxfile host="Electron" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/24.7.17 Chrome/128.0.6613.36 Electron/32.0.1 Safari/537.36" version="24.7.17">
   <diagram name="Page-1" id="pOOXwO6L9AF_jRGJaAWt">
-    <mxGraphModel dx="2316" dy="1061" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="2057" dy="874" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -73,7 +73,7 @@
         <mxCell id="1Eybvrv1VI62fLZZ8ii_-29" value="title : VARCHAR(150)" style="text;strokeColor=default;fillColor=none;align=center;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="1Eybvrv1VI62fLZZ8ii_-23" vertex="1">
           <mxGeometry y="180" width="210" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="1Eybvrv1VI62fLZZ8ii_-53" value="invitation_code : VARCHAR(20)" style="text;strokeColor=default;fillColor=none;align=center;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="1Eybvrv1VI62fLZZ8ii_-23" vertex="1">
+        <mxCell id="1Eybvrv1VI62fLZZ8ii_-53" value="invitation_code : VARCHAR(5)" style="text;strokeColor=default;fillColor=none;align=center;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="1Eybvrv1VI62fLZZ8ii_-23" vertex="1">
           <mxGeometry y="210" width="210" height="30" as="geometry" />
         </mxCell>
         <mxCell id="1Eybvrv1VI62fLZZ8ii_-68" value="creation_date : TIMESTAMPZ" style="text;strokeColor=default;fillColor=none;align=center;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="1Eybvrv1VI62fLZZ8ii_-23" vertex="1">
@@ -82,7 +82,7 @@
         <mxCell id="1Eybvrv1VI62fLZZ8ii_-30" value="attendances" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="370" y="450" width="180" height="150" as="geometry" />
         </mxCell>
-        <mxCell id="1Eybvrv1VI62fLZZ8ii_-66" value="attendance_id : UUID" style="text;strokeColor=default;fillColor=none;align=center;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="1Eybvrv1VI62fLZZ8ii_-30" vertex="1">
+        <mxCell id="1Eybvrv1VI62fLZZ8ii_-66" value="&lt;u&gt;attendance_id : UUID&lt;/u&gt;" style="text;strokeColor=default;fillColor=none;align=center;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="1Eybvrv1VI62fLZZ8ii_-30" vertex="1">
           <mxGeometry y="30" width="180" height="30" as="geometry" />
         </mxCell>
         <mxCell id="1Eybvrv1VI62fLZZ8ii_-31" value="user_id :&amp;nbsp;UUID" style="text;strokeColor=default;fillColor=none;align=center;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="1Eybvrv1VI62fLZZ8ii_-30" vertex="1">

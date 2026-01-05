@@ -68,4 +68,22 @@ public class EventService
             .SqlQueryRaw<EventDestination>(sql, eventId)
             .ToListAsync();
     }
+
+    // 7. Create a new event
+    public async Task<Guid> CreateEventAsync(CreateEventRequest request)
+    {
+        var sql = "SELECT create_event(@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7)";
+        return await _context.Database
+            .SqlQueryRaw<Guid>(sql,
+                request.CreatorId,
+                request.Title,
+                request.Description,
+                request.StartDate,
+                request.RoutePolyline,
+                request.WaypointsJson,
+                request.TotalDistanceMeters,
+                request.EstimatedDurationSeconds)
+            .FirstOrDefaultAsync();
+    }
+    
 }

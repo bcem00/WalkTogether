@@ -49,4 +49,16 @@ namespace WalkTogetherAPI.DTO
         public Guid UserId { get; set; }
         public Guid EventId { get; set; }
     }
+
+    public class CreateEventRequest
+    {
+        public Guid CreatorId { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public DateTimeOffset StartDate { get; set; }
+        public string? RoutePolyline { get; set; }
+        public string? WaypointsJson { get; set; }
+        public int? TotalDistanceMeters { get; set; }
+        public int? EstimatedDurationSeconds { get; set; }
+    }
 }
