@@ -6,7 +6,10 @@ FROM postgres:16-alpine
 RUN mkdir -p /docker-entrypoint-initdb.d
 
 # Copy initialization scripts in the correct order
-# TablesInit.sql should run first as it creates the schema
+# Create user and database first
+COPY Queries/00-init-user.sql /docker-entrypoint-initdb.d/00-init-user.sql
+
+# TablesInit.sql should run after user creation
 COPY Queries/TablesInit.sql /docker-entrypoint-initdb.d/01-init-tables.sql
 
 # Note: TableCreation.sql is kept as a backup/alternative schema
@@ -26,4 +29,3 @@ EXPOSE 5432
 # Health check to ensure database is ready
 HEALTHCHECK --interval=10s --timeout=5s --retries=5 \
   CMD pg_isready -U walktogether_user -d walktogether || exit 1
-
