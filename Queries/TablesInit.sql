@@ -16,7 +16,7 @@ CREATE TABLE roles (
     role_name VARCHAR(20) NOT NULL UNIQUE
 );
 INSERT INTO roles (role_id, role_name) VALUES 
-    (gen_random_uuid(), 'user'), 
+    (gen_random_uuid(), 'walktogether_user'), 
     (gen_random_uuid(), 'admin');
 
 -- 3. USERS (UUID'ye geçildi)
