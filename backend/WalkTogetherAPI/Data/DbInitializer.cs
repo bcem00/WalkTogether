@@ -23,7 +23,7 @@ namespace WalkTogether.Data
         public static async System.Threading.Tasks.Task InitializeAsync(AppDbContext context, string? queriesFolder = null)
         {
             // 1) Apply pending migrations
-            await context.Database.MigrateAsync();
+            //await context.Database.MigrateAsync();
 
             // 2) Find the Queries folder (allowing a few common locations so it works both in dev and deployed apps)
             string? folder = null;
