@@ -31,7 +31,7 @@ CREATE TABLE events (
     title VARCHAR(150) NOT NULL,
     description TEXT,
     invitation_code VARCHAR(20) UNIQUE, -- Davet kodları benzersiz olmalı
-    start_date TIMESTAMPTZ NOT NULL
+    start_date TIMESTAMPTZ NOT NULL,
     creation_date TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 

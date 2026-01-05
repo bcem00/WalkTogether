@@ -119,5 +119,7 @@ namespace WalkTogetherAPI.Controllers
             }
             return userId;
         }
+
+        
     }
 }

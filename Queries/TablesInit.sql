@@ -10,18 +10,19 @@ DROP TABLE IF EXISTS routes CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 DROP TABLE IF EXISTS roles CASCADE;
 
--- 2. ROLES
+-- 2. ROLES (UUID to match User model)
 CREATE TABLE roles (
-    -- role_id sayısal kalabilir çünkü dışarıya açılmaz, sabittir.
-    role_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY, 
+    role_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     role_name VARCHAR(20) NOT NULL UNIQUE
 );
-INSERT INTO roles (role_name) VALUES ('user'), ('admin');
+INSERT INTO roles (role_id, role_name) VALUES 
+    (gen_random_uuid(), 'user'), 
+    (gen_random_uuid(), 'admin');
 
 -- 3. USERS (UUID'ye geçildi)
 CREATE TABLE users (
     user_id UUID DEFAULT gen_random_uuid() PRIMARY KEY, -- Otomatik UUID üretir
-    role_id INT NOT NULL REFERENCES roles(role_id),
+    role_id UUID NOT NULL REFERENCES roles(role_id),
     first_name VARCHAR(50) NOT NULL,
     last_name VARCHAR(50) NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
@@ -41,12 +42,16 @@ CREATE TABLE routes (
 CREATE TABLE events (
     event_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     creator_id UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
-    route_id UUID NOT NULL REFERENCES routes(route_id) ON DELETE RESTRICT,
+    route_id UUID REFERENCES routes(route_id) ON DELETE SET NULL,
     title VARCHAR(150) NOT NULL,
     description TEXT,
     invitation_code VARCHAR(20) UNIQUE,
     start_date TIMESTAMPTZ NOT NULL,
-    creation_date TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    creation_date TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    route_polyline TEXT,
+    waypoints_json TEXT,
+    total_distance_meters INTEGER,
+    estimated_duration_seconds INTEGER
 );
 
 -- 6. DESTINATIONS

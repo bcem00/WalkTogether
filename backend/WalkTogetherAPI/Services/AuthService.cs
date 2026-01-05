@@ -78,7 +78,7 @@ public class AuthService
         if (user == null) throw new Exception("Kullanıcı bulunamadı.");
 
         // Eski şifre doğru mu?
-        if (!BCrypt.Net.BCrypt.Verify(request.OldPassword, user.PasswordHash)) // Entity'deki property adı
+        if (!BCrypt.Net.BCrypt.Verify(request.OldPassword, user.PasswordHash)) 
             throw new Exception("Eski şifreniz hatalı.");
 
         // Yeni şifreyi hashle
@@ -91,7 +91,7 @@ public class AuthService
             .FirstOrDefaultAsync();
     }
 
-    // 4. CHANGE USERNAME
+ 
     public async Task<bool> ChangeUsernameAsync(ChangeUsernameRequest request)
     {
         var sql = "SELECT * FROM user_change_username(@p0, @p1)";

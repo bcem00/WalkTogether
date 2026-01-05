@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION register_user(
+CREATE OR REPLACE FUNCTION auth_register(
     p_first_name VARCHAR,
     p_last_name VARCHAR,
     p_username VARCHAR,
