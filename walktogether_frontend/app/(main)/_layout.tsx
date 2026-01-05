@@ -22,10 +22,10 @@ export default function MainLayout() {
         }} 
       />
       <Tabs.Screen 
-        name="friends" 
+        name="joined-events" 
         options={{ 
-          title: 'Arkadaşlar', 
-          tabBarIcon: ({color}) => <Ionicons name="people-outline" size={24} color={color} /> 
+          title: 'Katıldığım Etkinlikler', 
+          tabBarIcon: ({color}) => <Ionicons name="add-circle-outline" size={24} color={color} /> 
         }} 
       />
       <Tabs.Screen 

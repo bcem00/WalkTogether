@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://localhost:5067'; // Adjust if needed (backend URL)
+const API_BASE_URL = 'https://172.20.10.2:5067/api'; // Adjust if needed (backend URL)
 
 interface ApiResponse<T> {
   data?: T;

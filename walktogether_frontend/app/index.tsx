@@ -1,135 +1,152 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator, Alert, KeyboardAvoidingView, Platform,
+  ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View
+} from 'react-native';
+import { authApi } from './apiClient';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const [isLogin, setIsLogin] = useState(true); 
+  const [isLogin, setIsLogin] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
+
+  // Form State'leri - TypeScript otomatik olarak 'string' atar
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
 
-  const handleAction = () => {
+  // Parametreye ': string' ekleyerek hatayı çözüyoruz
+  const validateEmail = (email: string): boolean => {
+    return /\S+@\S+\.\S+/.test(email);
+  };
+
+  const handleAction = async () => {
+    // Validasyon
     if (isLogin) {
-      console.log("Giriş yapılıyor:", username, password);
-      alert(`Hoş geldin ${username}!`);
-      router.replace('/(main)/home');
+      if (!username.trim() || !password.trim()) {
+        Alert.alert("Eksik Bilgi", "Lütfen kullanıcı adı ve şifrenizi girin.");
+        return;
+      }
     } else {
-      console.log("Kayıt olunuyor:", username, email, password);
-      alert("Hesabınız oluşturuldu! Şimdi giriş yapabilirsiniz.");
-      setIsLogin(true); 
+      if (!firstName.trim() || !lastName.trim() || !email.trim() || !username.trim() || !password.trim()) {
+        Alert.alert("Eksik Bilgi", "Lütfen tüm alanları doldurun.");
+        return;
+      }
+      if (!validateEmail(email)) {
+        Alert.alert("Geçersiz E-posta", "Lütfen geçerli bir e-posta adresi girin.");
+        return;
+      }
+    }
+
+    setLoading(true);
+
+    try {
+      if (isLogin) {
+        // --- GİRİŞ İŞLEMİ ---
+        const result = await authApi.login({ identifier: username, password });
+
+        if (result.data) {
+          await AsyncStorage.setItem('userToken', result.data.token);
+          await AsyncStorage.setItem('username', username);
+          
+          if (username.toLowerCase() === 'admin') {
+            router.replace('/admin/dashboard');
+          } else {
+            router.replace('/(main)/home');
+          }
+        } else {
+          Alert.alert("Giriş Başarısız", result.error || "Hatalı bilgiler.");
+        }
+      } else {
+        // --- KAYIT İŞLEMİ ---
+        const result = await authApi.register({
+          firstName,
+          lastName,
+          username,
+          email,
+          password
+        });
+
+        if (result.data) {
+          Alert.alert("Başarılı", "Hesabınız oluşturuldu!", [
+            { text: "Tamam", onPress: () => setIsLogin(true) }
+          ]);
+        } else {
+          Alert.alert("Kayıt Hatası", result.error || "İşlem başarısız.");
+        }
+      }
+    } catch (err: any) {
+      // TypeScript'te catch blogundaki hata 'any' veya 'unknown' olmalıdır
+      Alert.alert("Bağlantı Hatası", "Sunucuya ulaşılamıyor.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <KeyboardAvoidingView 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
-      style={styles.container}
-    >
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
       <ScrollView contentContainerStyle={styles.inner}>
-        
-        <Text style={styles.logo}>PROJE LOGO</Text>
-        <Text style={styles.title}>{isLogin ? 'Giriş Yap' : 'Hesap Oluştur'}</Text>
+        <Text style={styles.logo}>WALK TOGETHER</Text>
+        <Text style={styles.title}>{isLogin ? 'Oturum Aç' : 'Hesap Oluştur'}</Text>
 
         <View style={styles.form}>
-          <TextInput 
-            style={styles.input} 
-            placeholder="Kullanıcı Adı" 
-            value={username}
-            onChangeText={setUsername}
-            autoCapitalize="none"
-          />
+          {!isLogin && (
+            <>
+              <Text style={styles.label}>Ad</Text>
+              <TextInput style={styles.input} placeholder="Ad" value={firstName} onChangeText={setFirstName} />
+              
+              <Text style={styles.label}>Soyad</Text>
+              <TextInput style={styles.input} placeholder="Soyad" value={lastName} onChangeText={setLastName} />
 
-          {!isLogin && ( // Sadece Kayıt modundaysak E-posta göster
-            <TextInput 
-              style={styles.input} 
-              placeholder="E-posta" 
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-            />
+              <Text style={styles.label}>E-posta</Text>
+              <TextInput 
+                style={styles.input} 
+                placeholder="email@example.com" 
+                value={email} 
+                onChangeText={setEmail} 
+                autoCapitalize="none"
+                keyboardType="email-address"
+              />
+            </>
           )}
 
-          <TextInput 
-            style={styles.input} 
-            placeholder="Şifre" 
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry // Şifreyi yıldızlı gösterir
-          />
+          <Text style={styles.label}>Kullanıcı Adı</Text>
+          <TextInput style={styles.input} placeholder="Kullanıcı adı" value={username} onChangeText={setUsername} autoCapitalize="none" />
 
-          <TouchableOpacity style={styles.button} onPress={handleAction}>
-            <Text style={styles.buttonText}>{isLogin ? 'Giriş' : 'Kayıt Ol'}</Text>
+          <Text style={styles.label}>Şifre</Text>
+          <TextInput style={styles.input} placeholder="••••••••" value={password} onChangeText={setPassword} secureTextEntry />
+
+          <TouchableOpacity style={styles.button} onPress={handleAction} disabled={loading}>
+            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>{isLogin ? 'Giriş Yap' : 'Kaydol'}</Text>}
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={styles.switchButton} 
-            onPress={() => setIsLogin(!isLogin)}
-          >
-            <Text style={styles.switchText}>
-              {isLogin ? 'Hesabın yok mu? Kayıt Ol' : 'Zaten hesabın var mı? Giriş Yap'}
-            </Text>
-          </TouchableOpacity>
+          <View style={styles.switchContainer}>
+            <Text style={styles.switchTextNormal}>{isLogin ? 'Hesabın yok mu?' : 'Zaten üye misin?'}</Text>
+            <TouchableOpacity onPress={() => setIsLogin(!isLogin)}>
+              <Text style={styles.switchTextBlue}>{isLogin ? ' Kayıt Ol' : ' Giriş Yap'}</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  inner: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: 30,
-  },
-  logo: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    color: '#007AFF',
-    marginBottom: 10,
-  },
-  title: {
-    fontSize: 20,
-    textAlign: 'center',
-    marginBottom: 40,
-    color: '#555',
-  },
-  form: {
-    width: '100%',
-  },
-  input: {
-    backgroundColor: '#f9f9f9',
-    padding: 15,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#eee',
-    marginBottom: 15,
-    fontSize: 16,
-  },
-  button: {
-    backgroundColor: '#007AFF',
-    padding: 18,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 18,
-  },
-  switchButton: {
-    marginTop: 20,
-    alignItems: 'center',
-  },
-  switchText: {
-    color: '#007AFF',
-    fontSize: 14,
-  },
+  container: { flex: 1, backgroundColor: '#fff' },
+  inner: { flexGrow: 1, justifyContent: 'center', padding: 30 },
+  logo: { fontSize: 32, fontWeight: 'bold', textAlign: 'center', color: '#007AFF', marginBottom: 10 },
+  title: { fontSize: 18, textAlign: 'center', marginBottom: 30, color: '#555' },
+  form: { width: '100%' },
+  label: { fontSize: 14, fontWeight: '600', color: '#333', marginBottom: 5, marginLeft: 5 },
+  input: { backgroundColor: '#f9f9f9', padding: 15, borderRadius: 10, borderWidth: 1, borderColor: '#eee', marginBottom: 15 },
+  button: { backgroundColor: '#007AFF', padding: 18, borderRadius: 10, alignItems: 'center', marginTop: 10 },
+  buttonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+  switchContainer: { flexDirection: 'row', justifyContent: 'center', marginTop: 25 },
+  switchTextNormal: { color: '#666', fontSize: 15 },
+  switchTextBlue: { color: '#007AFF', fontSize: 15, fontWeight: 'bold' },
 });
