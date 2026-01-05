@@ -33,7 +33,7 @@ namespace WalkTogetherAPI.Controllers
             }
             catch (Exception ex)
             {
-                // Returns 400 Bad Request with the error message from the service
+                
                 return BadRequest(new { message = ex.Message });
             }
         }

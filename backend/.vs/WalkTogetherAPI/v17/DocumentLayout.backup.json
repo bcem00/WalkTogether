@@ -3,16 +3,16 @@
   "WorkspaceRootPath": "C:\\Users\\ARTEMIS\\WalkTogether\\backend\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{73A6930A-5630-4193-B016-561D9D0D161E}|WalkTogetherAPI\\WalkTogetherAPI.csproj|c:\\users\\artemis\\walktogether\\backend\\walktogetherapi\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
-      "RelativeMoniker": "D:0:0:{73A6930A-5630-4193-B016-561D9D0D161E}|WalkTogetherAPI\\WalkTogetherAPI.csproj|solutionrelative:walktogetherapi\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{73A6930A-5630-4193-B016-561D9D0D161E}|WalkTogetherAPI\\WalkTogetherAPI.csproj|c:\\users\\artemis\\walktogether\\backend\\walktogetherapi\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{73A6930A-5630-4193-B016-561D9D0D161E}|WalkTogetherAPI\\WalkTogetherAPI.csproj|solutionrelative:walktogetherapi\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{73A6930A-5630-4193-B016-561D9D0D161E}|WalkTogetherAPI\\WalkTogetherAPI.csproj|c:\\users\\artemis\\walktogether\\backend\\walktogetherapi\\services\\googleroutesservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{73A6930A-5630-4193-B016-561D9D0D161E}|WalkTogetherAPI\\WalkTogetherAPI.csproj|solutionrelative:walktogetherapi\\services\\googleroutesservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{73A6930A-5630-4193-B016-561D9D0D161E}|WalkTogetherAPI\\WalkTogetherAPI.csproj|c:\\users\\artemis\\walktogether\\backend\\walktogetherapi\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{73A6930A-5630-4193-B016-561D9D0D161E}|WalkTogetherAPI\\WalkTogetherAPI.csproj|solutionrelative:walktogetherapi\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{73A6930A-5630-4193-B016-561D9D0D161E}|WalkTogetherAPI\\WalkTogetherAPI.csproj|c:\\users\\artemis\\walktogether\\backend\\walktogetherapi\\controllers\\eventscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -74,7 +74,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 8,
+          "SelectedChildIndex": 7,
           "Children": [
             {
               "$type": "Document",
@@ -86,21 +86,19 @@
               "RelativeToolTip": "WalkTogetherAPI\\Controllers\\EventsController.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAqwBAAAAAbAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-24T16:46:58.351Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-24T16:46:58.351Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 1,
               "Title": "GoogleRoutesService.cs",
               "DocumentMoniker": "C:\\Users\\ARTEMIS\\WalkTogether\\backend\\WalkTogetherAPI\\Services\\GoogleRoutesService.cs",
               "RelativeDocumentMoniker": "WalkTogetherAPI\\Services\\GoogleRoutesService.cs",
               "ToolTip": "C:\\Users\\ARTEMIS\\WalkTogether\\backend\\WalkTogetherAPI\\Services\\GoogleRoutesService.cs",
               "RelativeToolTip": "WalkTogetherAPI\\Services\\GoogleRoutesService.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAACEAAAA2AAAAAAAAAA==",
+              "ViewState": "AgIAABUAAAAAAAAAAAAowDoAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-24T16:45:52.026Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-24T16:45:52.026Z"
             },
             {
               "$type": "Document",
@@ -112,8 +110,7 @@
               "RelativeToolTip": "WalkTogetherAPI\\DTO\\GoogleRoutes\\GoogleRouteContracts.cs",
               "ViewState": "AgIAACwAAAAAAAAAAADwv0QAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-24T16:45:25.174Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-24T16:45:25.174Z"
             },
             {
               "$type": "Document",
@@ -125,8 +122,7 @@
               "RelativeToolTip": "WalkTogetherAPI\\Models\\Event.cs",
               "ViewState": "AgIAABUAAAAAAAAAAAA4wDAAAAA6AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-24T16:44:44.788Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-24T16:44:44.788Z"
             },
             {
               "$type": "Document",
@@ -138,8 +134,7 @@
               "RelativeToolTip": "WalkTogetherAPI\\Controllers\\UserController.cs",
               "ViewState": "AgIAAF0AAAAAAAAAAAAYwG4AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-24T16:41:46.15Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-24T16:41:46.15Z"
             },
             {
               "$type": "Document",
@@ -151,8 +146,7 @@
               "RelativeToolTip": "WalkTogetherAPI\\Models\\Attendance.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-24T16:39:56.821Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-24T16:39:56.821Z"
             },
             {
               "$type": "Document",
@@ -164,25 +158,24 @@
               "RelativeToolTip": "WalkTogetherAPI\\DTO\\RegisterRequest.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-24T16:09:52.354Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-24T16:09:52.354Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 0,
               "Title": "Program.cs",
               "DocumentMoniker": "C:\\Users\\ARTEMIS\\WalkTogether\\backend\\WalkTogetherAPI\\Program.cs",
               "RelativeDocumentMoniker": "WalkTogetherAPI\\Program.cs",
               "ToolTip": "C:\\Users\\ARTEMIS\\WalkTogether\\backend\\WalkTogetherAPI\\Program.cs",
               "RelativeToolTip": "WalkTogetherAPI\\Program.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAxAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABkAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-12-24T16:17:27.06Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 2,
               "Title": "appsettings.json",
               "DocumentMoniker": "C:\\Users\\ARTEMIS\\WalkTogether\\backend\\WalkTogetherAPI\\appsettings.json",
               "RelativeDocumentMoniker": "WalkTogetherAPI\\appsettings.json",
@@ -190,8 +183,7 @@
               "RelativeToolTip": "WalkTogetherAPI\\appsettings.json",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAVAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2025-12-24T16:21:23.02Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-24T16:21:23.02Z"
             },
             {
               "$type": "Document",
@@ -203,8 +195,7 @@
               "RelativeToolTip": "WalkTogetherAPI\\DTO\\LoginRequest.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-24T16:10:13.803Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-24T16:10:13.803Z"
             },
             {
               "$type": "Document",
@@ -216,8 +207,7 @@
               "RelativeToolTip": "WalkTogetherAPI\\DTO\\ChangeUserNameRequest.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-24T16:10:53.725Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-24T16:10:53.725Z"
             },
             {
               "$type": "Document",
@@ -229,8 +219,7 @@
               "RelativeToolTip": "WalkTogetherAPI\\DTO\\UserLoginResult.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-24T16:11:07.074Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-24T16:11:07.074Z"
             },
             {
               "$type": "Document",
@@ -242,8 +231,7 @@
               "RelativeToolTip": "WalkTogetherAPI\\Services\\AuthService.cs",
               "ViewState": "AgIAAEcAAAAAAAAAAAAmwG0AAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-24T16:07:55.609Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-24T16:07:55.609Z"
             },
             {
               "$type": "Document",
@@ -255,8 +243,7 @@
               "RelativeToolTip": "WalkTogetherAPI\\DTO\\ChangePasswordRequest.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-24T16:10:36.887Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-24T16:10:36.887Z"
             },
             {
               "$type": "Document",
@@ -268,8 +255,7 @@
               "RelativeToolTip": "WalkTogetherAPI\\Models\\User.cs",
               "ViewState": "AgIAABoAAAAAAAAAAAAwwDMAAAAoAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-24T16:32:33.295Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-24T16:32:33.295Z"
             },
             {
               "$type": "Document",
@@ -281,8 +267,7 @@
               "RelativeToolTip": "WalkTogetherAPI\\Helpers\\TokenHelper.cs",
               "ViewState": "AgIAAAMAAAAAAAAAAAAAABoAAABFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-24T16:06:44.557Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-24T16:06:44.557Z"
             }
           ]
         }

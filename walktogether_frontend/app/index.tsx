@@ -47,7 +47,7 @@ export default function LoginScreen() {
     try {
       if (isLogin) {
         // --- GİRİŞ İŞLEMİ ---
-        const result = await authApi.login({ identifier: username, password });
+        const result = await authApi.loginWithStorage({ identifier: username, password });
 
         if (result.data) {
           await AsyncStorage.setItem('userToken', result.data.token);

@@ -15,10 +15,13 @@ namespace WalkTogetherAPI.DTO.GoogleRoutes
         public List<RouteLocation> Intermediates { get; set; }
 
         [JsonPropertyName("travelMode")]
-        public string TravelMode { get; set; } = "WALKING"; // or DRIVE
+        // FIX: Change "WALKING" to "WALK"
+        public string TravelMode { get; set; } = "WALK";
 
+        // Keep this nullable fix from the previous step!
         [JsonPropertyName("routingPreference")]
-        public string RoutingPreference { get; set; } = "TRAFFIC_UNAWARE";
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? RoutingPreference { get; set; }
     }
 
     public class RouteLocation

@@ -52,7 +52,7 @@ public class AuthService
     // 2. LOGIN
     public async Task<string> LoginAsync(LoginRequest request)
     {
-        var sql = "SELECT * FROM auth_get_user_for_login(@p0)";
+        var sql = "SELECT * FROM auth_get_user_for_login(@p0) AS \"Value\"";
 
         var user = await _context.Database
             .SqlQueryRaw<UserLoginResult>(sql, request.Identifier)
@@ -84,7 +84,7 @@ public class AuthService
         // Yeni şifreyi hashle
         string newHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
 
-        var sql = "SELECT * FROM user_change_password(@p0, @p1)";
+        var sql = "SELECT * FROM user_change_password(@p0, @p1) AS \"Value\"";
 
         return await _context.Database
             .SqlQueryRaw<bool>(sql, request.UserId, newHash)
@@ -94,7 +94,7 @@ public class AuthService
  
     public async Task<bool> ChangeUsernameAsync(ChangeUsernameRequest request)
     {
-        var sql = "SELECT * FROM user_change_username(@p0, @p1)";
+        var sql = "SELECT * FROM user_change_username(@p0, @p1) AS \"Value\"";
 
         try
         {

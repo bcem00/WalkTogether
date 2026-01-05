@@ -58,38 +58,50 @@ export default function CreateEventScreen() {
 
     setLoading(true);
     try {
-      // 1. AsyncStorage'dan mevcut kullanıcının UUID'sini al
       const creatorId = await AsyncStorage.getItem('userId');
       const token = await AsyncStorage.getItem('userToken');
 
-      // 2. DB şemasına uygun waypoints formatı (order_in_route sırasıyla)
-      const waypoints = stops.map(s => ({
-        lat: s.latitude,
-        lng: s.longitude
-      }));
+      if (!creatorId || !token) {
+        Alert.alert("Hata", "Kullanıcı girişi yapılmamış. Lütfen giriş yapın.");
+        return;
+      }
 
-      // 3. Backend'e gönderilecek tam paket
-      // NOT: apiClient içindeki createRoute fonksiyonunu bu geniş veriyi alacak şekilde güncellediğini varsayıyoruz.
+      // 1. Etkinliği Oluştur
       const eventData = {
-        title,
-        description,
-        invitation_code: invitationCode,
-        start_date: startDate.toISOString(),
-        creation_date: new Date().toISOString(), // Oluşturulma tarihi
-        creator_id: creatorId, // Kullanıcı ID'si
-        route_distance: routeDistance, // Google Maps'ten gelen gerçek mesafe
-        waypoints
+        CreatorId: creatorId,
+        Title: title,
+        Description: description,
+        StartDate: startDate.toISOString(),
+        // Diğer alanlar backend tarafından hesaplanacağı için undefined/null gönderilebilir
       };
 
-      const result = await eventsApi.createRoute('new', waypoints, token || undefined);
+      const createResult = await eventsApi.createEvent(eventData);
 
-      if (result.data) {
+      if (!createResult.data) {
+        Alert.alert("Hata", createResult.error || "Etkinlik oluşturulamadı.");
+        return;
+      }
+
+      const eventId = createResult.data.eventId;
+
+      // 2. Rotayı Oluştur
+      // FIX: 'lat'/'lng' yerine 'latitude'/'longitude' kullanın.
+      // Backend DTO'su (LatLng class) tam olarak bu isimleri bekliyor.
+      const waypoints = stops.map(s => ({
+        latitude: s.latitude,  // lat -> latitude
+        longitude: s.longitude // lng -> longitude
+      }));
+
+      const routeResult = await eventsApi.createRoute(eventId, waypoints, token || undefined);
+
+      if (routeResult.data) {
         Alert.alert("Başarılı", `Etkinlik oluşturuldu! Davet Kodunuz: ${invitationCode}`);
         resetForm();
       } else {
-        Alert.alert("Hata", result.error || "Backend bağlantı hatası.");
+        Alert.alert("Hata", routeResult.error || "Rota kaydedilemedi.");
       }
     } catch (err) {
+      console.log(err);
       Alert.alert("Hata", "Beklenmedik bir sorun oluştu.");
     } finally {
       setLoading(false);

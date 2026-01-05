@@ -88,7 +88,7 @@ export default function JoinedEventsScreen() {
         <FlatList
           data={events}
           renderItem={renderEventCard}
-          keyExtractor={item => (item.event_id || item.id).toString()}
+          keyExtractor={item => (item.id || item.event_id || Math.random()).toString()}
           contentContainerStyle={{ padding: 20 }}
           ListEmptyComponent={<Text style={styles.emptyText}>Henüz bir etkinliğe katılmadınız.</Text>}
         />

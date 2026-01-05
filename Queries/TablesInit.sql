@@ -11,7 +11,7 @@ DROP TABLE IF EXISTS users CASCADE;
 DROP TABLE IF EXISTS roles CASCADE;
 
 -- 2. ROLES (UUID to match User model)
-CREATE TABLE roles (
+CREATE TABLE IF NOT EXISTS roles (
     role_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     role_name VARCHAR(20) NOT NULL UNIQUE
 );
@@ -20,7 +20,7 @@ INSERT INTO roles (role_id, role_name) VALUES
     (gen_random_uuid(), 'admin');
 
 -- 3. USERS (UUID'ye geçildi)
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     user_id UUID DEFAULT gen_random_uuid() PRIMARY KEY, -- Otomatik UUID üretir
     role_id UUID NOT NULL REFERENCES roles(role_id),
     first_name VARCHAR(50) NOT NULL,
@@ -33,13 +33,13 @@ CREATE TABLE users (
 );
 
 -- 4. ROUTES (UUID'ye geçildi)
-CREATE TABLE routes (
+CREATE TABLE IF NOT EXISTS routes (
     route_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     distance INTEGER DEFAULT 0
 );
 
 -- 5. EVENTS (UUID'ye geçildi)
-CREATE TABLE events (
+CREATE TABLE IF NOT EXISTS events (
     event_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     creator_id UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
     route_id UUID REFERENCES routes(route_id) ON DELETE SET NULL,
@@ -55,7 +55,7 @@ CREATE TABLE events (
 );
 
 -- 6. DESTINATIONS
-CREATE TABLE destinations (
+CREATE TABLE IF NOT EXISTS destinations (
     destination_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     route_id UUID NOT NULL REFERENCES routes(route_id) ON DELETE CASCADE,
     latitude DOUBLE PRECISION NOT NULL,
@@ -64,7 +64,7 @@ CREATE TABLE destinations (
 );
 
 -- 7. ATTENDANCES
-CREATE TABLE attendances (
+CREATE TABLE IF NOT EXISTS attendances (
     attendance_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
     event_id UUID NOT NULL REFERENCES events(event_id) ON DELETE CASCADE,

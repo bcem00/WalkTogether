@@ -84,7 +84,7 @@
               "RelativeDocumentMoniker": "WalkTogetherAPI\\Controllers\\EventsController.cs",
               "ToolTip": "C:\\Users\\ARTEMIS\\WalkTogether\\backend\\WalkTogetherAPI\\Controllers\\EventsController.cs",
               "RelativeToolTip": "WalkTogetherAPI\\Controllers\\EventsController.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAqwBAAAAAbAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAqwBAAAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-12-24T16:46:58.351Z",
               "EditorCaption": ""
@@ -123,7 +123,7 @@
               "RelativeDocumentMoniker": "WalkTogetherAPI\\Models\\Event.cs",
               "ToolTip": "C:\\Users\\ARTEMIS\\WalkTogether\\backend\\WalkTogetherAPI\\Models\\Event.cs",
               "RelativeToolTip": "WalkTogetherAPI\\Models\\Event.cs",
-              "ViewState": "AgIAABUAAAAAAAAAAAA4wDAAAAA6AAAAAAAAAA==",
+              "ViewState": "AgIAABYAAAAAAAAAAAAcwDAAAAA6AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-12-24T16:44:44.788Z",
               "EditorCaption": ""
@@ -175,7 +175,7 @@
               "RelativeDocumentMoniker": "WalkTogetherAPI\\Program.cs",
               "ToolTip": "C:\\Users\\ARTEMIS\\WalkTogether\\backend\\WalkTogetherAPI\\Program.cs",
               "RelativeToolTip": "WalkTogetherAPI\\Program.cs",
-              "ViewState": "AgIAAAkAAAAAAAAAAAAAABkAAAAuAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABkAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-12-24T16:17:27.06Z",
               "EditorCaption": ""
@@ -279,7 +279,7 @@
               "RelativeDocumentMoniker": "WalkTogetherAPI\\Helpers\\TokenHelper.cs",
               "ToolTip": "C:\\Users\\ARTEMIS\\WalkTogether\\backend\\WalkTogetherAPI\\Helpers\\TokenHelper.cs",
               "RelativeToolTip": "WalkTogetherAPI\\Helpers\\TokenHelper.cs",
-              "ViewState": "AgIAAAMAAAAAAAAAAAAAABoAAABFAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAIBJwBoAAABFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-12-24T16:06:44.557Z",
               "EditorCaption": ""

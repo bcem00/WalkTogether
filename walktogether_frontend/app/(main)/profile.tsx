@@ -43,7 +43,7 @@ export default function ProfileScreen() {
     const token = await AsyncStorage.getItem('userToken');
     if (!token) return;
 
-    const result = await authApi.changeUsername(token, { newUsername: userModal.newValue });
+    const result = await authApi.changeUsername({ newUsername: userModal.newValue });
     
     if (result.data) {
       Alert.alert("Başarılı", "Kullanıcı adınız güncellendi.");
@@ -60,7 +60,7 @@ export default function ProfileScreen() {
     const token = await AsyncStorage.getItem('userToken');
     if (!token) return;
 
-    const result = await authApi.changePassword(token, { oldPassword, newPassword });
+    const result = await authApi.changePassword({ oldPassword, newPassword });
     
     if (result.data) {
       Alert.alert("Başarılı", "Şifreniz başarıyla değiştirildi.");
@@ -70,6 +70,13 @@ export default function ProfileScreen() {
       // Backend mevcut şifreyi kontrol eder
       Alert.alert("Hata", result.error || "Mevcut şifreniz hatalı girildi.");
     }
+  };
+
+  // LOGOUT HANDLER
+  const handleLogout = async () => {
+    await authApi.logout();
+    Alert.alert("Çıkış Yapıldı", "Uygulamadan çıkış yaptınız.");
+    // Optionally navigate to login screen if you have navigation
   };
 
   if (loading) return <ActivityIndicator style={{ flex: 1 }} />;
@@ -113,6 +120,12 @@ export default function ProfileScreen() {
             <Text style={styles.passwordText}>Güvenlik ve Şifre</Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color="#ccc" />
+        </TouchableOpacity>
+
+        {/* LOGOUT BUTTON */}
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Ionicons name="log-out-outline" size={20} color="#FF3B30" />
+          <Text style={styles.logoutText}>Çıkış Yap</Text>
         </TouchableOpacity>
       </View>
 
@@ -188,5 +201,7 @@ const styles = StyleSheet.create({
   modalInput: { backgroundColor: '#f5f5f5', padding: 15, borderRadius: 12, marginBottom: 15 },
   modalActions: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 },
   cancelText: { color: '#999', fontWeight: '600' },
-  saveText: { color: '#007AFF', fontWeight: 'bold' }
+  saveText: { color: '#007AFF', fontWeight: 'bold' },
+  logoutButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 30, padding: 15, backgroundColor: '#FFECEC', borderRadius: 12, gap: 10 },
+  logoutText: { fontWeight: '600', color: '#FF3B30' }
 });

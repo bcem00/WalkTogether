@@ -41,8 +41,15 @@ namespace WalkTogetherAPI.Helpers
                 signingCredentials: creds
             );
 
+            
+
             // 4. Write the Token to a string
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+
+            // Debug: Write the entire token
+            Console.WriteLine($"Generated JWT Token: {tokenString}");
+
+            return tokenString;
         }
     }
 }
