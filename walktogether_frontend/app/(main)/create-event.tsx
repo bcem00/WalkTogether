@@ -3,12 +3,15 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useState } from 'react';
 import { Alert, FlatList, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
+import MapViewDirections from 'react-native-maps-directions';
 //API KEY: AIzaSyDFYEsvv3CUOa07f13Go1T2XKul0HbtfnU
 export default function MyEventsScreen() {
   // --- STATE YÖNETİMİ ---
   const [showForm, setShowForm] = useState(false);
   const [myEvents, setMyEvents] = useState<any[]>([]);
 
+  const GOOGLE_MAPS_APIKEY = 'AIzaSyDFYEsvv3CUOa07f13Go1T2XKul0HbtfnU';
+  
   // Form Field State'leri
   const [eventName, setEventName] = useState('');
   const [startLoc, setStartLoc] = useState('');
@@ -16,10 +19,12 @@ export default function MyEventsScreen() {
   const [startDate, setStartDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [duration, setDuration] = useState('1');
-const [stops, setStops] = useState<{ id: number; name: string; latitude: number; longitude: number }[]>([]);
-  const [newStop, setNewStop] = useState('');
+  const [stops, setStops] = useState<{ id: number; name: string; latitude: number; longitude: number }[]>([]);
   const [tempCoordinate, setTempCoordinate] = useState<any>(null);
 
+  const origin = stops.length > 0 ? { latitude: stops[0].latitude, longitude: stops[0].longitude } : null; // İlk durak başlangıç
+  const destination = stops.length > 1 ? { latitude: stops[stops.length - 1].latitude, longitude: stops[stops.length - 1].longitude } : null; // Son durak bitiş
+  const waypoints = stops.length > 2 ? stops.slice(1, -1).map(s => ({ latitude: s.latitude, longitude: s.longitude })) : []; // Aradaki duraklar
   // --- DURAK VE HESAPLAMA FONKSİYONLARI ---
 
 
@@ -31,7 +36,9 @@ const [stops, setStops] = useState<{ id: number; name: string; latitude: number;
 const addStopFromMap = () => {
   if (!tempCoordinate) return;
   
-  const stopName = newStop || `Durak ${stops.length + 1}`;
+  // Eğer kullanıcı TextInput'a isim yazmışsa onu kullan, yazmamışsa numara ver
+  const stopName = `${stops.length + 1}. Durak`;
+  
   setStops([...stops, { 
     id: Date.now(), 
     name: stopName, 
@@ -39,8 +46,7 @@ const addStopFromMap = () => {
     longitude: tempCoordinate.longitude 
   }]);
   
-  setTempCoordinate(null); // Seçimi sıfırla
-  setNewStop('');
+  setTempCoordinate(null); 
 };
 
   const deleteStop = (id: number) => {
@@ -140,42 +146,58 @@ const addStopFromMap = () => {
             <DateTimePicker value={startDate} mode="date" onChange={(e, d) => { setShowDatePicker(false); if(d) setStartDate(d); }} />
           )}
 
-          {/* ARA DURAKLAR KISMI */}
-          <Text style={styles.label}>Ara Duraklar</Text>
-          <View style={styles.stopInputContainer}>
-            <TextInput style={[styles.input, { flex: 1 }]} placeholder="Durak ekle..." value={newStop} onChangeText={setNewStop} />
-            <TouchableOpacity style={styles.addStopBtn} onPress={addStopFromMap}>
-              <Ionicons name="add" size={28} color="white" />
-            </TouchableOpacity>
-          </View>
+
           {/* Harita Bölümü */}
 <Text style={styles.label}>Haritadan Durak Seç (Tıkla ve Ekle)</Text>
 <View style={styles.mapContainer}>
-  <MapView
-    style={styles.map}
-    initialRegion={{
-      latitude: 41.0082,
-      longitude: 28.9784,
-      latitudeDelta: 0.05,
-      longitudeDelta: 0.05,
-    }}
-    onPress={handleMapPress}
+    <MapView
+  style={styles.map}
+  initialRegion={{
+    latitude: 41.0082,
+    longitude: 28.9784,
+    latitudeDelta: 0.05,
+    longitudeDelta: 0.05,
+  }}
+  onPress={handleMapPress}
+>
+  {/* Mevcut Durak Marker'ların */}
+  {stops.map((stop, index) => (
+  <Marker 
+    key={stop.id} 
+    coordinate={{ latitude: stop.latitude, longitude: stop.longitude }}
   >
-    {/* Geçici İşaretçi (Yeşil) */}
-    {tempCoordinate && (
-      <Marker coordinate={tempCoordinate} pinColor="green" />
-    )}
+    {/* Unity'deki 'Custom Sprite + Text' yapısı gibi düşünebilirsin */}
+    <View style={styles.customMarkerContainer}>
+      <View style={styles.markerLabelBox}>
+        <Text style={styles.markerLabelText}>{stop.name}</Text>
+      </View>
+      <Ionicons name="location" size={30} color="#007AFF" />
+    </View>
+  </Marker>
+))}
 
-    {/* Kayıtlı Duraklar (Mavi) */}
-    {stops.map(stop => (
-      <Marker 
-        key={stop.id} 
-        coordinate={{ latitude: stop.latitude, longitude: stop.longitude }} 
-        title={stop.name}
-      />
-    ))}
-  </MapView>
-</View>
+  {/* GERÇEK ROTA ÇİZİMİ */}
+  {origin && destination && (
+    <MapViewDirections
+      origin={origin}
+      destination={destination}
+      waypoints={waypoints}
+      apikey={GOOGLE_MAPS_APIKEY}
+      strokeWidth={4}
+      strokeColor="#007AFF"
+      mode="WALKING" // Yaya yollarını takip etmesi için çok önemli
+      optimizeWaypoints={true} // Google'ın sırayı en kısa yola göre optimize etmesini sağlar
+      onReady={(result) => {
+        console.log(`Mesafe: ${result.distance} km`);
+        console.log(`Süre: ${result.duration} dk`);
+      }}
+      onError={(errorMessage) => {
+        console.error("Rota Hatası:", errorMessage);
+      }}
+    />
+  )}
+</MapView>
+  </View>
 
 {/* Eğer haritadan bir yer seçildiyse butonu göster */}
 {tempCoordinate && (
@@ -309,5 +331,23 @@ confirmMapBtn: {
 confirmMapBtnText: { 
   color: 'white', 
   fontWeight: 'bold' 
+},
+customMarkerContainer: {
+  alignItems: 'center',
+  justifyContent: 'center',
+},
+markerLabelBox: {
+  backgroundColor: 'rgba(255, 255, 255, 0.9)',
+  paddingHorizontal: 8,
+  paddingVertical: 4,
+  borderRadius: 5,
+  borderWidth: 1,
+  borderColor: '#007AFF',
+  marginBottom: 2, // Pin'in biraz üzerinde durması için
+},
+markerLabelText: {
+  color: '#007AFF',
+  fontSize: 12,
+  fontWeight: 'bold',
 },
 });
