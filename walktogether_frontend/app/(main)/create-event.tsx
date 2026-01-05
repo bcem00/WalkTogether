@@ -2,7 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useState } from 'react';
 import { Alert, FlatList, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-
+import MapView, { Marker } from 'react-native-maps';
+//API KEY: AIzaSyDFYEsvv3CUOa07f13Go1T2XKul0HbtfnU
 export default function MyEventsScreen() {
   // --- STATE YÖNETİMİ ---
   const [showForm, setShowForm] = useState(false);
@@ -15,16 +16,32 @@ export default function MyEventsScreen() {
   const [startDate, setStartDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [duration, setDuration] = useState('1');
-  const [stops, setStops] = useState<{ id: number; name: string }[]>([]);
+const [stops, setStops] = useState<{ id: number; name: string; latitude: number; longitude: number }[]>([]);
   const [newStop, setNewStop] = useState('');
+  const [tempCoordinate, setTempCoordinate] = useState<any>(null);
 
   // --- DURAK VE HESAPLAMA FONKSİYONLARI ---
 
-  const addStop = () => {
-    if (newStop.trim() === '') return;
-    setStops([...stops, { id: Date.now(), name: newStop }]);
-    setNewStop('');
-  };
+
+  const handleMapPress = (e: any) => {
+  // Haritaya tıklandığında koordinatı temp state'e atar
+  setTempCoordinate(e.nativeEvent.coordinate);
+};
+
+const addStopFromMap = () => {
+  if (!tempCoordinate) return;
+  
+  const stopName = newStop || `Durak ${stops.length + 1}`;
+  setStops([...stops, { 
+    id: Date.now(), 
+    name: stopName, 
+    latitude: tempCoordinate.latitude, 
+    longitude: tempCoordinate.longitude 
+  }]);
+  
+  setTempCoordinate(null); // Seçimi sıfırla
+  setNewStop('');
+};
 
   const deleteStop = (id: number) => {
     setStops(stops.filter(stop => stop.id !== id));
@@ -127,10 +144,46 @@ export default function MyEventsScreen() {
           <Text style={styles.label}>Ara Duraklar</Text>
           <View style={styles.stopInputContainer}>
             <TextInput style={[styles.input, { flex: 1 }]} placeholder="Durak ekle..." value={newStop} onChangeText={setNewStop} />
-            <TouchableOpacity style={styles.addStopBtn} onPress={addStop}>
+            <TouchableOpacity style={styles.addStopBtn} onPress={addStopFromMap}>
               <Ionicons name="add" size={28} color="white" />
             </TouchableOpacity>
           </View>
+          {/* Harita Bölümü */}
+<Text style={styles.label}>Haritadan Durak Seç (Tıkla ve Ekle)</Text>
+<View style={styles.mapContainer}>
+  <MapView
+    style={styles.map}
+    initialRegion={{
+      latitude: 41.0082,
+      longitude: 28.9784,
+      latitudeDelta: 0.05,
+      longitudeDelta: 0.05,
+    }}
+    onPress={handleMapPress}
+  >
+    {/* Geçici İşaretçi (Yeşil) */}
+    {tempCoordinate && (
+      <Marker coordinate={tempCoordinate} pinColor="green" />
+    )}
+
+    {/* Kayıtlı Duraklar (Mavi) */}
+    {stops.map(stop => (
+      <Marker 
+        key={stop.id} 
+        coordinate={{ latitude: stop.latitude, longitude: stop.longitude }} 
+        title={stop.name}
+      />
+    ))}
+  </MapView>
+</View>
+
+{/* Eğer haritadan bir yer seçildiyse butonu göster */}
+{tempCoordinate && (
+  <TouchableOpacity style={styles.confirmMapBtn} onPress={addStopFromMap}>
+    <Ionicons name="checkmark-circle" size={20} color="white" />
+    <Text style={styles.confirmMapBtnText}>Bu Noktayı Durak Olarak Onayla</Text>
+  </TouchableOpacity>
+)}
 
           <View style={styles.stopList}>
             {stops.map((stop, index) => (
@@ -229,5 +282,32 @@ const styles = StyleSheet.create({
   backBtn: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   backBtnText: { color: '#007AFF', fontWeight: 'bold' },
   emptyContainer: { alignItems: 'center', marginTop: 100 },
-  emptyText: { marginTop: 10, color: '#999' }
+  emptyText: { marginTop: 10, color: '#999' },
+  mapContainer: { 
+  height: 300, 
+  width: '100%', 
+  borderRadius: 15, 
+  overflow: 'hidden', 
+  marginTop: 10,
+  borderWidth: 1,
+  borderColor: '#ddd'
+},
+map: { 
+  width: '100%', 
+  height: '100%' 
+},
+confirmMapBtn: { 
+  flexDirection: 'row',
+  backgroundColor: '#007AFF', 
+  padding: 12, 
+  borderRadius: 10, 
+  marginTop: 10, 
+  justifyContent: 'center',
+  alignItems: 'center',
+  gap: 8
+},
+confirmMapBtnText: { 
+  color: 'white', 
+  fontWeight: 'bold' 
+},
 });
