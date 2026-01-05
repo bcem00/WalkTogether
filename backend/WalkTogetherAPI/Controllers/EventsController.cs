@@ -158,4 +158,19 @@ public class EventsController : ControllerBase
             return StatusCode(500, ex.Message);
         }
     }
+
+    // POST: api/events/create
+    [HttpPost("create")]
+    public async Task<IActionResult> CreateEvent([FromBody] CreateEventRequest request)
+    {
+        try
+        {
+            var newEventId = await _eventService.CreateEventAsync(request);
+            return Ok(new { eventId = newEventId, message = "Event created successfully" });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 }

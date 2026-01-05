@@ -69,7 +69,7 @@ public class EventService
             .ToListAsync();
     }
 
-    // 7. Create a new event
+ 
     public async Task<Guid> CreateEventAsync(CreateEventRequest request)
     {
         var sql = "SELECT create_event(@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7)";
@@ -85,5 +85,5 @@ public class EventService
                 request.EstimatedDurationSeconds)
             .FirstOrDefaultAsync();
     }
-    
+
 }
