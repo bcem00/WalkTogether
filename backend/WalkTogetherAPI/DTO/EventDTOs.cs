@@ -5,7 +5,7 @@ namespace WalkTogetherAPI.DTO
         public Guid EventId { get; set; }
         public string Title { get; set; }
         public string Description { get; set; }
-        public DateTimeOffset StartDate { get; set; } // Matches DateTimeOffset in Entity
+        public DateTimeOffset StartDate { get; set; } 
         public int TotalDistanceMeters { get; set; }
         public string InvitationCode { get; set; }
         public string CreatorUsername { get; set; }
