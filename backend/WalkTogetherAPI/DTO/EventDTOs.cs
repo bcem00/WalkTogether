@@ -11,7 +11,7 @@ namespace WalkTogetherAPI.DTO
         public string CreatorUsername { get; set; }
         public bool IsCreator { get; set; }
 
-        // ✅ Add these two properties
+       
         public string? RoutePolyline { get; set; }
         public string? WaypointsJson { get; set; }
     }

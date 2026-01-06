@@ -21,13 +21,13 @@ BEGIN
         e.event_id,
         e.title,
         e.description,
-        e.start_date,  -- ensure this matches the return type above
+        e.start_date,  
         e.total_distance_meters,
         e.invitation_code,
         u.username AS creator_username,
         (e.creator_id = p_user_id) AS is_creator,
-        e.route_polyline,    -- ✅ Select the polyline
-        e.waypoints_json     -- ✅ Select the waypoints
+        e.route_polyline,    
+        e.waypoints_json     
     FROM 
         events e
     JOIN 

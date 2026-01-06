@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
-import React, { useCallback, useEffect, useRef, useState } from 'react'; // useRef ve useEffect eklendi
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Dimensions,
@@ -11,11 +11,37 @@ import {
   StyleSheet,
   Text, TouchableOpacity, View
 } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker, Polyline } from 'react-native-maps';
 import MapViewDirections from 'react-native-maps-directions';
 import { eventsApi } from '../apiClient';
 
-const { width, height } = Dimensions.get('window');
+// Helper to decode Google Polyline string into coordinates
+const decodePolyline = (t: string) => {
+  let points = [];
+  let index = 0, len = t.length;
+  let lat = 0, lng = 0;
+  while (index < len) {
+    let b, shift = 0, result = 0;
+    do {
+      b = t.charCodeAt(index++) - 63;
+      result |= (b & 0x1f) << shift;
+      shift += 5;
+    } while (b >= 0x20);
+    let dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
+    lat += dlat;
+    shift = 0;
+    result = 0;
+    do {
+      b = t.charCodeAt(index++) - 63;
+      result |= (b & 0x1f) << shift;
+      shift += 5;
+    } while (b >= 0x20);
+    let dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
+    lng += dlng;
+    points.push({ latitude: (lat / 1E5), longitude: (lng / 1E5) });
+  }
+  return points;
+};
 
 export default function JoinedEventsScreen() {
   const [events, setEvents] = useState<any[]>([]);
@@ -23,11 +49,11 @@ export default function JoinedEventsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
-  const [destinations, setDestinations] = useState<any[]>([]);
+  const [destinations, setDestinations] = useState<any[]>([]); // Markers
+  const [routeCoords, setRouteCoords] = useState<any[]>([]);   // The path line
   const [infoLoading, setInfoLoading] = useState(false);
+  
   const GOOGLE_MAPS_APIKEY = 'AIzaSyDFYEsvv3CUOa07f13Go1T2XKul0HbtfnU';
-  
-  
   const mapRef = useRef<MapView>(null);
 
   useFocusEffect(
@@ -36,15 +62,19 @@ export default function JoinedEventsScreen() {
     }, [])
   );
 
-  
   useEffect(() => {
-    if (destinations.length > 0 && mapRef.current) {
-      mapRef.current.fitToCoordinates(destinations, {
-        edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
-        animated: true,
-      });
+    // Zoom to fit markers + route when they change
+    if ((destinations.length > 0 || routeCoords.length > 0) && mapRef.current) {
+      // Create a combined list of points to ensure everything fits
+      const allPoints = [...destinations, ...routeCoords];
+      if(allPoints.length > 0) {
+        mapRef.current.fitToCoordinates(allPoints, {
+          edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
+          animated: true,
+        });
+      }
     }
-  }, [destinations]);
+  }, [destinations, routeCoords]);
 
   const fetchJoinedEvents = async () => {
     if (!refreshing) setLoading(true); 
@@ -63,49 +93,51 @@ export default function JoinedEventsScreen() {
   }, []);
 
   const handleOpenInfo = async (event: any) => {
-  // 1. Tıklanan kartın tüm içeriğini görelim (id mi geliyor event_id mi?)
-  console.log("--- KART TIKLANDI ---");
-  console.log("Gelen Event Objesi:", JSON.stringify(event, null, 2));
-    
-  setSelectedEvent(event);
-  setInfoLoading(true);
-  
-  // 2. ID tespiti
-  const eventId = event.event_id || event.id || event.eventId;
-  console.log("Tespit Edilen ID:", eventId);
+    setSelectedEvent(event);
+    setInfoLoading(true);
+    setRouteCoords([]); // Reset previous route
+    setDestinations([]); // Reset previous markers
 
-  if (!eventId) {
-    console.log("HATA: Obje içinde ID bulunamadı!");
+    // 1. Check if we already have the data in the event object (Saved in DB)
+    // Note: C# DTO sends 'waypointsJson' and 'routePolyline' (camelCase via JSON)
+    if (event.waypointsJson && event.routePolyline) {
+        console.log("Using Cached Data from DB");
+        try {
+            const parsedWaypoints = JSON.parse(event.waypointsJson);
+            setDestinations(parsedWaypoints);
+            
+            const decodedPath = decodePolyline(event.routePolyline);
+            setRouteCoords(decodedPath);
+            
+            setInfoLoading(false);
+            return; // EXIT EARLY - No API Call needed!
+        } catch (e) {
+            console.log("Error parsing local data, falling back to API", e);
+        }
+    }
+
+    // 2. Fallback: If no local data, fetch from API (Old logic)
+    const eventId = event.event_id || event.id || event.eventId;
+    if (!eventId) {
+      setInfoLoading(false);
+      return;
+    }
+
+    const result = await eventsApi.getDestinationsForEvent(eventId);
+    if (result.data) {
+      const mappedDestinations = result.data.map((d: any) => ({
+        ...d,
+        latitude: d.latitude || d.lat || d.Lat,
+        longitude: d.longitude || d.lng || d.Lng || d.Long,
+      })).sort((a: any, b: any) => a.order_in_route - b.order_in_route);
+
+      setDestinations(mappedDestinations);
+      // If falling back to API, we leave routeCoords empty so MapViewDirections runs
+    }
     setInfoLoading(false);
-    return;
-  }
+  };
 
-  // 3. API İsteği
-  console.log("API İsteği Atılıyor: /api/events/" + eventId + "/destinations");
-  const result = await eventsApi.getDestinationsForEvent(eventId);
-  
-  if (result.data) {
-    // 4. Gelen durak verisinin detaylı dökümü
-    console.log("API'den Gelen Durak Sayısı:", result.data.length);
-    console.log("Durak Verisi (İlk Eleman):", JSON.stringify(result.data[0], null, 2));
-
-    const mappedDestinations = result.data.map((d: any) => ({
-      ...d,
-      latitude: d.latitude || d.lat || d.Lat,
-      longitude: d.longitude || d.lng || d.Lng || d.Long,
-    })).sort((a: any, b: any) => a.order_in_route - b.order_in_route);
-
-    setDestinations(mappedDestinations);
-  } else {
-    // 5. Hata durumu (404, 500 veya boş dönme)
-    console.log("API HATASI VEYA BOŞ VERİ:", result.error || "Veri gelmedi");
-    setDestinations([]);
-  }
-  setInfoLoading(false);
-  console.log("--- İŞLEM TAMAMLANDI ---");
-};
-
-  // Rota hesaplamalarını daha güvenli hale getirdik
+  // Logic for MapViewDirections (Only used if routeCoords is empty)
   const origin = destinations.length > 0 ? { latitude: destinations[0].latitude, longitude: destinations[0].longitude } : null;
   const destination = destinations.length > 1 ? { latitude: destinations[destinations.length - 1].latitude, longitude: destinations[destinations.length - 1].longitude } : null;
   const waypoints = destinations.length > 2 ? destinations.slice(1, -1).map(d => ({ latitude: d.latitude, longitude: d.longitude })) : [];
@@ -115,13 +147,18 @@ export default function JoinedEventsScreen() {
       <View style={styles.cardTop}>
         <Text style={styles.cardTitle}>{item.title}</Text>
         <View style={styles.codeBadge}>
-          <Text style={styles.codeText}>{item.invitation_code}</Text>
+          <Text style={styles.codeText}>{item.invitationCode || item.invitation_code}</Text>
         </View>
       </View>
       <Text style={styles.cardDesc} numberOfLines={2}>{item.description}</Text>
       <View style={styles.cardBottom}>
         <Ionicons name="calendar-outline" size={14} color="#888" />
-        <Text style={styles.cardDate}>{new Date(item.start_date).toLocaleDateString('tr-TR')}</Text>
+        <Text style={styles.cardDate}>{new Date(item.startDate || item.start_date).toLocaleDateString('tr-TR')}</Text>
+        {item.totalDistanceMeters && (
+             <Text style={[styles.cardDate, { marginLeft: 10 }]}>
+               {(item.totalDistanceMeters / 1000).toFixed(2)} km
+             </Text>
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -153,7 +190,7 @@ export default function JoinedEventsScreen() {
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{selectedEvent?.title}</Text>
-              <TouchableOpacity onPress={() => { setSelectedEvent(null); setDestinations([]); }}>
+              <TouchableOpacity onPress={() => { setSelectedEvent(null); setDestinations([]); setRouteCoords([]); }}>
                 <Ionicons name="close-circle" size={32} color="#ccc" />
               </TouchableOpacity>
             </View>
@@ -165,7 +202,7 @@ export default function JoinedEventsScreen() {
                 <>
                   <View style={styles.mapBox}>
                     <MapView 
-                      ref={mapRef} // Ref buraya bağlandı
+                      ref={mapRef}
                       style={styles.map}
                       initialRegion={{
                         latitude: 41.0082,
@@ -173,33 +210,50 @@ export default function JoinedEventsScreen() {
                         latitudeDelta: 0.05, longitudeDelta: 0.05
                       }}
                     >
-                      {/* DURAK MARKERLARI */}
+                      {/* 1. MARKERS (ALWAYS SHOW) */}
                       {destinations.map((d, i) => (
-                        <Marker key={d.destination_id} coordinate={{latitude: d.latitude, longitude: d.longitude}}>
+                        <Marker key={i} coordinate={{latitude: d.latitude, longitude: d.longitude}}>
                            <View style={styles.markerBadge}><Text style={styles.markerText}>{i + 1}</Text></View>
                            <Ionicons name="location" size={26} color="#007AFF" />
                         </Marker>
                       ))}
 
-                      {/* YOL GÜZERGAHI */}
-                      {origin && destination && (
-                        <MapViewDirections
-                          origin={origin}
-                          destination={destination}
-                          waypoints={waypoints}
-                          apikey={GOOGLE_MAPS_APIKEY}
-                          strokeWidth={4} 
-                          strokeColor="#007AFF" 
-                          mode="WALKING"
-                          // Google bazen 2 durak arası çok yakınsa hata verebilir, onReady ile mesafeyi loglayabilirsin
+                      {/* 2. ROUTE: IF WE HAVE CACHED POLYLINE, USE IT (FASTER) */}
+                      {routeCoords.length > 0 ? (
+                        <Polyline 
+                           coordinates={routeCoords}
+                           strokeWidth={4}
+                           strokeColor="#007AFF"
                         />
+                      ) : (
+                      // 3. FALLBACK: IF NO POLYLINE, CALCULATE IT LIVE
+                        origin && destination && (
+                          <MapViewDirections
+                            origin={origin}
+                            destination={destination}
+                            waypoints={waypoints}
+                            apikey={GOOGLE_MAPS_APIKEY}
+                            strokeWidth={4} 
+                            strokeColor="#007AFF" 
+                            mode="WALKING"
+                          />
+                        )
                       )}
                     </MapView>
                   </View>
+                  
                   <View style={styles.detailRow}>
                     <Text style={styles.detailLabel}>Davet Kodu:</Text>
-                    <Text style={styles.detailValue}>{selectedEvent?.invitation_code}</Text>
+                    <Text style={styles.detailValue}>{selectedEvent?.invitationCode || selectedEvent?.invitation_code}</Text>
                   </View>
+                  
+                  {selectedEvent?.totalDistanceMeters && (
+                    <View style={styles.detailRow}>
+                        <Text style={styles.detailLabel}>Mesafe:</Text>
+                        <Text style={styles.detailValue}>{(selectedEvent.totalDistanceMeters / 1000).toFixed(2)} km</Text>
+                    </View>
+                  )}
+
                   <Text style={styles.detailDesc}>{selectedEvent?.description}</Text>
                 </>
               )}

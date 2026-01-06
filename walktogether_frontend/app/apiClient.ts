@@ -7,6 +7,21 @@ interface ApiResponse<T> {
   error?: string;
 }
 
+export interface EventResponse {
+  eventId: string; // C# DTO 'EventId' becomes 'eventId' in JSON
+  title: string;
+  description: string;
+  startDate: string;
+  invitationCode: string;
+  creatorUsername: string;
+  isCreator: boolean;
+  
+  // ✅ New fields for map rendering
+  routePolyline?: string;
+  waypointsJson?: string;
+  totalDistanceMeters?: number;
+}
+
 // JWT decode helper (handles base64url)
 const decodeJWT = (token: string) => {
   try {
@@ -161,7 +176,7 @@ export const eventsApi = {
   createRoute: async (eventId: string, waypoints: Array<{ latitude: number; longitude: number }>, token?: string) => {
     let headers: Record<string, string> = {};
     
-    // Use provided token or fall back to stored token
+    
     if (token) {
       headers.Authorization = `Bearer ${token}`;
     } else {
@@ -172,7 +187,7 @@ export const eventsApi = {
     return apiRequest<{ message: string; polyline: string; distance: number }>(`/api/events/${eventId}/create-route`, {
       method: 'POST',
       headers: { ...headers, 'Content-Type': 'application/json' },
-      body: JSON.stringify(waypoints), // Now sends [{ latitude: ..., longitude: ... }]
+      body: JSON.stringify(waypoints), 
     });
   },
 
@@ -195,7 +210,17 @@ export const eventsApi = {
   },
 
   getEventsByUsername: async (username: string) => {
-    return apiRequest<Array<{ id: string; title: string; description: string; start_date: string; invitation_code: string; creator_id: string }>>(`/api/events/user/${username}`);
+    return apiRequest<EventResponse[]>(`/api/events/user/${username}`);
+  },
+
+  getEventsById: async (userId: string) => {
+    // We also need to send the Authorization header here, handled by apiRequest logic 
+    // but ensure your getAuthHeaders() logic wraps this if needed, 
+    // or rely on the apiRequest helper if you've set it up to auto-attach tokens.
+    const headers = await getAuthHeaders();
+    return apiRequest<EventResponse[]>(`/api/events/user-id/${userId}`, {
+       headers: headers || {} 
+    });
   },
 
   filterEventsByDistance: async (minDist: number, maxDist: number) => {

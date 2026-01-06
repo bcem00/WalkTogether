@@ -78,7 +78,7 @@ export default function CreateEventScreen() {
         StartDate: startDate.toISOString(),
       };
 
-      // 1. Send data to Backend
+      
       const createResult = await eventsApi.createEvent(eventData);
 
       if (!createResult.data) {
@@ -98,7 +98,7 @@ export default function CreateEventScreen() {
       const routeResult = await eventsApi.createRoute(eventId, waypoints, token || undefined);
 
       if (routeResult.data) {
-        // 3. Show the code ONLY now, after successful creation
+        
         Alert.alert(
           "Başarılı", 
           `Etkinlik oluşturuldu!\n\nDavet Kodunuz: ${backendGeneratedCode}`,
