@@ -2,8 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using WalkTogetherAPI.DTO;
-// Make sure to include the namespace where AuthService is located
-// using WalkTogetherAPI.Services; 
+
 
 namespace WalkTogetherAPI.Controllers
 {

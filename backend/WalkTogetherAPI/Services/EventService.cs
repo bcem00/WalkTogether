@@ -15,12 +15,20 @@ public class EventService
         _context = context;
     }
 
-    // 1. Get events created by a user
+
     public async Task<List<EventSummary>> GetEventsByUsernameAsync(string username)
     {
         var sql = "SELECT * FROM get_events_by_username(@p0) AS \"Value\"";
         return await _context.Database
             .SqlQueryRaw<EventSummary>(sql, username)
+            .ToListAsync();
+    }
+    
+    public async Task<List<EventSummary>> GetEventsByUserIdAsync(Guid userId)
+    {
+        var sql = "SELECT * FROM get_events_by_user_id(@p0) AS \"Value\"";
+        return await _context.Database
+            .SqlQueryRaw<EventSummary>(sql, userId)
             .ToListAsync();
     }
 

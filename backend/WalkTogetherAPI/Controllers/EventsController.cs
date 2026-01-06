@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using System.Text.Json;
 using WalkTogether.Data;
 using WalkTogetherAPI.DTO;
 using WalkTogetherAPI.DTO.GoogleRoutes;
 using WalkTogetherAPI.Services;
 
+[Authorize] 
 [Route("api/[controller]")]
 [ApiController]
 public class EventsController : ControllerBase
@@ -20,17 +23,66 @@ public class EventsController : ControllerBase
         _eventService = eventService;
     }
 
-    // POST: api/events/{id}/create-route
+    
+    [HttpGet("user-id/{userId}")]
+    public async Task<IActionResult> GetEventsByUserId(Guid userId)
+    {
+        // Security Check: Is the requester the actual user?
+        if (!ValidateUserAccess(userId)) return Forbid();
+
+        try
+        {
+            var events = await _eventService.GetEventsByUserIdAsync(userId);
+            return Ok(events);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
+    
+    [HttpPost("create")]
+    public async Task<IActionResult> CreateEvent([FromBody] CreateEventRequest request)
+    {
+        
+        if (!ValidateUserAccess(request.CreatorId)) return Forbid();
+
+        try
+        {
+            var newEventId = await _eventService.CreateEventAsync(request);
+
+            
+            var createdEvent = await _eventService.GetEventByIdAsync(newEventId);
+
+            return Ok(new
+            {
+                eventId = newEventId,
+                message = "Event created successfully",
+                invitationCode = createdEvent?.InvitationCode
+            });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    
     [HttpPost("{eventId}/create-route")]
     public async Task<IActionResult> CreateRoute(Guid eventId, [FromBody] List<LatLng> waypoints)
     {
         // 1. Validate Event
-        var eventEntity = await _context.Events.FindAsync(eventId);
+        var eventEntity = await _eventService.GetEventByIdAsync(eventId);
         if (eventEntity == null) return NotFound("Event not found");
+
+        // 2. Security Check: Only the Creator can modify the route
+        if (!ValidateUserAccess(eventEntity.CreatorId))
+            return StatusCode(403, "Only the event creator can add a route.");
 
         try
         {
-            // 2. Call Google Routes API
+            // 3. Call Google Routes API
             var routeResult = await _routeService.ComputeRouteAsync(waypoints);
 
             if (routeResult?.Routes == null || !routeResult.Routes.Any())
@@ -38,14 +90,9 @@ public class EventsController : ControllerBase
 
             var bestRoute = routeResult.Routes.First();
 
-            // 3. Save Data to Database
+            // 4. Save Data
             eventEntity.RoutePolyline = bestRoute.Polyline.EncodedPolyline;
             eventEntity.TotalDistanceMeters = bestRoute.DistanceMeters;
-
-            // Duration comes as "1234s", verify format parsing if needed
-            // eventEntity.EstimatedDurationSeconds = ... 
-
-            // Save the raw waypoints too, so the user can "Edit" the stops later
             eventEntity.WaypointsJson = JsonSerializer.Serialize(waypoints);
 
             await _context.SaveChangesAsync();
@@ -63,25 +110,13 @@ public class EventsController : ControllerBase
         }
     }
 
-    // GET: api/events/upcoming
-    [HttpGet("upcoming")]
-    public async Task<IActionResult> GetUpcomingEvents()
-    {
-        try
-        {
-            var events = await _eventService.GetUpcomingEventsAsync();
-            return Ok(events);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, ex.Message);
-        }
-    }
-
     // POST: api/events/join
     [HttpPost("join")]
     public async Task<IActionResult> JoinEvent([FromBody] JoinEventRequest request)
     {
+        // Security Check
+        if (!ValidateUserAccess(request.UserId)) return Forbid();
+
         try
         {
             var success = await _eventService.JoinEventByCodeAsync(request.UserId, request.InviteCode);
@@ -100,6 +135,9 @@ public class EventsController : ControllerBase
     [HttpPost("leave")]
     public async Task<IActionResult> LeaveEvent([FromBody] LeaveEventRequest request)
     {
+        // Security Check
+        if (!ValidateUserAccess(request.UserId)) return Forbid();
+
         try
         {
             var success = await _eventService.LeaveEventAsync(request.UserId, request.EventId);
@@ -111,6 +149,25 @@ public class EventsController : ControllerBase
         catch (Exception ex)
         {
             return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    // ==================================================================================
+    // 🔓 GENERAL AUTHENTICATED ENDPOINTS (Requires Login, but no specific ID check)
+    // ==================================================================================
+
+    // GET: api/events/upcoming
+    [HttpGet("upcoming")]
+    public async Task<IActionResult> GetUpcomingEvents()
+    {
+        try
+        {
+            var events = await _eventService.GetUpcomingEventsAsync();
+            return Ok(events);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
         }
     }
 
@@ -159,18 +216,19 @@ public class EventsController : ControllerBase
         }
     }
 
-    // POST: api/events/create
-    [HttpPost("create")]
-    public async Task<IActionResult> CreateEvent([FromBody] CreateEventRequest request)
+    // ==================================================================================
+    // 🛠️ HELPER METHODS
+    // ==================================================================================
+
+    /// <summary>
+    /// Checks if the logged-in user (from Token) matches the requested User ID.
+    /// </summary>
+    private bool ValidateUserAccess(Guid requestUserId)
     {
-        try
-        {
-            var newEventId = await _eventService.CreateEventAsync(request);
-            return Ok(new { eventId = newEventId, message = "Event created successfully", invitationCode = (await _eventService.GetEventByIdAsync(newEventId))?.InvitationCode.ToString() });
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        var userIdFromToken = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (userIdFromToken == null) return false;
+
+        return userIdFromToken == requestUserId.ToString();
     }
 }

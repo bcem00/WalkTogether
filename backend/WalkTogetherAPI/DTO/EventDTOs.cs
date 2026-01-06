@@ -2,11 +2,14 @@ namespace WalkTogetherAPI.DTO
 {
     public class EventSummary
     {
-        public string title { get; set; }
-        public string description { get; set; }
-        public DateTime start_date { get; set; }
-        public string invitation_code { get; set; }
-        public Guid creator_id { get; set; }
+        public Guid EventId { get; set; }
+        public string Title { get; set; }
+        public string Description { get; set; }
+        public DateTime StartDate { get; set; }
+        public int TotalDistanceMeters { get; set; }
+        public string InvitationCode { get; set; }
+        public string CreatorUsername { get; set; }
+        public bool IsCreator { get; set; } 
     }
 
     public class UpcomingEvent
@@ -61,4 +64,6 @@ namespace WalkTogetherAPI.DTO
         public int? TotalDistanceMeters { get; set; }
         public int? EstimatedDurationSeconds { get; set; }
     }
+
+    
 }
