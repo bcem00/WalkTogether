@@ -69,7 +69,7 @@ public class EventService
             .ToListAsync();
     }
 
- 
+
     public async Task<Guid> CreateEventAsync(CreateEventRequest request)
     {
         var sql = "SELECT create_event(@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7) AS \"Value\"";
@@ -84,6 +84,12 @@ public class EventService
                 request.TotalDistanceMeters,
                 request.EstimatedDurationSeconds)
             .FirstOrDefaultAsync();
+    }
+
+    
+    public async Task<WalkTogether.Domain.Entities.Event> GetEventByIdAsync(Guid eventId)
+    {
+        return await _context.Events.FindAsync(eventId);
     }
 
 }

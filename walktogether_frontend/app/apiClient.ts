@@ -207,7 +207,7 @@ export const eventsApi = {
   },
 
   createEvent: async (eventData: { CreatorId?: string; Title: string; Description?: string; StartDate: string; RoutePolyline?: string; WaypointsJson?: string; TotalDistanceMeters?: number; EstimatedDurationSeconds?: number }) => {
-    return apiRequest<{ eventId: string; message: string }>('/api/events/create', {
+    return apiRequest<{ eventId: string; message: string, invitationCode: string }>('/api/events/create', {
       method: 'POST',
       body: JSON.stringify(eventData),
     });

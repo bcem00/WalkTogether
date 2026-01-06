@@ -27,7 +27,7 @@ export default function JoinedEventsScreen() {
   const [infoLoading, setInfoLoading] = useState(false);
   const GOOGLE_MAPS_APIKEY = 'AIzaSyDFYEsvv3CUOa07f13Go1T2XKul0HbtfnU';
   
-  // Haritayı programatik olarak kontrol etmek için Ref
+  
   const mapRef = useRef<MapView>(null);
 
   useFocusEffect(
@@ -36,7 +36,7 @@ export default function JoinedEventsScreen() {
     }, [])
   );
 
-  // Duraklar değiştiğinde haritayı rotaya sığdır
+  
   useEffect(() => {
     if (destinations.length > 0 && mapRef.current) {
       mapRef.current.fitToCoordinates(destinations, {

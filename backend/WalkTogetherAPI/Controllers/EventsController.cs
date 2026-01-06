@@ -166,7 +166,7 @@ public class EventsController : ControllerBase
         try
         {
             var newEventId = await _eventService.CreateEventAsync(request);
-            return Ok(new { eventId = newEventId, message = "Event created successfully" });
+            return Ok(new { eventId = newEventId, message = "Event created successfully", invitationCode = (await _eventService.GetEventByIdAsync(newEventId))?.InvitationCode.ToString() });
         }
         catch (Exception ex)
         {

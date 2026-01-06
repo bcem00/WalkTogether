@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   ActivityIndicator, Alert, ScrollView, StyleSheet,
   Text, TextInput, TouchableOpacity, View
@@ -17,24 +17,14 @@ export default function CreateEventScreen() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [startDate, setStartDate] = useState(new Date());
-  const [invitationCode, setInvitationCode] = useState('');
   
-  // Seçici state'leri
+  // Selector states
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false); 
   
   const [stops, setStops] = useState<{ id: number; latitude: number; longitude: number }[]>([]);
   const [tempCoordinate, setTempCoordinate] = useState<any>(null);
   const [routeDistance, setRouteDistance] = useState(0);
-
-  useEffect(() => {
-    generateInviteCode();
-  }, []);
-
-  const generateInviteCode = () => {
-    const code = Math.random().toString(36).substring(2, 10).toUpperCase();
-    setInvitationCode(code);
-  };
 
   const handleMapPress = (e: any) => setTempCoordinate(e.nativeEvent.coordinate);
 
@@ -69,6 +59,7 @@ export default function CreateEventScreen() {
     }
 
     setLoading(true);
+
     try {
       const creatorId = await AsyncStorage.getItem('userId');
       const token = await AsyncStorage.getItem('userToken');
@@ -78,14 +69,16 @@ export default function CreateEventScreen() {
         return;
       }
 
+
+
       const eventData = {
         CreatorId: creatorId,
         Title: title,
         Description: description,
-        // toISOString() hem tarihi hem ayarladığımız saati backend'e gönderir
         StartDate: startDate.toISOString(),
       };
 
+      // 1. Send data to Backend
       const createResult = await eventsApi.createEvent(eventData);
 
       if (!createResult.data) {
@@ -94,6 +87,9 @@ export default function CreateEventScreen() {
       }
 
       const eventId = createResult.data.eventId;
+      
+      const backendGeneratedCode = createResult.data.invitationCode;
+
       const waypoints = stops.map(s => ({
         latitude: s.latitude,
         longitude: s.longitude
@@ -102,8 +98,17 @@ export default function CreateEventScreen() {
       const routeResult = await eventsApi.createRoute(eventId, waypoints, token || undefined);
 
       if (routeResult.data) {
-        Alert.alert("Başarılı", `Etkinlik oluşturuldu! Davet Kodunuz: ${invitationCode}`);
-        resetForm();
+        // 3. Show the code ONLY now, after successful creation
+        Alert.alert(
+          "Başarılı", 
+          `Etkinlik oluşturuldu!\n\nDavet Kodunuz: ${backendGeneratedCode}`,
+          [
+            { 
+              text: "Tamam", 
+              onPress: () => resetForm() 
+            }
+          ]
+        );
       } else {
         Alert.alert("Hata", routeResult.error || "Rota kaydedilemedi.");
       }
@@ -117,7 +122,7 @@ export default function CreateEventScreen() {
 
   const resetForm = () => {
     setTitle(''); setDescription(''); setStops([]);
-    setRouteDistance(0); setStartDate(new Date()); generateInviteCode();
+    setRouteDistance(0); setStartDate(new Date()); 
   };
 
   return (
@@ -149,7 +154,6 @@ export default function CreateEventScreen() {
             </TouchableOpacity>
           </View>
           
-          {/* SAAT SEÇİM BUTONU */}
           <View style={{ flex: 1, marginLeft: 15 }}>
             <Text style={styles.label}>Saat</Text>
             <TouchableOpacity style={styles.dateBtn} onPress={() => setShowTimePicker(true)}>
@@ -161,7 +165,6 @@ export default function CreateEventScreen() {
           </View>
         </View>
 
-        {/* TARİH SEÇİCİ */}
         {showDatePicker && (
           <DateTimePicker 
             value={startDate} 
@@ -178,7 +181,6 @@ export default function CreateEventScreen() {
           />
         )}
 
-        {/* SAAT SEÇİCİ */}
         {showTimePicker && (
           <DateTimePicker 
             value={startDate} 
@@ -195,12 +197,7 @@ export default function CreateEventScreen() {
           />
         )}
 
-        <View style={{ marginTop: 15 }}>
-            <Text style={styles.label}>Davet Kodu</Text>
-            <View style={styles.codeDisplay}>
-                <Text style={styles.codeText}>{invitationCode}</Text>
-            </View>
-        </View>
+        {/* The Invitation Code View has been removed from here */}
 
         <Text style={styles.label}>Rota ve Durakları Belirle (Haritaya Tıkla)</Text>
         <View style={styles.mapBox}>
@@ -291,8 +288,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center' },
   dateBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f5f5f5', padding: 12, borderRadius: 10, gap: 10 },
   dateText: { fontWeight: 'bold', color: '#333', fontSize: 14 },
-  codeDisplay: { backgroundColor: '#E3F2FD', padding: 12, borderRadius: 10, alignItems: 'center', borderWidth: 1, borderColor: '#007AFF', borderStyle: 'dashed' },
-  codeText: { fontWeight: 'bold', color: '#007AFF', letterSpacing: 1 },
+  // Removed codeDisplay and codeText styles as they are no longer used
   mapBox: { height: 300, borderRadius: 15, overflow: 'hidden', marginTop: 10, borderWidth: 1, borderColor: '#eee' },
   map: { width: '100%', height: '100%' },
   confirmBtn: { backgroundColor: '#FF9500', padding: 12, borderRadius: 10, marginTop: 10, alignItems: 'center' },
