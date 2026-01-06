@@ -1,0 +1,20 @@
+-- 1. Önce Fonksiyonu Tanımlayalım
+CREATE OR REPLACE FUNCTION check_badge_eligibility()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    -- Eğer yeni puan 1000'den büyükse VE kullanıcının henüz rozeti yoksa
+    IF NEW.motivation_point >= 1000 AND OLD.has_badge = FALSE THEN
+        NEW.has_badge := TRUE;
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+-- 2. Sonra Trigger'ı Tabloya Bağlayalım
+CREATE TRIGGER trg_award_badge
+BEFORE UPDATE ON users
+FOR EACH ROW
+WHEN (OLD.motivation_point < 1000 AND NEW.motivation_point >= 1000) -- Sadece baraj geçildiğinde çalışsın
+EXECUTE FUNCTION check_badge_eligibility();

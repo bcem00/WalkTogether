@@ -32,15 +32,31 @@ CREATE TABLE IF NOT EXISTS users (
     has_badge BOOLEAN DEFAULT FALSE
 );
 
+
+-- ON DELETE RESTRICT
+ALTER TABLE users
+ADD CONSTRAINT fk_users_roles
+FOREIGN KEY (role_id) REFERENCES roles(role_id)
+ON DELETE RESTRICT; -- İşte kısıt burada
+
 -- 4. ROUTES (UUID'ye geçildi)
 CREATE TABLE IF NOT EXISTS routes (
     route_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     distance INTEGER DEFAULT 0
 );
 
+-- Sayı Kısıtlaması
+ALTER TABLE routes
+ADD CONSTRAINT check_distance_positive
+CHECK (distance > 0);
+
 -- 5. EVENTS (UUID'ye geçildi)
+-- Sequence for event numbering (for display/reference purposes)
+CREATE SEQUENCE IF NOT EXISTS event_number_seq START 1000;
+
 CREATE TABLE IF NOT EXISTS events (
     event_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    event_number INTEGER UNIQUE DEFAULT nextval('event_number_seq'), -- Human-readable event number
     creator_id UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
     route_id UUID REFERENCES routes(route_id) ON DELETE SET NULL,
     title VARCHAR(150) NOT NULL,
