@@ -117,3 +117,9 @@ TestResults/
 coverage/
 *.coverage
 *.coveragexml
+*.cache
+*.editorconfig
+*.props
+backend/WalkTogetherAPI/obj/WalkTogetherAPI.csproj.nuget.g.props
+backend/WalkTogetherAPI/obj/WalkTogetherAPI.csproj.nuget.dgspec.json
+*.cache

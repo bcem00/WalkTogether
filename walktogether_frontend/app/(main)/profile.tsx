@@ -8,6 +8,9 @@ import {
   Text, TextInput, TouchableOpacity, View
 } from 'react-native';
 import { authApi } from '../apiClient';
+import { routeToScreen } from 'expo-router/build/useScreens';
+import { Route } from 'expo-router/build/Route';
+import { router } from 'expo-router';
 
 export default function ProfileScreen() {
   const [loading, setLoading] = useState(true);
@@ -80,7 +83,7 @@ export default function ProfileScreen() {
     // Tüm verileri temizle ve çıkış yap
     await AsyncStorage.clear();
     Alert.alert("Çıkış Yapıldı", "Oturumunuz sonlandırıldı.");
-    // Uygulama rotasına göre yönlendirme eklenebilir
+    router.replace('/');
   };
 
   if (loading) return <ActivityIndicator style={{ flex: 1 }} />;
