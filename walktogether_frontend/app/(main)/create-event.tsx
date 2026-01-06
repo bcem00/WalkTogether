@@ -288,7 +288,6 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center' },
   dateBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f5f5f5', padding: 12, borderRadius: 10, gap: 10 },
   dateText: { fontWeight: 'bold', color: '#333', fontSize: 14 },
-  // Removed codeDisplay and codeText styles as they are no longer used
   mapBox: { height: 300, borderRadius: 15, overflow: 'hidden', marginTop: 10, borderWidth: 1, borderColor: '#eee' },
   map: { width: '100%', height: '100%' },
   confirmBtn: { backgroundColor: '#FF9500', padding: 12, borderRadius: 10, marginTop: 10, alignItems: 'center' },

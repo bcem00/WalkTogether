@@ -1,17 +1,17 @@
--- Drop the function if it already exists to ensure a clean update
 DROP FUNCTION IF EXISTS get_events_by_user_id(UUID);
 
--- Create the function
 CREATE OR REPLACE FUNCTION get_events_by_user_id(p_user_id UUID)
 RETURNS TABLE (
     event_id UUID,
     title VARCHAR,
     description TEXT,
-    start_date TIMESTAMP,
+    start_date TIMESTAMP, -- or TIMESTAMP WITH TIME ZONE depending on your DB setup
     total_distance_meters INT,
     invitation_code VARCHAR,
     creator_username VARCHAR,
-    is_creator BOOLEAN  
+    is_creator BOOLEAN,
+    route_polyline VARCHAR,  -- ✅ Added
+    waypoints_json VARCHAR   -- ✅ Added
 )
 LANGUAGE plpgsql
 AS $$
@@ -21,11 +21,13 @@ BEGIN
         e.event_id,
         e.title,
         e.description,
-        e.start_date,
+        e.start_date,  -- ensure this matches the return type above
         e.total_distance_meters,
         e.invitation_code,
         u.username AS creator_username,
-        (e.creator_id = p_user_id) AS is_creator
+        (e.creator_id = p_user_id) AS is_creator,
+        e.route_polyline,    -- ✅ Select the polyline
+        e.waypoints_json     -- ✅ Select the waypoints
     FROM 
         events e
     JOIN 
@@ -33,8 +35,8 @@ BEGIN
     LEFT JOIN 
         event_participants ep ON e.event_id = ep.event_id
     WHERE 
-        e.creator_id = p_user_id   
+        e.creator_id = p_user_id 
         OR 
-        ep.user_id = p_user_id;    
+        ep.user_id = p_user_id;
 END;
 $$;

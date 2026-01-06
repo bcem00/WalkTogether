@@ -27,7 +27,7 @@ public class EventsController : ControllerBase
     [HttpGet("user-id/{userId}")]
     public async Task<IActionResult> GetEventsByUserId(Guid userId)
     {
-        // Security Check: Is the requester the actual user?
+        
         if (!ValidateUserAccess(userId)) return Forbid();
 
         try
@@ -59,7 +59,7 @@ public class EventsController : ControllerBase
             {
                 eventId = newEventId,
                 message = "Event created successfully",
-                invitationCode = createdEvent?.InvitationCode
+                invitationCode = createdEvent?.InvitationCode.ToString()
             });
         }
         catch (Exception ex)

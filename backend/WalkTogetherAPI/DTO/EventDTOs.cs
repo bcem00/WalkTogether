@@ -5,11 +5,15 @@ namespace WalkTogetherAPI.DTO
         public Guid EventId { get; set; }
         public string Title { get; set; }
         public string Description { get; set; }
-        public DateTime StartDate { get; set; }
+        public DateTimeOffset StartDate { get; set; } // Matches DateTimeOffset in Entity
         public int TotalDistanceMeters { get; set; }
         public string InvitationCode { get; set; }
         public string CreatorUsername { get; set; }
-        public bool IsCreator { get; set; } 
+        public bool IsCreator { get; set; }
+
+        // ✅ Add these two properties
+        public string? RoutePolyline { get; set; }
+        public string? WaypointsJson { get; set; }
     }
 
     public class UpcomingEvent
