@@ -123,3 +123,6 @@ coverage/
 backend/WalkTogetherAPI/obj/WalkTogetherAPI.csproj.nuget.g.props
 backend/WalkTogetherAPI/obj/WalkTogetherAPI.csproj.nuget.dgspec.json
 *.cache
+*.cache
+*.editorconfig
+*.props

@@ -3427,25 +3427,49 @@
     ]
   },
   "packageFolders": {
+<<<<<<< Updated upstream
     "/Users/semih/.nuget/packages/": {}
+=======
+    "C:\\Users\\ARTEMIS\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
+>>>>>>> Stashed changes
   },
   "project": {
     "version": "1.0.0",
     "restore": {
+<<<<<<< Updated upstream
       "projectUniqueName": "/Users/semih/Documents/Projects/WalkTogether/backend/WalkTogetherAPI/WalkTogetherAPI.csproj",
       "projectName": "WalkTogetherAPI",
       "projectPath": "/Users/semih/Documents/Projects/WalkTogether/backend/WalkTogetherAPI/WalkTogetherAPI.csproj",
       "packagesPath": "/Users/semih/.nuget/packages/",
       "outputPath": "/Users/semih/Documents/Projects/WalkTogether/backend/WalkTogetherAPI/obj/",
+=======
+      "projectUniqueName": "C:\\Users\\ARTEMIS\\WalkTogether\\backend\\WalkTogetherAPI\\WalkTogetherAPI.csproj",
+      "projectName": "WalkTogetherAPI",
+      "projectPath": "C:\\Users\\ARTEMIS\\WalkTogether\\backend\\WalkTogetherAPI\\WalkTogetherAPI.csproj",
+      "packagesPath": "C:\\Users\\ARTEMIS\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\ARTEMIS\\WalkTogether\\backend\\WalkTogetherAPI\\obj\\",
+>>>>>>> Stashed changes
       "projectStyle": "PackageReference",
       "configFilePaths": [
+<<<<<<< Updated upstream
         "/Users/semih/.nuget/NuGet/NuGet.Config"
+=======
+        "C:\\Users\\ARTEMIS\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+>>>>>>> Stashed changes
       ],
       "originalTargetFrameworks": [
         "net9.0"
       ],
       "sources": {
+<<<<<<< Updated upstream
         "/opt/homebrew/Cellar/dotnet/9.0.101/libexec/library-packs": {},
+=======
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "C:\\Program Files\\dotnet\\library-packs": {},
+>>>>>>> Stashed changes
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -3464,7 +3488,11 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
+<<<<<<< Updated upstream
       "SdkAnalysisLevel": "9.0.100"
+=======
+      "SdkAnalysisLevel": "9.0.300"
+>>>>>>> Stashed changes
     },
     "frameworks": {
       "net9.0": {
@@ -3540,7 +3568,11 @@
             "privateAssets": "all"
           }
         },
+<<<<<<< Updated upstream
         "runtimeIdentifierGraphPath": "/opt/homebrew/Cellar/dotnet/9.0.101/libexec/sdk/9.0.101/PortableRuntimeIdentifierGraph.json"
+=======
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.301/PortableRuntimeIdentifierGraph.json"
+>>>>>>> Stashed changes
       }
     }
   }
