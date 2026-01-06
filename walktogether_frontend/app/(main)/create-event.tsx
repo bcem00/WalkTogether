@@ -8,25 +8,25 @@ import {
 } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import MapViewDirections from 'react-native-maps-directions';
-import { eventsApi } from '../apiClient'; //
+import { eventsApi } from '../apiClient';
 
 export default function CreateEventScreen() {
   const [loading, setLoading] = useState(false);
   const GOOGLE_MAPS_APIKEY = 'AIzaSyDFYEsvv3CUOa07f13Go1T2XKul0HbtfnU';
 
-  // --- DB ALANLARIYLA UYUMLU STATE'LER ---
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [startDate, setStartDate] = useState(new Date());
   const [invitationCode, setInvitationCode] = useState('');
-  const [showDatePicker, setShowDatePicker] = useState(false);
   
-  // Rota ve Durak State'leri
+  // Seçici state'leri
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false); 
+  
   const [stops, setStops] = useState<{ id: number; latitude: number; longitude: number }[]>([]);
   const [tempCoordinate, setTempCoordinate] = useState<any>(null);
   const [routeDistance, setRouteDistance] = useState(0);
 
-  // Sayfa açıldığında otomatik Davet Kodu oluştur
   useEffect(() => {
     generateInviteCode();
   }, []);
@@ -36,7 +36,6 @@ export default function CreateEventScreen() {
     setInvitationCode(code);
   };
 
-  // Harita Fonksiyonları
   const handleMapPress = (e: any) => setTempCoordinate(e.nativeEvent.coordinate);
 
   const addStopFromMap = () => {
@@ -49,7 +48,20 @@ export default function CreateEventScreen() {
     setTempCoordinate(null);
   };
 
-  // --- KRİTİK BACKEND BAĞLANTISI ---
+  const moveStop = (index: number, direction: 'up' | 'down') => {
+    const newStops = [...stops];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= stops.length) return;
+
+    [newStops[index], newStops[targetIndex]] = [newStops[targetIndex], newStops[index]];
+    setStops(newStops);
+  };
+
+  const removeStop = (index: number) => {
+    const newStops = stops.filter((_, i) => i !== index);
+    setStops(newStops);
+  };
+
   const handleCreateEvent = async () => {
     if (!title.trim() || stops.length < 2) {
       Alert.alert("Hata", "Lütfen bir başlık girin ve en az 2 durak seçin.");
@@ -66,13 +78,12 @@ export default function CreateEventScreen() {
         return;
       }
 
-      // 1. Etkinliği Oluştur
       const eventData = {
         CreatorId: creatorId,
         Title: title,
         Description: description,
+        // toISOString() hem tarihi hem ayarladığımız saati backend'e gönderir
         StartDate: startDate.toISOString(),
-        // Diğer alanlar backend tarafından hesaplanacağı için undefined/null gönderilebilir
       };
 
       const createResult = await eventsApi.createEvent(eventData);
@@ -83,13 +94,9 @@ export default function CreateEventScreen() {
       }
 
       const eventId = createResult.data.eventId;
-
-      // 2. Rotayı Oluştur
-      // FIX: 'lat'/'lng' yerine 'latitude'/'longitude' kullanın.
-      // Backend DTO'su (LatLng class) tam olarak bu isimleri bekliyor.
       const waypoints = stops.map(s => ({
-        latitude: s.latitude,  // lat -> latitude
-        longitude: s.longitude // lng -> longitude
+        latitude: s.latitude,
+        longitude: s.longitude
       }));
 
       const routeResult = await eventsApi.createRoute(eventId, waypoints, token || undefined);
@@ -110,7 +117,7 @@ export default function CreateEventScreen() {
 
   const resetForm = () => {
     setTitle(''); setDescription(''); setStops([]);
-    setRouteDistance(0); generateInviteCode();
+    setRouteDistance(0); setStartDate(new Date()); generateInviteCode();
   };
 
   return (
@@ -135,28 +142,65 @@ export default function CreateEventScreen() {
 
         <View style={styles.row}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.label}>Başlangıç Tarihi</Text>
+            <Text style={styles.label}>Tarih</Text>
             <TouchableOpacity style={styles.dateBtn} onPress={() => setShowDatePicker(true)}>
               <Ionicons name="calendar-outline" size={18} color="#007AFF" />
               <Text style={styles.dateText}>{startDate.toLocaleDateString('tr-TR')}</Text>
             </TouchableOpacity>
           </View>
+          
+          {/* SAAT SEÇİM BUTONU */}
           <View style={{ flex: 1, marginLeft: 15 }}>
-            <Text style={styles.label}>Davet Kodu</Text>
-            <View style={styles.codeDisplay}>
-              <Text style={styles.codeText}>{invitationCode}</Text>
-            </View>
+            <Text style={styles.label}>Saat</Text>
+            <TouchableOpacity style={styles.dateBtn} onPress={() => setShowTimePicker(true)}>
+              <Ionicons name="time-outline" size={18} color="#007AFF" />
+              <Text style={styles.dateText}>
+                {startDate.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
 
+        {/* TARİH SEÇİCİ */}
         {showDatePicker && (
           <DateTimePicker 
             value={startDate} 
             mode="date" 
             minimumDate={new Date()}
-            onChange={(e, d) => { setShowDatePicker(false); if(d) setStartDate(d); }} 
+            onChange={(e, d) => { 
+                setShowDatePicker(false); 
+                if(d) {
+                    const nextDate = new Date(startDate);
+                    nextDate.setFullYear(d.getFullYear(), d.getMonth(), d.getDate());
+                    setStartDate(nextDate);
+                }
+            }} 
           />
         )}
+
+        {/* SAAT SEÇİCİ */}
+        {showTimePicker && (
+          <DateTimePicker 
+            value={startDate} 
+            mode="time" 
+            is24Hour={true}
+            onChange={(e, d) => { 
+                setShowTimePicker(false); 
+                if(d) {
+                    const nextDate = new Date(startDate);
+                    nextDate.setHours(d.getHours(), d.getMinutes());
+                    setStartDate(nextDate);
+                }
+            }} 
+          />
+        )}
+
+        <View style={{ marginTop: 15 }}>
+            <Text style={styles.label}>Davet Kodu</Text>
+            <View style={styles.codeDisplay}>
+                <Text style={styles.codeText}>{invitationCode}</Text>
+            </View>
+        </View>
 
         <Text style={styles.label}>Rota ve Durakları Belirle (Haritaya Tıkla)</Text>
         <View style={styles.mapBox}>
@@ -171,6 +215,13 @@ export default function CreateEventScreen() {
                 <Ionicons name="location" size={30} color="#007AFF" />
               </Marker>
             ))}
+
+            {tempCoordinate && (
+              <Marker coordinate={tempCoordinate}>
+                <Ionicons name="location" size={35} color="#FF9500" />
+                <View style={[styles.markerCircle, {borderColor: '#FF9500'}]}><Text style={[styles.markerText, {color: '#FF9500'}]}>?</Text></View>
+              </Marker>
+            )}
 
             {stops.length >= 2 && (
               <MapViewDirections
@@ -187,8 +238,33 @@ export default function CreateEventScreen() {
 
         {tempCoordinate && (
           <TouchableOpacity style={styles.confirmBtn} onPress={addStopFromMap}>
-            <Text style={styles.confirmBtnText}>Durağı Onayla</Text>
+            <Text style={styles.confirmBtnText}>Seçilen Konumu Durak Olarak Ekle</Text>
           </TouchableOpacity>
+        )}
+
+        {stops.length > 0 && (
+          <View style={styles.stopListContainer}>
+            <Text style={styles.label}>Durak Sıralaması</Text>
+            {stops.map((stop, index) => (
+              <View key={stop.id} style={styles.stopItem}>
+                <Text style={styles.stopNumber}>{index + 1}</Text>
+                <Text style={styles.stopCoords} numberOfLines={1}>
+                  {stop.latitude.toFixed(4)}, {stop.longitude.toFixed(4)}
+                </Text>
+                <View style={styles.stopActions}>
+                  <TouchableOpacity onPress={() => moveStop(index, 'up')} disabled={index === 0}>
+                    <Ionicons name="arrow-up-circle" size={24} color={index === 0 ? "#ccc" : "#007AFF"} />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => moveStop(index, 'down')} disabled={index === stops.length - 1}>
+                    <Ionicons name="arrow-down-circle" size={24} color={index === stops.length - 1 ? "#ccc" : "#007AFF"} />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => removeStop(index)}>
+                    <Ionicons name="trash-outline" size={22} color="#FF3B30" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
+          </View>
         )}
 
         <View style={styles.distanceInfo}>
@@ -214,17 +290,22 @@ const styles = StyleSheet.create({
   input: { backgroundColor: '#f5f5f5', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#eee', fontSize: 15 },
   row: { flexDirection: 'row', alignItems: 'center' },
   dateBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f5f5f5', padding: 12, borderRadius: 10, gap: 10 },
-  dateText: { fontWeight: 'bold', color: '#333' },
+  dateText: { fontWeight: 'bold', color: '#333', fontSize: 14 },
   codeDisplay: { backgroundColor: '#E3F2FD', padding: 12, borderRadius: 10, alignItems: 'center', borderWidth: 1, borderColor: '#007AFF', borderStyle: 'dashed' },
   codeText: { fontWeight: 'bold', color: '#007AFF', letterSpacing: 1 },
   mapBox: { height: 300, borderRadius: 15, overflow: 'hidden', marginTop: 10, borderWidth: 1, borderColor: '#eee' },
   map: { width: '100%', height: '100%' },
-  confirmBtn: { backgroundColor: '#007AFF', padding: 12, borderRadius: 10, marginTop: 10, alignItems: 'center' },
+  confirmBtn: { backgroundColor: '#FF9500', padding: 12, borderRadius: 10, marginTop: 10, alignItems: 'center' },
   confirmBtnText: { color: '#fff', fontWeight: 'bold' },
   distanceInfo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 15, gap: 8 },
   distanceText: { color: '#666', fontWeight: '600' },
   createBtn: { backgroundColor: '#28a745', padding: 18, borderRadius: 15, alignItems: 'center', marginTop: 30 },
   createBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
   markerCircle: { backgroundColor: '#fff', borderRadius: 10, paddingHorizontal: 5, position: 'absolute', top: -15, alignSelf: 'center', borderWidth: 1, borderColor: '#007AFF', zIndex: 1 },
-  markerText: { fontSize: 10, fontWeight: 'bold', color: '#007AFF' }
+  markerText: { fontSize: 10, fontWeight: 'bold', color: '#007AFF' },
+  stopListContainer: { marginTop: 10, backgroundColor: '#fdfdfd', borderRadius: 12, padding: 5 },
+  stopItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', padding: 10, borderRadius: 8, marginBottom: 5, borderWidth: 1, borderColor: '#f0f0f0' },
+  stopNumber: { width: 25, fontWeight: 'bold', color: '#007AFF' },
+  stopCoords: { flex: 1, fontSize: 12, color: '#666' },
+  stopActions: { flexDirection: 'row', alignItems: 'center', gap: 10 }
 });

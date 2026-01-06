@@ -1,39 +1,56 @@
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { useEffect, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native'; // Eklendi
+import React, { useCallback, useRef, useState } from 'react'; // useRef eklendi
 import {
   ActivityIndicator, Alert, FlatList, Modal,
+  RefreshControl, // Eklendi
   ScrollView,
   StyleSheet,
   Text, TextInput, TouchableOpacity, View
 } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import MapViewDirections from 'react-native-maps-directions';
-import { eventsApi } from '../apiClient'; //
+import { eventsApi } from '../apiClient';
 
 export default function HomeScreen() {
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false); // Eklendi
   const [inviteCodeInput, setInviteCodeInput] = useState('');
   
-  // Panel (Modal) State'leri
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [destinations, setDestinations] = useState<any[]>([]);
   const [infoLoading, setInfoLoading] = useState(false);
   const GOOGLE_MAPS_APIKEY = 'AIzaSyDFYEsvv3CUOa07f13Go1T2XKul0HbtfnU';
 
-  useEffect(() => {
+  const mapRef = useRef<MapView>(null); // Harita kontrolü için ref
+
+  // Sayfaya her geri dönüldüğünde listeyi tazele
+  useFocusEffect(
+    useCallback(() => {
+      fetchEvents();
+    }, [])
+  );
+
+  const fetchEvents = async () => {
+    if (!refreshing) setLoading(true);
+    console.log("Upcoming etkinlikler çekiliyor...");
+    const result = await eventsApi.getUpcomingEvents();
+    
+    if (result.data) {
+      console.log("Gelen etkinlik sayısı:", result.data.length);
+      setEvents(result.data);
+    }
+    setLoading(false);
+    setRefreshing(false);
+  };
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
     fetchEvents();
   }, []);
 
-  const fetchEvents = async () => {
-    setLoading(true);
-    const result = await eventsApi.getUpcomingEvents();
-    if (result.data) setEvents(result.data);
-    setLoading(false);
-  };
-
-  // 1. ÜST PANEL: DAVET KODU İLE KATILMA
   const handleQuickJoin = async () => {
     if (!inviteCodeInput) return;
     const userId = await AsyncStorage.getItem('userId');
@@ -48,16 +65,36 @@ export default function HomeScreen() {
     }
   };
 
-  // 2. KART TIKLANDIĞINDA PANELİ AÇMA
   const handleOpenInfo = async (event: any) => {
+    console.log("Seçilen Event ID:", event.event_id);
     setSelectedEvent(event);
     setInfoLoading(true);
+    
     const result = await eventsApi.getDestinationsForEvent(event.event_id);
     if (result.data) {
-      setDestinations(result.data.sort((a: any, b: any) => a.order_in_route - b.order_in_route));
+      // Koordinat isimlerini garantiye al ve sırala
+      const mapped = result.data.map((d: any) => ({
+        ...d,
+        latitude: d.latitude || d.lat || d.Lat,
+        longitude: d.longitude || d.lng || d.Lng,
+      })).sort((a: any, b: any) => a.order_in_route - b.order_in_route);
+      
+      setDestinations(mapped);
+
+      // Haritayı duraklara göre odakla
+      if (mapped.length > 0 && mapRef.current) {
+        mapRef.current.fitToCoordinates(mapped, {
+          edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
+          animated: true,
+        });
+      }
     }
     setInfoLoading(false);
   };
+
+  const origin = destinations.length > 0 ? { latitude: destinations[0].latitude, longitude: destinations[0].longitude } : null;
+  const destination = destinations.length > 1 ? { latitude: destinations[destinations.length - 1].latitude, longitude: destinations[destinations.length - 1].longitude } : null;
+  const waypoints = destinations.length > 2 ? destinations.slice(1, -1).map(d => ({ latitude: d.latitude, longitude: d.longitude })) : [];
 
   const renderEventCard = ({ item }: { item: any }) => (
     <TouchableOpacity style={styles.card} onPress={() => handleOpenInfo(item)}>
@@ -68,6 +105,19 @@ export default function HomeScreen() {
         </View>
       </View>
       <Text style={styles.cardDesc} numberOfLines={2}>{item.description}</Text>
+      
+      {/* UpcomingEvent DTO'sundan gelen ek bilgiler */}
+      <View style={styles.cardStats}>
+         <View style={styles.statItem}>
+            <Ionicons name="people" size={14} color="#007AFF" />
+            <Text style={styles.statText}>{item.participant_count} Katılımcı</Text>
+         </View>
+         <View style={styles.statItem}>
+            <Ionicons name="walk" size={14} color="#28a745" />
+            <Text style={styles.statText}>{(item.route_distance_meters / 1000).toFixed(1)} km</Text>
+         </View>
+      </View>
+
       <View style={styles.cardBottom}>
         <Ionicons name="calendar-outline" size={14} color="#888" />
         <Text style={styles.cardDate}>{new Date(item.start_date).toLocaleDateString('tr-TR')}</Text>
@@ -77,7 +127,6 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      {/* HIZLI KATIL PANELİ */}
       <View style={styles.joinPanel}>
         <TextInput 
           style={styles.joinInput} 
@@ -91,26 +140,34 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.sectionHeader}>Tüm Etkinlikler</Text>
+      <Text style={styles.sectionHeader}>Keşfet</Text>
 
-      {loading ? (
+      {loading && !refreshing ? (
         <ActivityIndicator color="#007AFF" style={{marginTop: 50}} />
       ) : (
         <FlatList
           data={events}
           renderItem={renderEventCard}
-          keyExtractor={item => item.event_id}
+          keyExtractor={item => item.event_id.toString()}
           contentContainerStyle={{ padding: 20 }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#007AFF"]} />
+          }
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+               <Ionicons name="map-outline" size={50} color="#ccc" />
+               <Text style={styles.emptyText}>Şu an aktif etkinlik bulunmuyor.</Text>
+            </View>
+          }
         />
       )}
 
-      {/* EVENT INFO PANELİ */}
       <Modal visible={!!selectedEvent} animationType="slide" transparent={true}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{selectedEvent?.title}</Text>
-              <TouchableOpacity onPress={() => setSelectedEvent(null)}>
+              <TouchableOpacity onPress={() => { setSelectedEvent(null); setDestinations([]); }}>
                 <Ionicons name="close-circle" size={32} color="#ccc" />
               </TouchableOpacity>
             </View>
@@ -122,22 +179,26 @@ export default function HomeScreen() {
                 <>
                   <View style={styles.mapBox}>
                     <MapView 
+                      ref={mapRef}
                       style={styles.map}
                       initialRegion={{
-                        latitude: destinations[0]?.latitude || 41.0082,
-                        longitude: destinations[0]?.longitude || 28.9784,
-                        latitudeDelta: 0.01, longitudeDelta: 0.01
+                        latitude: 41.0082, longitude: 28.9784,
+                        latitudeDelta: 0.05, longitudeDelta: 0.05
                       }}
                     >
                       {destinations.map((d, i) => (
-                        <Marker key={d.destination_id} coordinate={{latitude: d.latitude, longitude: d.longitude}} title={`${i+1}. Durak`} />
+                        <Marker key={d.destination_id} coordinate={{latitude: d.latitude, longitude: d.longitude}}>
+                           <View style={styles.markerBadge}><Text style={styles.markerText}>{i + 1}</Text></View>
+                           <Ionicons name="location" size={26} color="#007AFF" />
+                        </Marker>
                       ))}
-                      {destinations.length > 1 && (
+                      {origin && destination && (
                         <MapViewDirections
-                          origin={{latitude: destinations[0].latitude, longitude: destinations[0].longitude}}
-                          destination={{latitude: destinations[destinations.length-1].latitude, longitude: destinations[destinations.length-1].longitude}}
-                          waypoints={destinations.slice(1,-1).map(d => ({latitude: d.latitude, longitude: d.longitude}))}
-                          apikey={GOOGLE_MAPS_APIKEY} strokeWidth={4} strokeColor="#007AFF" mode="WALKING"
+                          origin={origin}
+                          destination={destination}
+                          waypoints={waypoints}
+                          apikey={GOOGLE_MAPS_APIKEY}
+                          strokeWidth={4} strokeColor="#007AFF" mode="WALKING"
                         />
                       )}
                     </MapView>
@@ -170,6 +231,9 @@ const styles = StyleSheet.create({
   codeBadge: { backgroundColor: '#E3F2FD', padding: 4, borderRadius: 6 },
   codeText: { color: '#007AFF', fontSize: 11, fontWeight: 'bold' },
   cardDesc: { color: '#666', fontSize: 14, marginBottom: 12 },
+  cardStats: { flexDirection: 'row', gap: 15, marginBottom: 10, borderBottomWidth: 1, borderBottomColor: '#f9f9f9', paddingBottom: 10 },
+  statItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  statText: { fontSize: 12, color: '#555', fontWeight: '500' },
   cardBottom: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   cardDate: { fontSize: 12, color: '#888' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
@@ -181,5 +245,9 @@ const styles = StyleSheet.create({
   detailRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 15, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: '#eee' },
   detailLabel: { color: '#888' },
   detailValue: { fontWeight: 'bold', color: '#007AFF' },
-  detailDesc: { color: '#444', lineHeight: 22 }
+  detailDesc: { color: '#444', lineHeight: 22, fontSize: 15 },
+  emptyContainer: { alignItems: 'center', marginTop: 80 },
+  emptyText: { textAlign: 'center', marginTop: 15, color: '#999', fontSize: 14 },
+  markerBadge: { backgroundColor: '#fff', borderRadius: 10, paddingHorizontal: 5, borderWidth: 1, borderColor: '#007AFF', position: 'absolute', top: -15, alignSelf: 'center', zIndex: 1 },
+  markerText: { fontSize: 10, fontWeight: 'bold', color: '#007AFF' }
 });

@@ -1,60 +1,111 @@
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { useEffect, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import React, { useCallback, useEffect, useRef, useState } from 'react'; // useRef ve useEffect eklendi
 import {
-    ActivityIndicator,
-    Dimensions,
-    FlatList, Modal,
-    ScrollView,
-    StyleSheet,
-    Text, TouchableOpacity, View
+  ActivityIndicator,
+  Dimensions,
+  FlatList, Modal,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text, TouchableOpacity, View
 } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import MapViewDirections from 'react-native-maps-directions';
-import { eventsApi } from '../apiClient'; //
+import { eventsApi } from '../apiClient';
 
 const { width, height } = Dimensions.get('window');
 
 export default function JoinedEventsScreen() {
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   
-  // Home.tsx ile birebir aynı panel state'leri
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [destinations, setDestinations] = useState<any[]>([]);
   const [infoLoading, setInfoLoading] = useState(false);
   const GOOGLE_MAPS_APIKEY = 'AIzaSyDFYEsvv3CUOa07f13Go1T2XKul0HbtfnU';
+  
+  // Haritayı programatik olarak kontrol etmek için Ref
+  const mapRef = useRef<MapView>(null);
 
+  useFocusEffect(
+    useCallback(() => {
+      fetchJoinedEvents();
+    }, [])
+  );
+
+  // Duraklar değiştiğinde haritayı rotaya sığdır
   useEffect(() => {
-    fetchJoinedEvents();
-  }, []);
+    if (destinations.length > 0 && mapRef.current) {
+      mapRef.current.fitToCoordinates(destinations, {
+        edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
+        animated: true,
+      });
+    }
+  }, [destinations]);
 
   const fetchJoinedEvents = async () => {
-    setLoading(true);
-    // Veritabanındaki 'attendances' tablosu üzerinden kullanıcının katıldıklarını çekiyoruz
+    if (!refreshing) setLoading(true); 
     const username = await AsyncStorage.getItem('username');
-    
-    // Burada backend'den gelen, kullanıcının katıldığı etkinliklerin listesini çekiyoruz
     const result = await eventsApi.getEventsByUsername(username || '');
-    
     if (result.data) {
       setEvents(result.data);
     }
     setLoading(false);
+    setRefreshing(false);
   };
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchJoinedEvents();
+  }, []);
 
   const handleOpenInfo = async (event: any) => {
-    setSelectedEvent(event);
-    setInfoLoading(true);
-    // Rota ve durak bağlantısı: Destinations tablosundan verileri çek
-    const result = await eventsApi.getDestinationsForEvent(event.event_id || event.id);
-    if (result.data) {
-      setDestinations(result.data.sort((a: any, b: any) => a.order_in_route - b.order_in_route));
-    }
-    setInfoLoading(false);
-  };
+  // 1. Tıklanan kartın tüm içeriğini görelim (id mi geliyor event_id mi?)
+  console.log("--- KART TIKLANDI ---");
+  console.log("Gelen Event Objesi:", JSON.stringify(event, null, 2));
+    
+  setSelectedEvent(event);
+  setInfoLoading(true);
+  
+  // 2. ID tespiti
+  const eventId = event.event_id || event.id || event.eventId;
+  console.log("Tespit Edilen ID:", eventId);
 
-  // Harita Koordinat Hesaplamaları (Home.tsx ile aynı)
+  if (!eventId) {
+    console.log("HATA: Obje içinde ID bulunamadı!");
+    setInfoLoading(false);
+    return;
+  }
+
+  // 3. API İsteği
+  console.log("API İsteği Atılıyor: /api/events/" + eventId + "/destinations");
+  const result = await eventsApi.getDestinationsForEvent(eventId);
+  
+  if (result.data) {
+    // 4. Gelen durak verisinin detaylı dökümü
+    console.log("API'den Gelen Durak Sayısı:", result.data.length);
+    console.log("Durak Verisi (İlk Eleman):", JSON.stringify(result.data[0], null, 2));
+
+    const mappedDestinations = result.data.map((d: any) => ({
+      ...d,
+      latitude: d.latitude || d.lat || d.Lat,
+      longitude: d.longitude || d.lng || d.Lng || d.Long,
+    })).sort((a: any, b: any) => a.order_in_route - b.order_in_route);
+
+    setDestinations(mappedDestinations);
+  } else {
+    // 5. Hata durumu (404, 500 veya boş dönme)
+    console.log("API HATASI VEYA BOŞ VERİ:", result.error || "Veri gelmedi");
+    setDestinations([]);
+  }
+  setInfoLoading(false);
+  console.log("--- İŞLEM TAMAMLANDI ---");
+};
+
+  // Rota hesaplamalarını daha güvenli hale getirdik
   const origin = destinations.length > 0 ? { latitude: destinations[0].latitude, longitude: destinations[0].longitude } : null;
   const destination = destinations.length > 1 ? { latitude: destinations[destinations.length - 1].latitude, longitude: destinations[destinations.length - 1].longitude } : null;
   const waypoints = destinations.length > 2 ? destinations.slice(1, -1).map(d => ({ latitude: d.latitude, longitude: d.longitude })) : [];
@@ -82,7 +133,7 @@ export default function JoinedEventsScreen() {
         <Text style={styles.headerSubtitle}>Yürüyüş takviminiz burada listelenir.</Text>
       </View>
 
-      {loading ? (
+      {loading && !refreshing ? (
         <ActivityIndicator color="#007AFF" style={{marginTop: 50}} />
       ) : (
         <FlatList
@@ -90,17 +141,19 @@ export default function JoinedEventsScreen() {
           renderItem={renderEventCard}
           keyExtractor={item => (item.id || item.event_id || Math.random()).toString()}
           contentContainerStyle={{ padding: 20 }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#007AFF"]} />
+          }
           ListEmptyComponent={<Text style={styles.emptyText}>Henüz bir etkinliğe katılmadınız.</Text>}
         />
       )}
 
-      {/* EVENT INFO PANELİ (Home.tsx ile birebir aynı yapı) */}
       <Modal visible={!!selectedEvent} animationType="slide" transparent={true}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{selectedEvent?.title}</Text>
-              <TouchableOpacity onPress={() => setSelectedEvent(null)}>
+              <TouchableOpacity onPress={() => { setSelectedEvent(null); setDestinations([]); }}>
                 <Ionicons name="close-circle" size={32} color="#ccc" />
               </TouchableOpacity>
             </View>
@@ -112,26 +165,33 @@ export default function JoinedEventsScreen() {
                 <>
                   <View style={styles.mapBox}>
                     <MapView 
+                      ref={mapRef} // Ref buraya bağlandı
                       style={styles.map}
                       initialRegion={{
-                        latitude: destinations[0]?.latitude || 41.0082,
-                        longitude: destinations[0]?.longitude || 28.9784,
-                        latitudeDelta: 0.01, longitudeDelta: 0.01
+                        latitude: 41.0082,
+                        longitude: 28.9784,
+                        latitudeDelta: 0.05, longitudeDelta: 0.05
                       }}
                     >
+                      {/* DURAK MARKERLARI */}
                       {destinations.map((d, i) => (
                         <Marker key={d.destination_id} coordinate={{latitude: d.latitude, longitude: d.longitude}}>
                            <View style={styles.markerBadge}><Text style={styles.markerText}>{i + 1}</Text></View>
                            <Ionicons name="location" size={26} color="#007AFF" />
                         </Marker>
                       ))}
+
+                      {/* YOL GÜZERGAHI */}
                       {origin && destination && (
                         <MapViewDirections
                           origin={origin}
                           destination={destination}
                           waypoints={waypoints}
                           apikey={GOOGLE_MAPS_APIKEY}
-                          strokeWidth={4} strokeColor="#007AFF" mode="WALKING"
+                          strokeWidth={4} 
+                          strokeColor="#007AFF" 
+                          mode="WALKING"
+                          // Google bazen 2 durak arası çok yakınsa hata verebilir, onReady ile mesafeyi loglayabilirsin
                         />
                       )}
                     </MapView>

@@ -7,13 +7,12 @@ import {
   StyleSheet,
   Text, TextInput, TouchableOpacity, View
 } from 'react-native';
-import { authApi } from '../apiClient'; //
+import { authApi } from '../apiClient';
 
 export default function ProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   
-  // Sadece apiClient'da karşılığı olan düzenleme state'leri
   const [userModal, setUserModal] = useState({ visible: false, newValue: '' });
   const [passModal, setPassModal] = useState(false);
   const [oldPassword, setOldPassword] = useState('');
@@ -24,25 +23,27 @@ export default function ProfileScreen() {
   }, []);
 
   const fetchUserProfile = async () => {
-    // DB şemasına göre sakladığımız verileri simüle ediyoruz
+    // AsyncStorage'dan giriş anında kaydettiğimiz gerçek verileri çekiyoruz
     const storedUsername = await AsyncStorage.getItem('username');
+    const storedFirstName = await AsyncStorage.getItem('firstName');
+    const storedLastName = await AsyncStorage.getItem('lastName');
+    const storedEmail = await AsyncStorage.getItem('email');
     
-    // Veriler DB'deki kullanıcı tablosundan geliyor
     setUser({
-      firstName: 'Can', 
-      lastName: 'Demir',
-      email: 'can@example.com',
-      username: storedUsername || 'yürüyüşçü_01',
-      hasBadge: true // DB: has_badge
+      firstName: storedFirstName || 'Ad', 
+      lastName: storedLastName || 'Soyad',
+      email: storedEmail || 'E-posta tanımlı değil',
+      username: storedUsername || 'kullanıcı_adı',
+      hasBadge: true 
     });
     setLoading(false);
   };
 
-  // KULLANICI ADI GÜNCELLEME (API'de VAR)
   const handleUpdateUsername = async () => {
     const token = await AsyncStorage.getItem('userToken');
     if (!token) return;
 
+    // apiClient'daki authApi.changeUsername metodunu kullanıyoruz
     const result = await authApi.changeUsername({ newUsername: userModal.newValue });
     
     if (result.data) {
@@ -55,10 +56,14 @@ export default function ProfileScreen() {
     }
   };
 
-  // ŞİFRE DEĞİŞTİRME (API'de VAR)
   const handleChangePassword = async () => {
     const token = await AsyncStorage.getItem('userToken');
     if (!token) return;
+
+    if (!oldPassword || !newPassword) {
+        Alert.alert("Hata", "Lütfen tüm şifre alanlarını doldurun.");
+        return;
+    }
 
     const result = await authApi.changePassword({ oldPassword, newPassword });
     
@@ -67,16 +72,15 @@ export default function ProfileScreen() {
       setPassModal(false);
       setOldPassword(''); setNewPassword('');
     } else {
-      // Backend mevcut şifreyi kontrol eder
-      Alert.alert("Hata", result.error || "Mevcut şifreniz hatalı girildi.");
+      Alert.alert("Hata", result.error || "Mevcut şifreniz hatalı.");
     }
   };
 
-  // LOGOUT HANDLER
   const handleLogout = async () => {
-    await authApi.logout();
-    Alert.alert("Çıkış Yapıldı", "Uygulamadan çıkış yaptınız.");
-    // Optionally navigate to login screen if you have navigation
+    // Tüm verileri temizle ve çıkış yap
+    await AsyncStorage.clear();
+    Alert.alert("Çıkış Yapıldı", "Oturumunuz sonlandırıldı.");
+    // Uygulama rotasına göre yönlendirme eklenebilir
   };
 
   if (loading) return <ActivityIndicator style={{ flex: 1 }} />;
@@ -86,9 +90,12 @@ export default function ProfileScreen() {
       <View style={styles.header}>
         <View style={styles.avatarContainer}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{user?.firstName[0]}{user?.lastName[0]}</Text>
+            <Text style={styles.avatarText}>
+                {user?.firstName ? user.firstName[0] : 'U'}
+                {user?.lastName ? user.lastName[0] : 'U'}
+            </Text>
           </View>
-          {user?.hasBadge && ( // DB: has_badge kolonu kontrolü
+          {user?.hasBadge && (
             <View style={styles.badgeWrapper}>
               <Ionicons name="medal" size={22} color="#FFD700" />
             </View>
@@ -100,7 +107,6 @@ export default function ProfileScreen() {
       <View style={styles.content}>
         <Text style={styles.sectionTitle}>Hesap Bilgileri</Text>
         
-        {/* Değiştirilebilir Alan: Username */}
         <ProfileItem 
           label="Kullanıcı Adı" 
           value={user?.username} 
@@ -108,12 +114,10 @@ export default function ProfileScreen() {
           onEdit={() => setUserModal({ visible: true, newValue: user.username })} 
         />
 
-        {/* Değiştirilemez Alanlar (apiClient'da fonksiyonu yok) */}
         <ProfileItem label="E-posta" value={user?.email} canEdit={false} />
         <ProfileItem label="Ad" value={user?.firstName} canEdit={false} />
         <ProfileItem label="Soyad" value={user?.lastName} canEdit={false} />
 
-        {/* Değiştirilebilir Alan: Password */}
         <TouchableOpacity style={styles.passwordRow} onPress={() => setPassModal(true)}>
           <View style={styles.passwordLeft}>
             <Ionicons name="lock-closed-outline" size={20} color="#666" />
@@ -122,7 +126,6 @@ export default function ProfileScreen() {
           <Ionicons name="chevron-forward" size={20} color="#ccc" />
         </TouchableOpacity>
 
-        {/* LOGOUT BUTTON */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Ionicons name="log-out-outline" size={20} color="#FF3B30" />
           <Text style={styles.logoutText}>Çıkış Yap</Text>
@@ -134,6 +137,7 @@ export default function ProfileScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalBox}>
             <Text style={styles.modalTitle}>Kullanıcı Adını Değiştir</Text>
+            <Text style={styles.inputLabel}>Yeni Kullanıcı Adı</Text>
             <TextInput 
               style={styles.modalInput} 
               value={userModal.newValue} 
@@ -151,12 +155,29 @@ export default function ProfileScreen() {
       <Modal visible={passModal} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalBox}>
-            <Text style={styles.modalTitle}>Şifre Yenileme</Text>
-            <TextInput style={styles.modalInput} placeholder="Mevcut Şifre" secureTextEntry value={oldPassword} onChangeText={setOldPassword} />
-            <TextInput style={styles.modalInput} placeholder="Yeni Şifre" secureTextEntry value={newPassword} onChangeText={setNewPassword} />
+            <Text style={styles.modalTitle}>Şifre Değiştir</Text>
+            
+            <Text style={styles.inputLabel}>Mevcut Şifre</Text>
+            <TextInput 
+                style={styles.modalInput} 
+                placeholder="••••••••" 
+                secureTextEntry 
+                value={oldPassword} 
+                onChangeText={setOldPassword} 
+            />
+
+            <Text style={styles.inputLabel}>Yeni Şifre</Text>
+            <TextInput 
+                style={styles.modalInput} 
+                placeholder="••••••••" 
+                secureTextEntry 
+                value={newPassword} 
+                onChangeText={setNewPassword} 
+            />
+
             <View style={styles.modalActions}>
               <TouchableOpacity onPress={() => setPassModal(false)}><Text style={styles.cancelText}>Vazgeç</Text></TouchableOpacity>
-              <TouchableOpacity onPress={handleChangePassword}><Text style={styles.saveText}>Değiştir</Text></TouchableOpacity>
+              <TouchableOpacity onPress={handleChangePassword}><Text style={styles.saveText}>Şifreyi Güncelle</Text></TouchableOpacity>
             </View>
           </View>
         </View>
@@ -198,10 +219,11 @@ const styles = StyleSheet.create({
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 25 },
   modalBox: { backgroundColor: '#fff', borderRadius: 20, padding: 25 },
   modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
-  modalInput: { backgroundColor: '#f5f5f5', padding: 15, borderRadius: 12, marginBottom: 15 },
+  inputLabel: { fontSize: 13, fontWeight: '600', color: '#666', marginBottom: 8 },
+  modalInput: { backgroundColor: '#f5f5f5', padding: 15, borderRadius: 12, marginBottom: 15, borderWidth: 1, borderColor: '#eee' },
   modalActions: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 },
-  cancelText: { color: '#999', fontWeight: '600' },
-  saveText: { color: '#007AFF', fontWeight: 'bold' },
+  cancelText: { color: '#999', fontWeight: '600', padding: 10 },
+  saveText: { color: '#007AFF', fontWeight: 'bold', padding: 10 },
   logoutButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 30, padding: 15, backgroundColor: '#FFECEC', borderRadius: 12, gap: 10 },
   logoutText: { fontWeight: '600', color: '#FF3B30' }
 });
