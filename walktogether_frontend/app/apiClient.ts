@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://192.168.1.3:5068'; // Adjust if needed (backend URL)
+const API_BASE_URL = 'http://192.168.1.221:5068'; // Adjust if needed (backend URL)
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -121,15 +121,17 @@ export const authApi = {
     return loginResult;
   },
 
-  changePassword: async (passwordData: { oldPassword: string; newPassword: string }) => {
+  changePassword: async (passwordData: { userId: string | null ; oldPassword: string; newPassword: string }) => {
     const headers = await getAuthHeaders();
-    const userId = await getStoredUserId();
-    if (!headers || !userId) return { error: 'Not authenticated' };
+    
+    if (!headers) return { error: 'Not authenticated' };
+
 
     return apiRequest<{ message: string }>('/api/users/change-password', {
       method: 'PUT',
       headers: { ...headers, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, ...passwordData }),
+      
+      body: JSON.stringify(passwordData),
     });
   },
 

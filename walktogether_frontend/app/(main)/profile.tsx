@@ -61,6 +61,7 @@ export default function ProfileScreen() {
 
   const handleChangePassword = async () => {
     const token = await AsyncStorage.getItem('userToken');
+    const userId = await AsyncStorage.getItem('userId');
     if (!token) return;
 
     if (!oldPassword || !newPassword) {
@@ -68,7 +69,7 @@ export default function ProfileScreen() {
         return;
     }
 
-    const result = await authApi.changePassword({ oldPassword, newPassword });
+    const result = await authApi.changePassword({ userId, oldPassword, newPassword });
     
     if (result.data) {
       Alert.alert("Başarılı", "Şifreniz başarıyla değiştirildi.");

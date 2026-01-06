@@ -1,19 +1,6 @@
 {
   "format": 1,
   "restore": {
-<<<<<<< Updated upstream
-    "/Users/semih/Documents/Projects/WalkTogether/backend/WalkTogetherAPI/WalkTogetherAPI.csproj": {}
-  },
-  "projects": {
-    "/Users/semih/Documents/Projects/WalkTogether/backend/WalkTogetherAPI/WalkTogetherAPI.csproj": {
-      "version": "1.0.0",
-      "restore": {
-        "projectUniqueName": "/Users/semih/Documents/Projects/WalkTogether/backend/WalkTogetherAPI/WalkTogetherAPI.csproj",
-        "projectName": "WalkTogetherAPI",
-        "projectPath": "/Users/semih/Documents/Projects/WalkTogether/backend/WalkTogetherAPI/WalkTogetherAPI.csproj",
-        "packagesPath": "/Users/semih/.nuget/packages/",
-        "outputPath": "/Users/semih/Documents/Projects/WalkTogether/backend/WalkTogetherAPI/obj/",
-=======
     "C:\\Users\\ARTEMIS\\WalkTogether\\backend\\WalkTogetherAPI\\WalkTogetherAPI.csproj": {}
   },
   "projects": {
@@ -25,27 +12,21 @@
         "projectPath": "C:\\Users\\ARTEMIS\\WalkTogether\\backend\\WalkTogetherAPI\\WalkTogetherAPI.csproj",
         "packagesPath": "C:\\Users\\ARTEMIS\\.nuget\\packages\\",
         "outputPath": "C:\\Users\\ARTEMIS\\WalkTogether\\backend\\WalkTogetherAPI\\obj\\",
->>>>>>> Stashed changes
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-<<<<<<< Updated upstream
-          "/Users/semih/.nuget/NuGet/NuGet.Config"
-=======
           "C:\\Users\\ARTEMIS\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
->>>>>>> Stashed changes
         ],
         "originalTargetFrameworks": [
           "net9.0"
         ],
         "sources": {
-<<<<<<< Updated upstream
-          "/opt/homebrew/Cellar/dotnet/9.0.101/libexec/library-packs": {},
-=======
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "C:\\Program Files\\dotnet\\library-packs": {},
->>>>>>> Stashed changes
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -64,11 +45,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-<<<<<<< Updated upstream
-        "SdkAnalysisLevel": "9.0.100"
-=======
         "SdkAnalysisLevel": "9.0.300"
->>>>>>> Stashed changes
       },
       "frameworks": {
         "net9.0": {
@@ -81,6 +58,10 @@
             "MediatR": {
               "target": "Package",
               "version": "[13.1.0, )"
+            },
+            "Microsoft.AspNetCore.Authentication.JwtBearer": {
+              "target": "Package",
+              "version": "[9.0.0, )"
             },
             "Microsoft.EntityFrameworkCore.Design": {
               "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
@@ -144,11 +125,7 @@
               "privateAssets": "all"
             }
           },
-<<<<<<< Updated upstream
-          "runtimeIdentifierGraphPath": "/opt/homebrew/Cellar/dotnet/9.0.101/libexec/sdk/9.0.101/PortableRuntimeIdentifierGraph.json"
-=======
           "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.301/PortableRuntimeIdentifierGraph.json"
->>>>>>> Stashed changes
         }
       }
     }
