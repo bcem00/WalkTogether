@@ -4,7 +4,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Dimensions,
+  Alert,
   FlatList, Modal,
   RefreshControl,
   ScrollView,
@@ -47,6 +47,7 @@ export default function JoinedEventsScreen() {
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [leaveLoading, setLeaveLoading] = useState(false); // Yeni: Ayrılma işlemi için
   
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [destinations, setDestinations] = useState<any[]>([]); // Markers
@@ -63,9 +64,7 @@ export default function JoinedEventsScreen() {
   );
 
   useEffect(() => {
-    // Zoom to fit markers + route when they change
     if ((destinations.length > 0 || routeCoords.length > 0) && mapRef.current) {
-      // Create a combined list of points to ensure everything fits
       const allPoints = [...destinations, ...routeCoords];
       if(allPoints.length > 0) {
         mapRef.current.fitToCoordinates(allPoints, {
@@ -92,31 +91,64 @@ export default function JoinedEventsScreen() {
     fetchJoinedEvents();
   }, []);
 
+  // --- YENİ: ETKİNLİKTEN AYRILMA (LEAVE EVENT) FONKSİYONU ---
+  const handleLeaveEvent = async () => {
+    if (!selectedEvent) return;
+
+    const eventId = selectedEvent.id || selectedEvent.event_id || selectedEvent.eventId;
+    const userId = await AsyncStorage.getItem('userId');
+
+    if (!userId || !eventId) {
+      Alert.alert("Hata", "Kullanıcı veya etkinlik bilgisi eksik.");
+      return;
+    }
+
+    Alert.alert(
+      "Etkinlikten Ayrıl",
+      "Bu yürüyüşten ayrılmak istediğinize emin misiniz? Katılım kaydınız silinecektir.",
+      [
+        { text: "Vazgeç", style: "cancel" },
+        { 
+          text: "Ayrıl", 
+          style: "destructive", 
+          onPress: async () => {
+            setLeaveLoading(true);
+            const result = await eventsApi.leaveEvent(userId, eventId);
+            setLeaveLoading(false);
+
+            if (result.data) {
+              Alert.alert("Başarılı", "Etkinlikten ayrıldınız.");
+              // Listeyi yerel olarak güncelle (silineni listeden at)
+              setEvents(prev => prev.filter(e => (e.id || e.event_id || e.eventId) !== eventId));
+              setSelectedEvent(null); // Modalı kapat
+            } else {
+              Alert.alert("Hata", result.error || "Ayrılma işlemi başarısız oldu.");
+            }
+          } 
+        }
+      ]
+    );
+  };
+
   const handleOpenInfo = async (event: any) => {
     setSelectedEvent(event);
     setInfoLoading(true);
-    setRouteCoords([]); // Reset previous route
-    setDestinations([]); // Reset previous markers
+    setRouteCoords([]); 
+    setDestinations([]); 
 
-    // 1. Check if we already have the data in the event object (Saved in DB)
-    // Note: C# DTO sends 'waypointsJson' and 'routePolyline' (camelCase via JSON)
     if (event.waypointsJson && event.routePolyline) {
-        console.log("Using Cached Data from DB");
         try {
             const parsedWaypoints = JSON.parse(event.waypointsJson);
             setDestinations(parsedWaypoints);
-            
             const decodedPath = decodePolyline(event.routePolyline);
             setRouteCoords(decodedPath);
-            
             setInfoLoading(false);
-            return; // EXIT EARLY - No API Call needed!
+            return; 
         } catch (e) {
-            console.log("Error parsing local data, falling back to API", e);
+            console.log("Error parsing local data", e);
         }
     }
 
-    // 2. Fallback: If no local data, fetch from API (Old logic)
     const eventId = event.event_id || event.id || event.eventId;
     if (!eventId) {
       setInfoLoading(false);
@@ -130,14 +162,11 @@ export default function JoinedEventsScreen() {
         latitude: d.latitude || d.lat || d.Lat,
         longitude: d.longitude || d.lng || d.Lng || d.Long,
       })).sort((a: any, b: any) => a.order_in_route - b.order_in_route);
-
       setDestinations(mappedDestinations);
-      // If falling back to API, we leave routeCoords empty so MapViewDirections runs
     }
     setInfoLoading(false);
   };
 
-  // Logic for MapViewDirections (Only used if routeCoords is empty)
   const origin = destinations.length > 0 ? { latitude: destinations[0].latitude, longitude: destinations[0].longitude } : null;
   const destination = destinations.length > 1 ? { latitude: destinations[destinations.length - 1].latitude, longitude: destinations[destinations.length - 1].longitude } : null;
   const waypoints = destinations.length > 2 ? destinations.slice(1, -1).map(d => ({ latitude: d.latitude, longitude: d.longitude })) : [];
@@ -205,37 +234,23 @@ export default function JoinedEventsScreen() {
                       ref={mapRef}
                       style={styles.map}
                       initialRegion={{
-                        latitude: 41.0082,
-                        longitude: 28.9784,
+                        latitude: 41.0082, longitude: 28.9784,
                         latitudeDelta: 0.05, longitudeDelta: 0.05
                       }}
                     >
-                      {/* 1. MARKERS (ALWAYS SHOW) */}
                       {destinations.map((d, i) => (
                         <Marker key={i} coordinate={{latitude: d.latitude, longitude: d.longitude}}>
                            <View style={styles.markerBadge}><Text style={styles.markerText}>{i + 1}</Text></View>
                            <Ionicons name="location" size={26} color="#007AFF" />
                         </Marker>
                       ))}
-
-                      {/* 2. ROUTE: IF WE HAVE CACHED POLYLINE, USE IT (FASTER) */}
                       {routeCoords.length > 0 ? (
-                        <Polyline 
-                           coordinates={routeCoords}
-                           strokeWidth={4}
-                           strokeColor="#007AFF"
-                        />
+                        <Polyline coordinates={routeCoords} strokeWidth={4} strokeColor="#007AFF" />
                       ) : (
-                      // 3. FALLBACK: IF NO POLYLINE, CALCULATE IT LIVE
                         origin && destination && (
                           <MapViewDirections
-                            origin={origin}
-                            destination={destination}
-                            waypoints={waypoints}
-                            apikey={GOOGLE_MAPS_APIKEY}
-                            strokeWidth={4} 
-                            strokeColor="#007AFF" 
-                            mode="WALKING"
+                            origin={origin} destination={destination} waypoints={waypoints}
+                            apikey={GOOGLE_MAPS_APIKEY} strokeWidth={4} strokeColor="#007AFF" mode="WALKING"
                           />
                         )
                       )}
@@ -255,6 +270,22 @@ export default function JoinedEventsScreen() {
                   )}
 
                   <Text style={styles.detailDesc}>{selectedEvent?.description}</Text>
+
+                  {/* --- AYRILMA BUTONU --- */}
+                  <TouchableOpacity 
+                    style={[styles.leaveBtn, leaveLoading && { opacity: 0.7 }]} 
+                    onPress={handleLeaveEvent}
+                    disabled={leaveLoading}
+                  >
+                    {leaveLoading ? (
+                      <ActivityIndicator color="#fff" />
+                    ) : (
+                      <>
+                        <Ionicons name="log-out-outline" size={20} color="#fff" />
+                        <Text style={styles.leaveBtnText}>Etkinlikten Ayrıl</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
                 </>
               )}
             </ScrollView>
@@ -290,5 +321,18 @@ const styles = StyleSheet.create({
   detailDesc: { color: '#444', lineHeight: 22 },
   emptyText: { textAlign: 'center', marginTop: 50, color: '#999' },
   markerBadge: { backgroundColor: '#fff', borderRadius: 10, paddingHorizontal: 5, borderWidth: 1, borderColor: '#007AFF', position: 'absolute', top: -15, alignSelf: 'center', zIndex: 1 },
-  markerText: { fontSize: 10, fontWeight: 'bold', color: '#007AFF' }
+  markerText: { fontSize: 10, fontWeight: 'bold', color: '#007AFF' },
+  // YENİ BUTON STİLLERİ
+  leaveBtn: { 
+    backgroundColor: '#FF3B30', 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    padding: 15, 
+    borderRadius: 12, 
+    marginTop: 25, 
+    gap: 10,
+    marginBottom: 30
+  },
+  leaveBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 16 }
 });

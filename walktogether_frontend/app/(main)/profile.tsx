@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator, Alert, Modal,
@@ -8,9 +9,6 @@ import {
   Text, TextInput, TouchableOpacity, View
 } from 'react-native';
 import { authApi } from '../apiClient';
-import { routeToScreen } from 'expo-router/build/useScreens';
-import { Route } from 'expo-router/build/Route';
-import { router } from 'expo-router';
 
 export default function ProfileScreen() {
   const [loading, setLoading] = useState(true);
@@ -31,7 +29,12 @@ export default function ProfileScreen() {
     const storedFirstName = await AsyncStorage.getItem('firstName');
     const storedLastName = await AsyncStorage.getItem('lastName');
     const storedEmail = await AsyncStorage.getItem('email');
-    
+    console.log("--- STORAGE VERİLERİ ---", {
+    storedUsername,
+    storedFirstName,
+    storedLastName,
+    storedEmail,
+  });
     setUser({
       firstName: storedFirstName || 'Ad', 
       lastName: storedLastName || 'Soyad',
@@ -92,18 +95,10 @@ export default function ProfileScreen() {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <View style={styles.avatarContainer}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-                {user?.firstName ? user.firstName[0] : 'U'}
-                {user?.lastName ? user.lastName[0] : 'U'}
-            </Text>
-          </View>
-          {user?.hasBadge && (
-            <View style={styles.badgeWrapper}>
-              <Ionicons name="medal" size={22} color="#FFD700" />
-            </View>
-          )}
+        <View style={styles.content}>
+          
+         
+
         </View>
         <Text style={styles.fullName}>{user?.firstName} {user?.lastName}</Text>
       </View>
@@ -122,6 +117,19 @@ export default function ProfileScreen() {
         <ProfileItem label="Ad" value={user?.firstName} canEdit={false} />
         <ProfileItem label="Soyad" value={user?.lastName} canEdit={false} />
 
+       {/* YENİ: ROZETLER BÖLÜMÜ */}
+        {user?.hasBadge && (
+          <View style={styles.badgeSection}>
+            <Text style={styles.sectionTitle}>Kazanılan Rozetler</Text>
+            <View style={styles.badgeCard}>
+              <Ionicons name="trophy" size={24} color="#FFD700" />
+              <View style={{marginLeft: 12}}>
+                <Text style={styles.badgeName}>Usta Yürüyüşçü</Text>
+                <Text style={styles.badgeDesc}>Uygulamada ilk etkinliğini tamamladın!</Text>
+              </View>
+            </View>
+          </View>
+        )}
         <TouchableOpacity style={styles.passwordRow} onPress={() => setPassModal(true)}>
           <View style={styles.passwordLeft}>
             <Ionicons name="lock-closed-outline" size={20} color="#666" />
@@ -134,6 +142,8 @@ export default function ProfileScreen() {
           <Ionicons name="log-out-outline" size={20} color="#FF3B30" />
           <Text style={styles.logoutText}>Çıkış Yap</Text>
         </TouchableOpacity>
+
+        
       </View>
 
       {/* KULLANICI ADI MODAL */}
@@ -229,5 +239,27 @@ const styles = StyleSheet.create({
   cancelText: { color: '#999', fontWeight: '600', padding: 10 },
   saveText: { color: '#007AFF', fontWeight: 'bold', padding: 10 },
   logoutButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 30, padding: 15, backgroundColor: '#FFECEC', borderRadius: 12, gap: 10 },
-  logoutText: { fontWeight: '600', color: '#FF3B30' }
+  logoutText: { fontWeight: '600', color: '#FF3B30' },
+  badgeSection: {
+    marginBottom: 25,
+  },
+  badgeCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF9E6', // Hafif altın tonlu arka plan
+    padding: 15,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: '#FFE082',
+  },
+  badgeName: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: '#856404',
+  },
+  badgeDesc: {
+    fontSize: 12,
+    color: '#856404',
+    opacity: 0.8,
+  },
 });

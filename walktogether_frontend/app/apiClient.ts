@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://192.168.1.221:5068'; // Adjust if needed (backend URL)
+const API_BASE_URL = 'http://192.168.1.3:5068'; // Adjust if needed (backend URL)
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -169,6 +169,15 @@ export const authApi = {
     await AsyncStorage.removeItem('username');
     await AsyncStorage.removeItem('userRole');
   },
+
+  savePushToken: async (userId: string, token: string) => {
+    const headers = await getAuthHeaders();
+    return apiRequest('/api/users/save-push-token', {
+      method: 'POST',
+      headers: headers || {},
+      body: JSON.stringify({ userId, token }),
+    });
+  },
 };
 
 
@@ -237,6 +246,7 @@ export const eventsApi = {
       body: JSON.stringify(eventData),
     });
   },
+  
 };
 
 
