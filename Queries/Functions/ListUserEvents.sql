@@ -10,7 +10,7 @@ RETURNS TABLE (
     "StartDate" timestamptz,
     "TotalDistanceMeters" integer,
     "InvitationCode" text,
-    "CreatorUsername" text,       -- <--- THIS IS THE MISSING COLUMN
+    "CreatorUsername" text,
     "IsCreator" boolean,
     "RoutePolyline" text,
     "WaypointsJson" text
@@ -20,16 +20,16 @@ AS $$
 BEGIN
     RETURN QUERY
     SELECT 
-        e."Id" AS "EventId",
-        e."Title",
-        e."Description",
-        e."StartDate",
-        e."TotalDistanceMeters",
-        e."InvitationCode",
-        u."UserName" AS "CreatorUsername", -- <--- Selecting and Aliasing the username
-        (u."UserName" = p_username) AS "IsCreator", -- specific logic: true if the param matches the creator
-        e."RoutePolyline",
-        e."WaypointsJson"
+        e.event_id AS "EventId",
+        e.title::text AS "Title",
+        e.description::text AS "Description",
+        e.start_date AS "StartDate",
+        e.total_distance_meters AS "TotalDistanceMeters",
+        e.invitation_code::text AS "InvitationCode",
+        u.username::text AS "CreatorUsername",
+        (u.username = p_username) AS "IsCreator",
+        e.route_polyline::text AS "RoutePolyline",
+        e.waypoints_json::text AS "WaypointsJson"
     FROM events e
     JOIN users u ON e.creator_id = u.user_id
     WHERE u.username = p_username;

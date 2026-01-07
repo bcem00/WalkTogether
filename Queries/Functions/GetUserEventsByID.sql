@@ -33,10 +33,10 @@ BEGIN
     JOIN 
         users u ON e.creator_id = u.user_id
     LEFT JOIN 
-        event_participants ep ON e.event_id = ep.event_id
+        attendances a ON e.event_id = a.event_id
     WHERE 
         e.creator_id = p_user_id 
         OR 
-        ep.user_id = p_user_id;
+        a.user_id = p_user_id;
 END;
 $$;
