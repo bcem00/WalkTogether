@@ -31,7 +31,7 @@ BEGIN
         e."RoutePolyline",
         e."WaypointsJson"
     FROM events e
-    JOIN users u ON e."CreatorId" = u."Id"
-    WHERE u."UserName" = p_username;
+    JOIN users u ON e.creator_id = u.user_id
+    WHERE u.username = p_username;
 END;
 $$;
