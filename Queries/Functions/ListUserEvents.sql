@@ -1,7 +1,3 @@
--- 1. First, we need to drop the old function to update the return signature
-DROP FUNCTION IF EXISTS get_events_by_username(text);
-
--- 2. Re-create the function with the missing "CreatorUsername" column
 CREATE OR REPLACE FUNCTION get_events_by_username(p_username text)
 RETURNS TABLE (
     "EventId" uuid,
@@ -14,11 +10,14 @@ RETURNS TABLE (
     "IsCreator" boolean,
     "RoutePolyline" text,
     "WaypointsJson" text
-) 
+)
 LANGUAGE plpgsql
 AS $$
 BEGIN
     RETURN QUERY
+    WITH cu AS (
+        SELECT user_id FROM users WHERE username = p_username
+    )
     SELECT 
         e.event_id AS "EventId",
         e.title::text AS "Title",
@@ -31,7 +30,14 @@ BEGIN
         e.route_polyline::text AS "RoutePolyline",
         e.waypoints_json::text AS "WaypointsJson"
     FROM events e
-    JOIN users u ON e.creator_id = u.user_id
-    WHERE u.username = p_username;
+    JOIN users u ON u.user_id = e.creator_id
+    JOIN cu ON TRUE
+    WHERE e.creator_id = cu.user_id
+       OR EXISTS (
+            SELECT 1
+             FROM attendances a
+            WHERE a.event_id = e.event_id
+              AND a.user_id = cu.user_id
+       );
 END;
 $$;

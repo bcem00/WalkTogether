@@ -17,7 +17,7 @@ LANGUAGE plpgsql
 AS $$
 BEGIN
     RETURN QUERY
-    SELECT DISTINCT
+    SELECT
         e.event_id,
         e.title,
         e.description,
@@ -28,15 +28,14 @@ BEGIN
         (e.creator_id = p_user_id) AS is_creator,
         e.route_polyline,    
         e.waypoints_json     
-    FROM 
-        events e
-    JOIN 
-        users u ON e.creator_id = u.user_id
-    LEFT JOIN 
-        attendances a ON e.event_id = a.event_id
-    WHERE 
-        e.creator_id = p_user_id 
-        OR 
-        a.user_id = p_user_id;
+    FROM events e
+    JOIN users u ON u.user_id = e.creator_id
+    WHERE e.creator_id = p_user_id
+       OR EXISTS (
+            SELECT 1
+            FROM attendances a
+            WHERE a.event_id = e.event_id
+              AND a.user_id = p_user_id
+       );
 END;
 $$;
