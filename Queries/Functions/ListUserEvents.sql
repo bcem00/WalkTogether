@@ -30,8 +30,8 @@ BEGIN
         (u."UserName" = p_username) AS "IsCreator", -- specific logic: true if the param matches the creator
         e."RoutePolyline",
         e."WaypointsJson"
-    FROM "Events" e
-    JOIN "AspNetUsers" u ON e."CreatorId" = u."Id"
+    FROM events e
+    JOIN users u ON e."CreatorId" = u."Id"
     WHERE u."UserName" = p_username;
 END;
 $$;
