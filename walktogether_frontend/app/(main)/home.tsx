@@ -94,7 +94,7 @@ export default function HomeScreen() {
   const handleQuickJoin = async () => {
     if (!inviteCodeInput) return;
     const userId = await AsyncStorage.getItem('userId');
-    const result = await eventsApi.joinEvent(userId || '', inviteCodeInput);
+    const result = await eventsApi.joinEvent(inviteCodeInput);
     if (result.data) {
       Alert.alert("Başarılı", "Etkinliğe katıldınız!");
       setInviteCodeInput('');

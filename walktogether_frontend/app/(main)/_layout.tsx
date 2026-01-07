@@ -29,7 +29,7 @@ export default function MainLayout() {
         const userId = await AsyncStorage.getItem('userId');
         if (userId) {
           console.log("Push Token Kaydediliyor:", token);
-          await authApi.savePushToken(userId, token);
+          await authApi.savePushToken(token);
         }
       }
     });

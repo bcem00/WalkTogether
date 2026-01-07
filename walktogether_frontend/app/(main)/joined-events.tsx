@@ -124,7 +124,7 @@ export default function JoinedEventsScreen() {
           style: "destructive", 
           onPress: async () => {
             setLeaveLoading(true);
-            const result = await eventsApi.leaveEvent(userId, eventId);
+            const result = await eventsApi.leaveEvent(eventId);
             setLeaveLoading(false);
 
             if (result.data) {

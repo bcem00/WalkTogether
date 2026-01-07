@@ -72,7 +72,7 @@ export default function ProfileScreen() {
         return;
     }
 
-    const result = await authApi.changePassword({ userId, oldPassword, newPassword });
+    const result = await authApi.changePassword({ oldPassword, newPassword });
     
     if (result.data) {
       Alert.alert("Başarılı", "Şifreniz başarıyla değiştirildi.");

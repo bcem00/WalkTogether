@@ -62,7 +62,7 @@ export default function LoginScreen() {
           Alert.alert("Giriş Başarısız", result.error || "Hatalı bilgiler.");
         }
       } else {
-        // --- KAYIT İŞLEMİ ---
+        
         const result = await authApi.register({
           firstName,
           lastName,
