@@ -39,7 +39,11 @@ export default function HomeScreen() {
   const fetchEvents = async () => {
     if (!refreshing) setLoading(true);
     setIsFiltered(false); // Yenilendiğinde filtre durumunu sıfırla
-    const result = await eventsApi.getUpcomingEvents();
+    console.log("Upcoming etkinlikler çekiliyor...");
+  
+  // DEBUG İÇİN BU SATIRI EKLE:
+  const result = await eventsApi.getUpcomingEvents();
+  console.log("--- API RESPONSE DATA ---", JSON.stringify(result, null, 2));
     
     if (result.data) {
       setEvents(result.data);

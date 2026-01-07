@@ -76,15 +76,26 @@ export default function JoinedEventsScreen() {
   }, [destinations, routeCoords]);
 
   const fetchJoinedEvents = async () => {
-    if (!refreshing) setLoading(true); 
-    const username = await AsyncStorage.getItem('username');
-    const result = await eventsApi.getEventsByUsername(username || '');
-    if (result.data) {
-      setEvents(result.data);
-    }
-    setLoading(false);
-    setRefreshing(false);
-  };
+  if (!refreshing) setLoading(true); 
+  const username = await AsyncStorage.getItem('username');
+  console.log("Kullanıcı adına göre etkinlikler çekiliyor:", username);
+  
+  const result = await eventsApi.getEventsByUsername(username || '');
+  
+  // LOG: Gelen verinin yapısını terminalde mutlaka kontrol et
+  if (result.error) {
+    console.log("❌ API HATASI:", result.error);
+  } else {
+    console.log("✅ GELEN VERİ:", result.data);
+    setEvents(result.data || []);
+  }
+
+  if (result.data) {
+    setEvents(result.data);
+  }
+  setLoading(false);
+  setRefreshing(false);
+};
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -172,25 +183,29 @@ export default function JoinedEventsScreen() {
   const waypoints = destinations.length > 2 ? destinations.slice(1, -1).map(d => ({ latitude: d.latitude, longitude: d.longitude })) : [];
 
   const renderEventCard = ({ item }: { item: any }) => (
-    <TouchableOpacity style={styles.card} onPress={() => handleOpenInfo(item)}>
-      <View style={styles.cardTop}>
-        <Text style={styles.cardTitle}>{item.title}</Text>
-        <View style={styles.codeBadge}>
-          <Text style={styles.codeText}>{item.invitationCode || item.invitation_code}</Text>
-        </View>
+  // DTO'daki 'eventId' alanını kullandığından emin ol
+  <TouchableOpacity style={styles.card} onPress={() => handleOpenInfo(item)}>
+    <View style={styles.cardTop}>
+      <Text style={styles.cardTitle}>{item.title}</Text>
+      <View style={styles.codeBadge}>
+        {/* Hem camelCase hem snake_case kontrolü */}
+        <Text style={styles.codeText}>{item.invitationCode || item.invitation_code}</Text>
       </View>
-      <Text style={styles.cardDesc} numberOfLines={2}>{item.description}</Text>
-      <View style={styles.cardBottom}>
-        <Ionicons name="calendar-outline" size={14} color="#888" />
-        <Text style={styles.cardDate}>{new Date(item.startDate || item.start_date).toLocaleDateString('tr-TR')}</Text>
-        {item.totalDistanceMeters && (
-             <Text style={[styles.cardDate, { marginLeft: 10 }]}>
-               {(item.totalDistanceMeters / 1000).toFixed(2)} km
-             </Text>
-        )}
-      </View>
-    </TouchableOpacity>
-  );
+    </View>
+    <Text style={styles.cardDesc} numberOfLines={2}>{item.description}</Text>
+    <View style={styles.cardBottom}>
+      <Ionicons name="calendar-outline" size={14} color="#888" />
+      <Text style={styles.cardDate}>
+        {new Date(item.startDate || item.start_date).toLocaleDateString('tr-TR')}
+      </Text>
+      {(item.totalDistanceMeters || item.total_distance_meters) && (
+           <Text style={[styles.cardDate, { marginLeft: 10 }]}>
+             {((item.totalDistanceMeters || item.total_distance_meters) / 1000).toFixed(2)} km
+           </Text>
+      )}
+    </View>
+  </TouchableOpacity>
+);
 
   return (
     <View style={styles.container}>

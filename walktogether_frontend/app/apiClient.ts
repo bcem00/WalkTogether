@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://192.168.1.221:5068'; // Adjust if needed (backend URL)
+const API_BASE_URL = 'http://192.168.1.3:5068'; // Adjust if needed (backend URL)
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -88,8 +88,16 @@ async function apiRequest<T>(
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-      return { error: errorData.message || `HTTP ${response.status}` };
+      // HATA DURUMUNDA: JSON okumaya çalış, olmazsa durum kodunu dön
+      const errorText = await response.text(); // json() yerine text() ile ham hatayı alalım
+      console.log(`❌ Sunucu Hatası [${response.status}]:`, errorText);
+      
+      try {
+        const errorData = JSON.parse(errorText);
+        return { error: errorData.message || `HTTP ${response.status}` };
+      } catch {
+        return { error: `Sunucu hatası: ${response.status}` };
+      }
     }
 
     const data = await response.json();
@@ -219,7 +227,10 @@ export const eventsApi = {
   },
 
   getEventsByUsername: async (username: string) => {
-    return apiRequest<EventResponse[]>(`/api/events/user/${username}`);
+    const headers = await getAuthHeaders(); // Token eklemesi
+    return apiRequest<EventResponse[]>(`/api/events/user/${username}`, {
+      headers: headers || {}
+    });
   },
 
   getEventsById: async (userId: string) => {
@@ -240,12 +251,20 @@ export const eventsApi = {
     return apiRequest<Array<{ destination_id: string; latitude: number; longitude: number; order_in_route: number }>>(`/api/events/${eventId}/destinations`);
   },
 
-  createEvent: async (eventData: { CreatorId?: string; Title: string; Description?: string; StartDate: string; RoutePolyline?: string; WaypointsJson?: string; TotalDistanceMeters?: number; EstimatedDurationSeconds?: number }) => {
-    return apiRequest<{ eventId: string; message: string, invitationCode: string }>('/api/events/create', {
-      method: 'POST',
-      body: JSON.stringify(eventData),
-    });
-  },
+  createEvent: async (eventData: { CreatorId?: string; Title: string; Description?: string; StartDate: string; }) => {
+  const headers = await getAuthHeaders(); // Token'ı alıyoruz
+  
+  if (!headers) return { error: 'Oturum açılmamış.' };
+
+  return apiRequest<{ eventId: string; message: string, invitationCode: string }>('/api/events/create', {
+    method: 'POST',
+    headers: { 
+      ...headers, 
+      'Content-Type': 'application/json' 
+    },
+    body: JSON.stringify(eventData),
+  });
+},
   
 };
 
