@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://192.168.1.3:5068'; // Adjust if needed (backend URL)
+const API_BASE_URL = 'http://192.168.1.221:5068'; // Adjust if needed (backend URL)
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -8,15 +8,13 @@ interface ApiResponse<T> {
 }
 
 export interface EventResponse {
-  eventId: string; // C# DTO 'EventId' becomes 'eventId' in JSON
+  eventId: string; 
   title: string;
   description: string;
   startDate: string;
   invitationCode: string;
-  creatorUsername: string;
   isCreator: boolean;
   
-  // ✅ New fields for map rendering
   routePolyline?: string;
   waypointsJson?: string;
   totalDistanceMeters?: number;
@@ -227,7 +225,7 @@ export const eventsApi = {
   },
 
   getEventsByUsername: async (username: string) => {
-    const headers = await getAuthHeaders(); // Token eklemesi
+    const headers = await getAuthHeaders(); 
     return apiRequest<EventResponse[]>(`/api/events/user/${username}`, {
       headers: headers || {}
     });

@@ -1,23 +1,37 @@
-CREATE OR REPLACE FUNCTION get_events_by_username(p_username VARCHAR)
+-- 1. First, we need to drop the old function to update the return signature
+DROP FUNCTION IF EXISTS get_events_by_username(text);
+
+-- 2. Re-create the function with the missing "CreatorUsername" column
+CREATE OR REPLACE FUNCTION get_events_by_username(p_username text)
 RETURNS TABLE (
-    title VARCHAR,
-    description TEXT,
-    start_date TIMESTAMPTZ,
-    invitation_code VARCHAR,
-    creator_id UUID
+    "EventId" uuid,
+    "Title" text,
+    "Description" text,
+    "StartDate" timestamptz,
+    "TotalDistanceMeters" integer,
+    "InvitationCode" text,
+    "CreatorUsername" text,       -- <--- THIS IS THE MISSING COLUMN
+    "IsCreator" boolean,
+    "RoutePolyline" text,
+    "WaypointsJson" text
 ) 
 LANGUAGE plpgsql
 AS $$
 BEGIN
     RETURN QUERY
     SELECT 
-        e.title, 
-        e.description, 
-        e.start_date, 
-        e.invitation_code, 
-        e.creator_id
-    FROM events e
-    JOIN users u ON u.user_id = e.creator_id
-    WHERE u.username = p_username;
+        e."Id" AS "EventId",
+        e."Title",
+        e."Description",
+        e."StartDate",
+        e."TotalDistanceMeters",
+        e."InvitationCode",
+        u."UserName" AS "CreatorUsername", -- <--- Selecting and Aliasing the username
+        (u."UserName" = p_username) AS "IsCreator", -- specific logic: true if the param matches the creator
+        e."RoutePolyline",
+        e."WaypointsJson"
+    FROM "Events" e
+    JOIN "AspNetUsers" u ON e."CreatorId" = u."Id"
+    WHERE u."UserName" = p_username;
 END;
 $$;
