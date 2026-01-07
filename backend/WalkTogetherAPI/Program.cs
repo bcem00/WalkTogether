@@ -22,7 +22,7 @@ builder.Services.AddSwaggerGen();
 // Register your custom services
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<EventService>();
-builder.Services.AddScoped<TokenHelper>(); // Don't forget to register TokenHelper itself!
+builder.Services.AddScoped<TokenHelper>(); 
 builder.Services.AddHttpClient<WalkTogetherAPI.Services.GoogleRoutesService>();
 
 // --- AUTHENTICATION CONFIGURATION ---
