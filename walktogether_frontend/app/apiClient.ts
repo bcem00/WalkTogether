@@ -162,7 +162,7 @@ export const authApi = {
     });
   },
 
-  // Logout helper
+  
   logout: async () => {
     await AsyncStorage.removeItem('userToken');
     await AsyncStorage.removeItem('userId');
@@ -223,9 +223,6 @@ export const eventsApi = {
   },
 
   getEventsById: async (userId: string) => {
-    // We also need to send the Authorization header here, handled by apiRequest logic 
-    // but ensure your getAuthHeaders() logic wraps this if needed, 
-    // or rely on the apiRequest helper if you've set it up to auto-attach tokens.
     const headers = await getAuthHeaders();
     return apiRequest<EventResponse[]>(`/api/events/user-id/${userId}`, {
        headers: headers || {} 
