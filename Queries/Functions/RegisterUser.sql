@@ -13,7 +13,7 @@ DECLARE
     v_new_user_id UUID;
 BEGIN
     -- 1. 'user' rolünün ID'sini dinamik olarak buluyoruz
-    SELECT role_id INTO v_role_id FROM roles WHERE role_name = 'user';
+    SELECT role_id INTO v_role_id FROM roles WHERE role_name = 'walktogether_user';
     
     -- Eğer rol tablosu boşsa veya 'user' yoksa hata fırlat
     IF v_role_id IS NULL THEN
