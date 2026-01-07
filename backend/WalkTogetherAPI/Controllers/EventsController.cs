@@ -110,24 +110,36 @@ public class EventsController : ControllerBase
         }
     }
 
-    // POST: api/events/join
     [HttpPost("join")]
+    [Authorize] // Ensure the user is logged in
     public async Task<IActionResult> JoinEvent([FromBody] JoinEventRequest request)
     {
-        // Security Check
-        if (!ValidateUserAccess(request.UserId)) return Forbid();
+        // 1. Get User ID securely from the Token/Context
+        // (Assuming you have a standard claim setup, otherwise use your specific claim type)
+        var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.ToString();
+
+        if (!Guid.TryParse(userIdString, out Guid userId))
+            return Unauthorized();
 
         try
         {
-            var success = await _eventService.JoinEventByCodeAsync(request.UserId, request.InviteCode);
-            if (success)
-                return Ok(new { message = "Joined event successfully" });
-            else
-                return BadRequest(new { message = "Failed to join event" });
+            // 2. Call Service
+            var result = await _eventService.JoinEventByCodeAsync(userId, request.InviteCode);
+
+            
+            return result switch
+            {
+                JoinResult.Success => Ok(new { message = "Joined event successfully." }),
+                JoinResult.AlreadyJoined => Ok(new { message = "You are already a participant of this event." }), // Or 409 Conflict
+                JoinResult.InvalidCode => NotFound(new { message = "Invalid invitation code." }),
+                _ => BadRequest(new { message = "Unable to join event." })
+            };
         }
         catch (Exception ex)
         {
-            return BadRequest(new { message = ex.Message });
+
+            // Return a generic error message to the client
+            return StatusCode(500, new { message = "An internal error occurred. Please try again later." });
         }
     }
 

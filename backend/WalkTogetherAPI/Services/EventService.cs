@@ -6,6 +6,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using WalkTogether.Domain.Entities;
+using Npgsql;
+
+
+public enum JoinResult
+{
+    InvalidCode = 0,
+    Success = 1,
+    AlreadyJoined = 2
+}
+
 
 public class EventService
 {
@@ -24,7 +34,7 @@ public class EventService
             .SqlQueryRaw<EventSummary>(sql, username)
             .ToListAsync();
     }
-    
+
     public async Task<List<EventSummary>> GetEventsByUserIdAsync(Guid userId)
     {
         var sql = "SELECT * FROM get_events_by_user_id(@p0) AS \"Value\"";
@@ -33,16 +43,25 @@ public class EventService
             .ToListAsync();
     }
 
+
+
     // 2. Join an event by invitation code
-    public async Task<bool> JoinEventByCodeAsync(Guid userId, string inviteCode)
+
+    public async Task<JoinResult> JoinEventByCodeAsync(Guid userId, string inviteCode)
     {
-        var sql = "SELECT join_event_by_code(@p0, @p1) AS \"Value\"";
-        return await _context.Database
-            .SqlQueryRaw<bool>(sql, userId, inviteCode)
+        // Use named parameters for clarity
+        var sql = "SELECT join_event_by_code(@userId, @inviteCode) as \"Value\"";
+
+        var result = await _context.Database
+            .SqlQueryRaw<int>(sql,
+                new NpgsqlParameter("@userId", userId),
+                new NpgsqlParameter("@inviteCode", inviteCode))
             .FirstOrDefaultAsync();
+
+        return (JoinResult)result;
     }
 
-    // 3. Leave an event
+
     public async Task<bool> LeaveEventAsync(Guid userId, Guid eventId)
     {
         var sql = "SELECT leave_event(@p0, @p1) AS \"Value\"";
@@ -95,7 +114,7 @@ public class EventService
             .FirstOrDefaultAsync();
     }
 
-    
+
     public async Task<WalkTogether.Domain.Entities.Event> GetEventByIdAsync(Guid eventId)
     {
         return await _context.Events.FindAsync(eventId);
