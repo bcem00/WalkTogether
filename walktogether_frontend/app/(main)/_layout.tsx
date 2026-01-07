@@ -66,7 +66,7 @@ export default function MainLayout() {
 
       // Buradaki projectId'yi app.json'dan almayı unutma
       token = (await Notifications.getExpoPushTokenAsync({
-        projectId: 'BURAYA_APP_JSONDAKI_PROJECT_ID_GELECEK' 
+        projectId: '1eedce21-67a8-4e6b-87e7-b52214f92484' 
       })).data;
     }
 

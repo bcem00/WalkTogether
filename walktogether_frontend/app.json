@@ -45,6 +45,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "1eedce21-67a8-4e6b-87e7-b52214f92484"
+      }
+    },
+    "owner": "xerocare"
   }
 }
