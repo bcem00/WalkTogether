@@ -9,7 +9,7 @@ RETURNS UUID -- Geriye yeni oluşan kullanıcının ID'sini döndürür
 LANGUAGE plpgsql
 AS $$
 DECLARE
-    v_role_id INT;
+    v_role_id UUID;
     v_new_user_id UUID;
 BEGIN
     -- 1. 'user' rolünün ID'sini dinamik olarak buluyoruz
