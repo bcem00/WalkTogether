@@ -95,11 +95,6 @@ export default function ProfileScreen() {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <View style={styles.content}>
-          
-         
-
-        </View>
         <Text style={styles.fullName}>{user?.firstName} {user?.lastName}</Text>
       </View>
 
@@ -216,7 +211,7 @@ const ProfileItem = ({ label, value, canEdit, onEdit }: any) => (
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
-  header: { alignItems: 'center', paddingVertical: 40, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
+  header: { alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
   avatarContainer: { position: 'relative' },
   avatar: { width: 90, height: 90, borderRadius: 45, backgroundColor: '#007AFF', justifyContent: 'center', alignItems: 'center' },
   avatarText: { color: '#fff', fontSize: 28, fontWeight: 'bold' },

@@ -81,23 +81,58 @@ export default function MainLayout() {
     return token;
   }
 
-  return (
-    <Tabs screenOptions={{ tabBarActiveTintColor: '#007AFF', headerShown: true }}>
+ return (
+    <Tabs 
+      screenOptions={{ 
+        tabBarActiveTintColor: '#007AFF', 
+        headerShown: true,
+        
+        // --- BURASI DÜZELDİ: Tüm stil özellikleri artık screenOptions içinde ---
+        headerStyle: {
+          height: 40,            // Header yüksekliğini azalttık
+          backgroundColor: '#fff',
+          elevation: 2,          // Android gölge
+          shadowOpacity: 0.1,    // iOS gölge
+        },
+        headerTitleStyle: {
+          fontSize: 16,          // Daha kompakt yazı boyutu
+          fontWeight: 'bold',
+        },
+        headerTitleContainerStyle: {
+        marginTop: -10,        // Negatif değer yazıyı yukarı fırlatır
+        paddingTop: 0,
+      },
+        headerStatusBarHeight: 0, // Header'ı yukarı çekerek boşluğu azaltır
+        headerTitleAlign: 'center' // Başlığı ortalayarak daha şık görünmesini sağlar
+      }}
+    >
       <Tabs.Screen 
         name="home" 
-        options={{ title: 'Keşfet', tabBarIcon: ({color}) => <Ionicons name="map-outline" size={24} color={color} /> }} 
+        options={{ 
+          title: 'Keşfet', 
+          tabBarIcon: ({color}) => <Ionicons name="map-outline" size={24} color={color} /> 
+        }} 
       />
       <Tabs.Screen 
         name="create-event" 
-        options={{ title: 'Etkinlik Kur', tabBarIcon: ({color}) => <Ionicons name="add-circle-outline" size={24} color={color} /> }} 
+        options={{ 
+          title: 'Etkinlik Kur', 
+          tabBarIcon: ({color}) => <Ionicons name="add-circle-outline" size={24} color={color} /> 
+        }} 
       />
       <Tabs.Screen 
         name="joined-events" 
-        options={{ title: 'Etkinliklerim', tabBarIcon: ({color}) => <Ionicons name="walk-outline" size={24} color={color} /> }} 
+        options={{ 
+          title: 'Etkinliklerim', 
+          tabBarIcon: ({color}) => <Ionicons name="walk-outline" size={24} color={color} /> 
+        }} 
       />
       <Tabs.Screen 
         name="profile" 
-        options={{ title: 'Profilim', tabBarIcon: ({color}) => <Ionicons name="person-outline" size={24} color={color} /> }} 
+        options={{ 
+          title: 'Profilim', 
+          tabBarIcon: ({color}) => <Ionicons name="person-outline" size={24} color={color} /> 
+        }} 
       />
     </Tabs>
   );

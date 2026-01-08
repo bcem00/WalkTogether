@@ -313,7 +313,7 @@ export default function JoinedEventsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f5f5' },
-  pageHeader: { padding: 25, paddingTop: 60, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#eee' },
+  pageHeader: { padding: 25, paddingTop: 20, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#eee' },
   headerTitle: { fontSize: 24, fontWeight: 'bold', color: '#333' },
   headerSubtitle: { fontSize: 14, color: '#888', marginTop: 5 },
   card: { backgroundColor: '#fff', marginHorizontal: 20, marginTop: 15, padding: 15, borderRadius: 15, elevation: 3 },

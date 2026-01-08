@@ -1,9 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useRef, useState } from 'react';
 import {
   ActivityIndicator, Alert, FlatList,
+  Keyboard,
   RefreshControl,
   StyleSheet,
   Text, TextInput, TouchableOpacity, View
@@ -13,11 +13,12 @@ import { eventsApi } from '../apiClient';
 
 export default function HomeScreen() {
   const [events, setEvents] = useState<any[]>([]);
+  const [allEvents, setAllEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [inviteCodeInput, setInviteCodeInput] = useState('');
   
-  // --- YENİ: FİLTRELEME STATE'LERİ ---
+  const [searchText, setSearchText] = useState('');
   const [minDist, setMinDist] = useState('');
   const [maxDist, setMaxDist] = useState('');
   const [isFilterVisible, setIsFilterVisible] = useState(false);
@@ -26,7 +27,6 @@ export default function HomeScreen() {
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [destinations, setDestinations] = useState<any[]>([]);
   const [infoLoading, setInfoLoading] = useState(false);
-  const GOOGLE_MAPS_APIKEY = 'AIzaSyDFYEsvv3CUOa07f13Go1T2XKul0HbtfnU';
 
   const mapRef = useRef<MapView>(null);
 
@@ -38,41 +38,54 @@ export default function HomeScreen() {
 
   const fetchEvents = async () => {
     if (!refreshing) setLoading(true);
-    setIsFiltered(false); // Yenilendiğinde filtre durumunu sıfırla
-    console.log("Upcoming etkinlikler çekiliyor...");
-  
-  // DEBUG İÇİN BU SATIRI EKLE:
-  const result = await eventsApi.getUpcomingEvents();
-  console.log("--- API RESPONSE DATA ---", JSON.stringify(result, null, 2));
+    setIsFiltered(false);
+    setSearchText('');
+    setMinDist('');
+    setMaxDist('');
     
+    const result = await eventsApi.getUpcomingEvents();
     if (result.data) {
       setEvents(result.data);
+      setAllEvents(result.data);
     }
     setLoading(false);
     setRefreshing(false);
   };
 
-  // --- YENİ: FİLTRELEME MANTIĞI ---
+  const handleSearch = (text: string) => {
+    setSearchText(text);
+    if (!text.trim()) {
+      setEvents(allEvents);
+    } else {
+      const filtered = allEvents.filter(event => 
+        event.title.toLowerCase().includes(text.toLowerCase())
+      );
+      setEvents(filtered);
+    }
+  };
+
+  // --- 2. MESAFE FİLTRELEME (KM -> METRE DÖNÜŞÜMÜ DÜZELTİLDİ) ---
   const handleFilter = async () => {
-    // Sayısal değerleri kontrol et
-    const min = parseFloat(minDist) || 0;
-    const max = parseFloat(maxDist) || 999;
+    Keyboard.dismiss();
+    // 1. Kullanıcıdan KM alıyoruz, API metre beklediği için 1000 ile çarpıp gönderiyoruz
+    const minMeters = (parseFloat(minDist) || 0) * 1000;
+    const maxMeters = (parseFloat(maxDist) || 999) * 1000;
 
     setLoading(true);
-    const result = await eventsApi.filterEventsByDistance(min, max);
+    const result = await eventsApi.filterEventsByDistance(minMeters, maxMeters);
     
     if (result.data) {
-      // API'den gelen farklı key yapılarını (event_title vb.) mevcut kart yapısına uyarla
       const mapped = result.data.map((item: any) => ({
         ...item,
         event_id: item.event_id || Math.random().toString(),
         title: item.event_title || item.title,
         start_date: item.event_start_date || item.start_date,
-        // Backend'den km geliyorsa metreye çevir (karttaki bölme işlemi için)
-        route_distance_meters: (item.route_distance || item.route_distance_meters / 1000) * 1000 
+        // DÜZELTME: Backend zaten METRE gönderdiği için burada tekrar 1000 ile ÇARPMIYORUZ.
+        route_distance_meters: item.route_distance || item.route_distance_meters
       }));
       
       setEvents(mapped);
+      setAllEvents(mapped);
       setIsFiltered(true);
     } else {
       Alert.alert("Hata", result.error || "Filtreleme yapılamadı.");
@@ -81,8 +94,6 @@ export default function HomeScreen() {
   };
 
   const clearFilter = () => {
-    setMinDist('');
-    setMaxDist('');
     fetchEvents();
   };
 
@@ -93,44 +104,19 @@ export default function HomeScreen() {
 
   const handleQuickJoin = async () => {
     if (!inviteCodeInput) return;
-    const userId = await AsyncStorage.getItem('userId');
+    Keyboard.dismiss();
     const result = await eventsApi.joinEvent(inviteCodeInput);
     if (result.data) {
       Alert.alert("Başarılı", "Etkinliğe katıldınız!");
       setInviteCodeInput('');
       fetchEvents();
     } else {
-      Alert.alert("Hata", result.error || "Kod geçersiz veya zaten katıldınız.");
+      Alert.alert("Hata", result.error || "Kod geçersiz.");
     }
   };
-
-  const handleOpenInfo = async (event: any) => {
-    setSelectedEvent(event);
-    setInfoLoading(true);
-    const result = await eventsApi.getDestinationsForEvent(event.event_id);
-    if (result.data) {
-      const mapped = result.data.map((d: any) => ({
-        ...d,
-        latitude: d.latitude || d.lat || d.Lat,
-        longitude: d.longitude || d.lng || d.Lng,
-      })).sort((a: any, b: any) => a.order_in_route - b.order_in_route);
-      setDestinations(mapped);
-      if (mapped.length > 0 && mapRef.current) {
-        mapRef.current.fitToCoordinates(mapped, {
-          edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
-          animated: true,
-        });
-      }
-    }
-    setInfoLoading(false);
-  };
-
-  const origin = destinations.length > 0 ? { latitude: destinations[0].latitude, longitude: destinations[0].longitude } : null;
-  const destination = destinations.length > 1 ? { latitude: destinations[destinations.length - 1].latitude, longitude: destinations[destinations.length - 1].longitude } : null;
-  const waypoints = destinations.length > 2 ? destinations.slice(1, -1).map(d => ({ latitude: d.latitude, longitude: d.longitude })) : [];
 
   const renderEventCard = ({ item }: { item: any }) => (
-    <TouchableOpacity style={styles.card} onPress={() => handleOpenInfo(item)}>
+    <TouchableOpacity style={styles.card} onPress={() => {}}>
       <View style={styles.cardTop}>
         <Text style={styles.cardTitle}>{item.title}</Text>
         <View style={styles.codeBadge}>
@@ -146,7 +132,8 @@ export default function HomeScreen() {
          <View style={styles.statItem}>
             <Ionicons name="walk" size={14} color="#28a745" />
             <Text style={styles.statText}>
-                {((item.route_distance_meters || item.route_distance * 1000) / 1000).toFixed(1)} km
+                {/* Metreyi KM'ye çevirip gösteriyoruz */}
+                {(item.route_distance_meters / 1000).toFixed(1)} km
             </Text>
          </View>
       </View>
@@ -172,43 +159,63 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* YENİ: FİLTRELEME PANELİ */}
+      <View style={styles.searchSection}>
+        <View style={styles.searchBar}>
+          <Ionicons name="search" size={18} color="#888" style={{marginLeft: 12}} />
+          <TextInput 
+            style={styles.searchInput}
+            placeholder="Etkinlik başlığına göre ara..."
+            value={searchText}
+            onChangeText={handleSearch}
+          />
+        </View>
+      </View>
+
       <View style={styles.filterSection}>
         <TouchableOpacity 
           style={styles.filterToggle} 
           onPress={() => setIsFilterVisible(!isFilterVisible)}
         >
           <Ionicons name="options-outline" size={20} color="#333" />
-          <Text style={styles.filterToggleText}>Mesafe Filtrele (KM)</Text>
+          <Text style={styles.filterToggleText}>Mesafe Filtrele</Text>
           {isFiltered && <View style={styles.filterDot} />}
         </TouchableOpacity>
 
         {isFilterVisible && (
-  <View style={styles.filterInputs}>
-    <TextInput 
-      style={styles.smallInput} 
-      placeholder="Min km" // "Min" eklendi
-      keyboardType="numeric"
-      value={minDist}
-      onChangeText={setMinDist}
-    />
-    <TextInput 
-      style={styles.smallInput} 
-      placeholder="Max km" // "Max" eklendi
-      keyboardType="numeric"
-      value={maxDist}
-      onChangeText={setMaxDist}
-    />
-    <TouchableOpacity style={styles.applyBtn} onPress={handleFilter}>
-      <Text style={styles.applyBtnText}>Uygula</Text>
-    </TouchableOpacity>
-    {isFiltered && (
-      <TouchableOpacity onPress={clearFilter}>
-        <Ionicons name="close-circle" size={24} color="#FF3B30" />
-      </TouchableOpacity>
-    )}
-  </View>
-)}
+          <View style={styles.filterContainer}>
+            <Text style={styles.filterHint}>Mesafe aralığını KM cinsinden giriniz:</Text>
+            <View style={styles.filterInputs}>
+              <View style={styles.inputWrapper}>
+                <Text style={styles.inputLabel}>Min (KM)</Text>
+                <TextInput 
+                  style={styles.smallInput} 
+                  placeholder="0" 
+                  keyboardType="numeric" 
+                  value={minDist} 
+                  onChangeText={setMinDist} 
+                />
+              </View>
+              <View style={styles.inputWrapper}>
+                <Text style={styles.inputLabel}>Max (KM)</Text>
+                <TextInput 
+                  style={styles.smallInput} 
+                  placeholder="99" 
+                  keyboardType="numeric" 
+                  value={maxDist} 
+                  onChangeText={setMaxDist} 
+                />
+              </View>
+              <TouchableOpacity style={styles.applyBtn} onPress={handleFilter}>
+                <Text style={styles.applyBtnText}>Uygula</Text>
+              </TouchableOpacity>
+              {isFiltered && (
+                <TouchableOpacity onPress={clearFilter}>
+                  <Ionicons name="close-circle" size={28} color="#FF3B30" />
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        )}
       </View>
 
       <View style={styles.headerRow}>
@@ -228,43 +235,44 @@ export default function HomeScreen() {
           renderItem={renderEventCard}
           keyExtractor={item => (item.event_id || Math.random()).toString()}
           contentContainerStyle={{ padding: 20 }}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#007AFF"]} />
-          }
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#007AFF"]} />}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
                <Ionicons name="map-outline" size={50} color="#ccc" />
-               <Text style={styles.emptyText}>Kriterlere uygun etkinlik bulunamadı.</Text>
+               <Text style={styles.emptyText}>Sonuç bulunamadı.</Text>
             </View>
           }
         />
       )}
-
-      {/* Modal Kısmı Aynı Kalıyor... */}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f5f5' },
-  joinPanel: { flexDirection: 'row', padding: 20, paddingTop: 50, backgroundColor: '#fff', gap: 10, borderBottomWidth: 1, borderBottomColor: '#eee' },
-  joinInput: { flex: 1, backgroundColor: '#f0f0f0', padding: 12, borderRadius: 10 },
+  joinPanel: { flexDirection: 'row', padding: 20, paddingTop: 20, backgroundColor: '#fff', gap: 10, borderBottomWidth: 1, borderBottomColor: '#eee' },
+  joinInput: { flex: 1, backgroundColor: '#f0f0f0', padding: 8, borderRadius: 10 },
   joinBtn: { backgroundColor: '#007AFF', paddingHorizontal: 20, justifyContent: 'center', borderRadius: 10 },
   joinBtnText: { color: '#fff', fontWeight: 'bold' },
-  // FİLTRELEME STİLLERİ
+  searchSection: { paddingHorizontal: 20, marginTop: 15 },
+  searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#eee', elevation: 2, height: 45 },
+  searchInput: { flex: 1, paddingLeft: 10, fontSize: 14, color: '#333' },
   filterSection: { paddingHorizontal: 20, marginTop: 15 },
   filterToggle: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   filterToggleText: { fontSize: 14, fontWeight: '600', color: '#333' },
   filterDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#007AFF' },
-  filterInputs: { flexDirection: 'row', alignItems: 'center', marginTop: 10, gap: 10, backgroundColor: '#fff', padding: 10, borderRadius: 12, elevation: 1 },
-  smallInput: { flex: 1, backgroundColor: '#f5f5f5', padding: 8, borderRadius: 8, fontSize: 13, borderWidth: 1, borderColor: '#eee' },
-  applyBtn: { backgroundColor: '#333', paddingHorizontal: 15, paddingVertical: 10, borderRadius: 8 },
+  filterContainer: { backgroundColor: '#fff', padding: 12, borderRadius: 12, marginTop: 10, elevation: 1 },
+  filterHint: { fontSize: 11, color: '#888', marginBottom: 8 },
+  filterInputs: { flexDirection: 'row', alignItems: 'flex-end', gap: 10 },
+  inputWrapper: { flex: 1 },
+  inputLabel: { fontSize: 10, color: '#555', marginBottom: 4, fontWeight: '600' },
+  smallInput: { backgroundColor: '#f5f5f5', padding: 8, borderRadius: 8, fontSize: 13, borderWidth: 1, borderColor: '#eee' },
+  applyBtn: { backgroundColor: '#333', paddingHorizontal: 15, paddingVertical: 10, borderRadius: 8, marginBottom: 2 },
   applyBtnText: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
-  // DİĞER STİLLER
-  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingRight: 20 },
-  sectionHeader: { fontSize: 20, fontWeight: 'bold', padding: 20, paddingBottom: 0 },
+  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingRight: 20, marginTop:0 },
+  sectionHeader: { fontSize: 18, fontWeight: 'bold', padding: 10, paddingBottom: 0 },
   countBadge: { backgroundColor: '#007AFF', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 20, marginTop: 18 },
-  countText: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
+  countText: { color: '#fff', fontSize: 11, fontWeight: 'bold' },
   card: { backgroundColor: '#fff', marginHorizontal: 20, marginTop: 15, padding: 15, borderRadius: 15, elevation: 3 },
   cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   cardTitle: { fontSize: 17, fontWeight: 'bold' },
@@ -276,18 +284,6 @@ const styles = StyleSheet.create({
   statText: { fontSize: 12, color: '#555', fontWeight: '500' },
   cardBottom: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   cardDate: { fontSize: 12, color: '#888' },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  modalContent: { backgroundColor: '#fff', borderTopLeftRadius: 25, borderTopRightRadius: 25, height: '85%', padding: 20 },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 },
-  modalTitle: { fontSize: 20, fontWeight: 'bold' },
-  mapBox: { height: 250, borderRadius: 15, overflow: 'hidden', marginBottom: 20 },
-  map: { width: '100%', height: '100%' },
-  detailRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 15, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: '#eee' },
-  detailLabel: { color: '#888' },
-  detailValue: { fontWeight: 'bold', color: '#007AFF' },
-  detailDesc: { color: '#444', lineHeight: 22, fontSize: 15 },
   emptyContainer: { alignItems: 'center', marginTop: 80 },
-  emptyText: { textAlign: 'center', marginTop: 15, color: '#999', fontSize: 14 },
-  markerBadge: { backgroundColor: '#fff', borderRadius: 10, paddingHorizontal: 5, borderWidth: 1, borderColor: '#007AFF', position: 'absolute', top: -15, alignSelf: 'center', zIndex: 1 },
-  markerText: { fontSize: 10, fontWeight: 'bold', color: '#007AFF' }
+  emptyText: { textAlign: 'center', marginTop: 15, color: '#999', fontSize: 14 }
 });
