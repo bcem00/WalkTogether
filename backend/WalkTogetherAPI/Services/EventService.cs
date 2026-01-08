@@ -43,13 +43,10 @@ public class EventService
             .ToListAsync();
     }
 
-
-
-    // 2. Join an event by invitation code
-
+    
     public async Task<JoinResult> JoinEventByCodeAsync(Guid userId, string inviteCode)
     {
-        // Use named parameters for clarity
+        
         var sql = "SELECT join_event_by_code(@userId, @inviteCode) as \"Value\"";
 
         var result = await _context.Database
@@ -68,6 +65,24 @@ public class EventService
         return await _context.Database
             .SqlQueryRaw<bool>(sql, userId, eventId)
             .FirstOrDefaultAsync();
+    }
+
+    public async Task<bool> DeleteEventAsync(Guid eventId)
+    {
+        try
+        {
+            var eventEntity = await _context.Events.FindAsync(eventId);
+            if (eventEntity == null)
+                return false;
+
+            _context.Events.Remove(eventEntity);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     // 4. Get upcoming events (using the view)

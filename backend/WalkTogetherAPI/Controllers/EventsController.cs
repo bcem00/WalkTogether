@@ -192,6 +192,39 @@ public class EventsController : ControllerBase
         }
     }
 
+    // DELETE: api/events/{eventId}
+    [HttpDelete("{eventId}")]
+    public async Task<IActionResult> DeleteEvent(Guid eventId)
+    {
+        try
+        {
+            // 1. Get User ID from Token
+            var userId = GetUserId();
+
+            // 2. Validate Event
+            var eventEntity = await _context.Events.FindAsync(eventId);
+            if (eventEntity == null)
+                return NotFound(new { message = "Event not found" });
+
+            // 3. Security Check: Only event creator can delete
+            if (eventEntity.CreatorId != userId)
+                return StatusCode(403, new { message = "Only the event creator can delete this event." });
+
+            // 4. Delete the event
+            var success = await _eventService.DeleteEventAsync(eventId);
+
+            if (success)
+                return Ok(new { message = "Event deleted successfully" });
+            else
+                return BadRequest(new { message = "Failed to delete event" });
+        }
+        catch (UnauthorizedAccessException) { return Unauthorized(); }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = ex.Message });
+        }
+    }
+
     // ==================================================================================
     // 🔓 GENERAL READ-ONLY ENDPOINTS (Still requires Auth, but safe to share)
     // ==================================================================================
