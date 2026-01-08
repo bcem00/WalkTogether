@@ -24,25 +24,40 @@ export default function ProfileScreen() {
   }, []);
 
   const fetchUserProfile = async () => {
-    // AsyncStorage'dan giriş anında kaydettiğimiz gerçek verileri çekiyoruz
-    const storedUsername = await AsyncStorage.getItem('username');
-    const storedFirstName = await AsyncStorage.getItem('firstName');
-    const storedLastName = await AsyncStorage.getItem('lastName');
-    const storedEmail = await AsyncStorage.getItem('email');
-    console.log("--- STORAGE VERİLERİ ---", {
-    storedUsername,
-    storedFirstName,
-    storedLastName,
-    storedEmail,
-  });
-    setUser({
-      firstName: storedFirstName || 'Ad', 
-      lastName: storedLastName || 'Soyad',
-      email: storedEmail || 'E-posta tanımlı değil',
-      username: storedUsername || 'kullanıcı_adı',
-      hasBadge: true 
-    });
-    setLoading(false);
+    try {
+      setLoading(true);
+      const result = await authApi.getUserProfile();
+      
+      if (result.data) {
+        setUser({
+          firstName: result.data.firstName,
+          lastName: result.data.lastName,
+          email: result.data.email,
+          username: result.data.username,
+          motivationPoint: result.data.motivationPoint,
+          hasBadge: result.data.hasBadge
+        });
+      } else {
+        // Fallback to AsyncStorage if API call fails
+        const storedUsername = await AsyncStorage.getItem('username');
+        const storedFirstName = await AsyncStorage.getItem('firstName');
+        const storedLastName = await AsyncStorage.getItem('lastName');
+        const storedEmail = await AsyncStorage.getItem('email');
+        
+        setUser({
+          firstName: storedFirstName || 'Ad', 
+          lastName: storedLastName || 'Soyad',
+          email: storedEmail || 'E-posta tanımlı değil',
+          username: storedUsername || 'kullanıcı_adı',
+          hasBadge: false 
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      Alert.alert('Hata', 'Profil bilgileri alınamadı.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleUpdateUsername = async () => {

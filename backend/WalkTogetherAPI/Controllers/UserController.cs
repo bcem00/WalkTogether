@@ -107,6 +107,22 @@ namespace WalkTogetherAPI.Controllers
             }
         }
 
+        [HttpGet("profile")]
+        [Authorize]
+        public async Task<IActionResult> GetProfile()
+        {
+            try
+            {
+                var userIdFromToken = GetUserIdFromToken();
+                var profile = await _authService.GetUserProfileAsync(userIdFromToken);
+                return Ok(profile);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
 
         private Guid GetUserIdFromToken()
         {

@@ -110,5 +110,23 @@ public class AuthService
         }
     }
 
-    
+    // 4. GET USER PROFILE
+    public async Task<UserProfileDto> GetUserProfileAsync(Guid userId)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        
+        if (user == null)
+            throw new Exception("Kullanıcı bulunamadı.");
+
+        return new UserProfileDto
+        {
+            UserId = user.Id,
+            Username = user.Username,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            Email = user.Email,
+            MotivationPoint = user.MotivationPoint,
+            HasBadge = user.HasBadge
+        };
+    }
 }

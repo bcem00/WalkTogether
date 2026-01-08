@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useRef, useState } from 'react';
 import {
-  ActivityIndicator, Alert, FlatList,
+  ActivityIndicator, Alert, Clipboard, FlatList,
   Keyboard,
   RefreshControl,
   StyleSheet,
@@ -115,13 +115,23 @@ export default function HomeScreen() {
     }
   };
 
+  const copyToClipboard = (code: string) => {
+    Clipboard.setString(code);
+    Alert.alert("Kopyalandı", `Davet kodu kopyalandı: ${code}`);
+  };
+
   const renderEventCard = ({ item }: { item: any }) => (
     <TouchableOpacity style={styles.card} onPress={() => {}}>
       <View style={styles.cardTop}>
         <Text style={styles.cardTitle}>{item.title}</Text>
-        <View style={styles.codeBadge}>
+        <TouchableOpacity 
+          style={styles.codeBadge} 
+          onPress={() => copyToClipboard(item.invitation_code)}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="copy-outline" size={12} color="#007AFF" style={{marginRight: 4}} />
           <Text style={styles.codeText}>{item.invitation_code}</Text>
-        </View>
+        </TouchableOpacity>
       </View>
       <Text style={styles.cardDesc} numberOfLines={2}>{item.description}</Text>
       <View style={styles.cardStats}>
@@ -276,7 +286,7 @@ const styles = StyleSheet.create({
   card: { backgroundColor: '#fff', marginHorizontal: 20, marginTop: 15, padding: 15, borderRadius: 15, elevation: 3 },
   cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   cardTitle: { fontSize: 17, fontWeight: 'bold' },
-  codeBadge: { backgroundColor: '#E3F2FD', padding: 4, borderRadius: 6 },
+  codeBadge: { backgroundColor: '#E3F2FD', padding: 6, borderRadius: 6, flexDirection: 'row', alignItems: 'center' },
   codeText: { color: '#007AFF', fontSize: 11, fontWeight: 'bold' },
   cardDesc: { color: '#666', fontSize: 14, marginBottom: 12 },
   cardStats: { flexDirection: 'row', gap: 15, marginBottom: 10, borderBottomWidth: 1, borderBottomColor: '#f9f9f9', paddingBottom: 10 },

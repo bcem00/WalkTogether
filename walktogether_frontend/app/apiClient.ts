@@ -135,6 +135,21 @@ export const authApi = {
     });
   },
 
+  // New: Get current user profile
+  getUserProfile: async () => {
+    return apiRequest<{
+      userId: string;
+      username: string;
+      firstName: string;
+      lastName: string;
+      email: string;
+      motivationPoint: number;
+      hasBadge: boolean;
+    }>('/api/users/profile', {
+      method: 'GET',
+    });
+  },
+
   logout: async () => {
     await AsyncStorage.multiRemove(['userToken', 'userId', 'username', 'userRole']);
   },
