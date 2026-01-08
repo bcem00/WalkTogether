@@ -1,3 +1,4 @@
+-- Event ve Route'u aynı anda oluşturan fonksiyon
 CREATE OR REPLACE FUNCTION create_event(
     p_creator_id UUID,
     p_title VARCHAR(150),
@@ -13,14 +14,21 @@ LANGUAGE plpgsql
 AS $$
 DECLARE
     v_new_event_id UUID;
+    v_new_route_id UUID;
     v_invitation_code VARCHAR(20);
 BEGIN
-    -- Generate a unique invitation code (8 characters)
+    -- 8 Karakterli Rastgele Oluşturulmuş Davet Kodu
     v_invitation_code := UPPER(SUBSTRING(MD5(RANDOM()::TEXT) FROM 1 FOR 8));
     
-    -- Insert the new event
+    -- Route'u Oluştur
+    INSERT INTO routes (distance)
+    VALUES (COALESCE(p_total_distance_meters, 0))
+    RETURNING route_id INTO v_new_route_id;
+    
+    -- Event Insert edilir
     INSERT INTO events (
         creator_id,
+        route_id,
         title,
         description,
         start_date,
@@ -32,6 +40,7 @@ BEGIN
     )
     VALUES (
         p_creator_id,
+        v_new_route_id,
         p_title,
         p_description,
         p_start_date,
@@ -43,7 +52,7 @@ BEGIN
     )
     RETURNING event_id INTO v_new_event_id;
     
-    -- Also add the creator as an attendee
+    -- Oluşturan Kullanıcıyı Katılımcı Olarak Ekle
     INSERT INTO attendances (user_id, event_id, has_completed)
     VALUES (p_creator_id, v_new_event_id, FALSE);
     

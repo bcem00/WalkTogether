@@ -1,5 +1,4 @@
--- 1. UUID fonksiyonlarını kullanabilmek için eklenti (Gerekirse)
--- PostgreSQL 13+ kullanıyorsan gen_random_uuid() zaten vardır, gerek yok.
+-- 1. UUID fonksiyonlarını kullanabilmek için eklenti
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp"; 
 
 -- TEMİZLİK
@@ -10,7 +9,7 @@ DROP TABLE IF EXISTS routes CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 DROP TABLE IF EXISTS roles CASCADE;
 
--- 2. ROLES (UUID to match User model)
+-- 2. ROLES
 CREATE TABLE IF NOT EXISTS roles (
     role_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     role_name VARCHAR(20) NOT NULL UNIQUE
@@ -19,9 +18,9 @@ INSERT INTO roles (role_id, role_name) VALUES
     (gen_random_uuid(), 'walktogether_user'), 
     (gen_random_uuid(), 'admin');
 
--- 3. USERS (UUID'ye geçildi)
+-- 3. USERS
 CREATE TABLE IF NOT EXISTS users (
-    user_id UUID DEFAULT gen_random_uuid() PRIMARY KEY, -- Otomatik UUID üretir
+    user_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     role_id UUID NOT NULL REFERENCES roles(role_id),
     first_name VARCHAR(50) NOT NULL,
     last_name VARCHAR(50) NOT NULL,
@@ -33,13 +32,13 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 
--- ON DELETE RESTRICT
+-- Silme Kısıtlaması
 ALTER TABLE users
 ADD CONSTRAINT fk_users_roles
 FOREIGN KEY (role_id) REFERENCES roles(role_id)
-ON DELETE RESTRICT; -- İşte kısıt burada
+ON DELETE RESTRICT;
 
--- 4. ROUTES (UUID'ye geçildi)
+-- 4. ROUTES 
 CREATE TABLE IF NOT EXISTS routes (
     route_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     distance INTEGER DEFAULT 0
@@ -50,13 +49,13 @@ ALTER TABLE routes
 ADD CONSTRAINT check_distance_positive
 CHECK (distance > 0);
 
--- 5. EVENTS (UUID'ye geçildi)
--- Sequence for event numbering (for display/reference purposes)
+-- event_number için sequence
 CREATE SEQUENCE IF NOT EXISTS event_number_seq START 1000;
 
+-- 5. EVENTS
 CREATE TABLE IF NOT EXISTS events (
     event_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    event_number INTEGER UNIQUE DEFAULT nextval('event_number_seq'), -- Human-readable event number
+    event_number INTEGER UNIQUE DEFAULT nextval('event_number_seq'),
     creator_id UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
     route_id UUID REFERENCES routes(route_id) ON DELETE SET NULL,
     title VARCHAR(150) NOT NULL,
@@ -88,7 +87,7 @@ CREATE TABLE IF NOT EXISTS attendances (
     UNIQUE(user_id, event_id)
 );
 
--- İNDEKSLER (Değişmedi, sadece tipler artık UUID)
+-- İNDEKSLER
 CREATE INDEX idx_users_role_id ON users(role_id);
 CREATE INDEX idx_events_creator_id ON events(creator_id);
 CREATE INDEX idx_events_start_date ON events(start_date);

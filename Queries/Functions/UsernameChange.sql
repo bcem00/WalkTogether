@@ -1,7 +1,4 @@
--- ================================================================
--- 4. CHANGE USERNAME (Kullanıcı Adı Değiştir)
--- Kullanıcı adını günceller. (Unique hatasını Backend yakalamalıdır)
--- ================================================================
+-- Kullanıcı Adını Güncelleyen Fonksiyon (Unique hatasını Backend yakalamalıdır)
 CREATE OR REPLACE FUNCTION user_change_username(
     p_user_id UUID,
     p_new_username VARCHAR

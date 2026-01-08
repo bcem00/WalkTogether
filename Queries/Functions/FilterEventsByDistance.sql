@@ -1,3 +1,4 @@
+-- Belirtilen Mesafe Aralığında Olan Etkinlikleri Filtreleyen Fonksiyon
 CREATE OR REPLACE FUNCTION filter_events_by_distance(p_min_dist INTEGER, p_max_dist INTEGER)
 RETURNS TABLE (
     event_title VARCHAR,
