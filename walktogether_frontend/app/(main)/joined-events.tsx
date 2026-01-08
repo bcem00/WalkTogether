@@ -53,6 +53,10 @@ export default function JoinedEventsScreen() {
   const [destinations, setDestinations] = useState<any[]>([]); 
   const [routeCoords, setRouteCoords] = useState<any[]>([]);   
   const [infoLoading, setInfoLoading] = useState(false);
+  const [eventReport, setEventReport] = useState<string>('');
+  const [showReport, setShowReport] = useState(false);
+  const [reportLoading, setReportLoading] = useState(false);
+  const [completeLoading, setCompleteLoading] = useState(false);
   
   const GOOGLE_MAPS_APIKEY = 'AIzaSyDFYEsvv3CUOa07f13Go1T2XKul0HbtfnU';
   const mapRef = useRef<MapView>(null);
@@ -130,6 +134,33 @@ export default function JoinedEventsScreen() {
         }
       ]
     );
+  };
+
+  const handleGetReport = async () => {
+    if (!selectedEvent) return;
+    setReportLoading(true);
+    const eventId = selectedEvent.id || selectedEvent.event_id || selectedEvent.eventId;
+    const result = await eventsApi.getEventReport(eventId);
+    setReportLoading(false);
+    if (result.data) {
+      setEventReport(result.data.report);
+      setShowReport(true);
+    } else {
+      Alert.alert("Hata", result.error || "Rapor alınamadı.");
+    }
+  };
+
+  const handleCompleteEvent = async () => {
+    if (!selectedEvent) return;
+    setCompleteLoading(true);
+    const eventId = selectedEvent.id || selectedEvent.event_id || selectedEvent.eventId;
+    const result = await eventsApi.addEventDistanceToAttendees(eventId);
+    setCompleteLoading(false);
+    if (result.data) {
+      Alert.alert("Başarılı", `${result.data.updatedCount} katılımcıya mesafe eklendi!`);
+    } else {
+      Alert.alert("Hata", result.error);
+    }
   };
 
   const handleOpenInfo = async (event: any) => {
@@ -286,23 +317,74 @@ export default function JoinedEventsScreen() {
 
                   <Text style={styles.detailDesc}>{selectedEvent?.description}</Text>
 
-                  <TouchableOpacity 
-                    style={[styles.leaveBtn, leaveLoading && { opacity: 0.7 }]} 
-                    onPress={handleLeaveEvent}
-                    disabled={leaveLoading}
-                  >
-                    {leaveLoading ? (
-                      <ActivityIndicator color="#fff" />
-                    ) : (
-                      <>
-                        <Ionicons name="log-out-outline" size={20} color="#fff" />
-                        <Text style={styles.leaveBtnText}>Etkinlikten Ayrıl</Text>
-                      </>
-                    )}
-                  </TouchableOpacity>
+                  <View style={{gap: 10, marginBottom: 30, marginTop: 20}}>
+                    <TouchableOpacity 
+                      style={[styles.reportBtn, reportLoading && { opacity: 0.7 }]} 
+                      onPress={handleGetReport}
+                      disabled={reportLoading}
+                    >
+                      {reportLoading ? (
+                        <ActivityIndicator color="#fff" />
+                      ) : (
+                        <>
+                          <Ionicons name="document-text-outline" size={20} color="#fff" />
+                          <Text style={styles.reportBtnText}>Raporu Görüntüle</Text>
+                        </>
+                      )}
+                    </TouchableOpacity>
+
+                    <TouchableOpacity 
+                      style={[styles.completeBtn, completeLoading && { opacity: 0.7 }]} 
+                      onPress={handleCompleteEvent}
+                      disabled={completeLoading}
+                    >
+                      {completeLoading ? (
+                        <ActivityIndicator color="#fff" />
+                      ) : (
+                        <>
+                          <Ionicons name="star-outline" size={20} color="#fff" />
+                          <Text style={styles.completeBtnText}>Mesafe Ekle</Text>
+                        </>
+                      )}
+                    </TouchableOpacity>
+
+                    <TouchableOpacity 
+                      style={[styles.leaveBtn, leaveLoading && { opacity: 0.7 }]} 
+                      onPress={handleLeaveEvent}
+                      disabled={leaveLoading}
+                    >
+                      {leaveLoading ? (
+                        <ActivityIndicator color="#fff" />
+                      ) : (
+                        <>
+                          <Ionicons name="log-out-outline" size={20} color="#fff" />
+                          <Text style={styles.leaveBtnText}>Etkinlikten Ayrıl</Text>
+                        </>
+                      )}
+                    </TouchableOpacity>
+                  </View>
                 </>
               )}
             </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={showReport} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.reportModalContent}>
+            <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20}}>
+              <Text style={styles.reportTitle}>Etkinlik Raporu</Text>
+              <TouchableOpacity onPress={() => setShowReport(false)}>
+                <Ionicons name="close-circle" size={28} color="#ccc" />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.reportContent}>
+              <Text style={styles.reportText}>{eventReport}</Text>
+            </View>
+            <TouchableOpacity style={styles.closeBtn} onPress={() => setShowReport(false)}>
+              <Text style={styles.closeBtnText}>Kapat</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -347,5 +429,44 @@ const styles = StyleSheet.create({
     gap: 10,
     marginBottom: 30
   },
-  leaveBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 16 }
+  leaveBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+  reportBtn: {
+    backgroundColor: '#9C27B0',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 15,
+    borderRadius: 12,
+    gap: 10,
+  },
+  reportBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+  completeBtn: {
+    backgroundColor: '#4CAF50',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 15,
+    borderRadius: 12,
+    gap: 10,
+  },
+  completeBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+  reportModalContent: { 
+    backgroundColor: '#fff', 
+    borderTopLeftRadius: 25, 
+    borderTopRightRadius: 25, 
+    height: '50%', 
+    padding: 20 
+  },
+  reportTitle: { fontSize: 18, fontWeight: 'bold', color: '#333' },
+  reportContent: { 
+    flex: 1, 
+    backgroundColor: '#f9f9f9', 
+    padding: 15, 
+    borderRadius: 12, 
+    marginBottom: 15, 
+    justifyContent: 'center' 
+  },
+  reportText: { fontSize: 13, color: '#555', lineHeight: 20 },
+  closeBtn: { backgroundColor: '#007AFF', padding: 15, borderRadius: 12, alignItems: 'center' },
+  closeBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 16 }
 });

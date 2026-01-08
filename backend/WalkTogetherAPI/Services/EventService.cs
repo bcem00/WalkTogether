@@ -135,4 +135,66 @@ public class EventService
         return await _context.Events.FindAsync(eventId);
     }
 
+    // 7. Add event distance to attendees
+    public async Task<int> AddEventDistanceToAttendeesAsync(Guid eventId)
+    {
+        var sql = "SELECT add_event_distance_to_attendees(@p0) AS \"Value\"";
+        return await _context.Database
+            .SqlQueryRaw<int>(sql, eventId)
+            .FirstOrDefaultAsync();
+    }
+
+    // 8. Create destination for a route
+    public async Task<Guid> CreateDestinationAsync(Guid routeId, double latitude, double longitude, int orderInRoute)
+    {
+        var sql = "SELECT create_destination(@p0, @p1, @p2, @p3) AS \"Value\"";
+        return await _context.Database
+            .SqlQueryRaw<Guid>(sql, routeId, latitude, longitude, orderInRoute)
+            .FirstOrDefaultAsync();
+    }
+
+    // 9. Update route distance
+    public async Task UpdateRouteDistanceAsync(Guid routeId, int distance)
+    {
+        var sql = "SELECT update_route_distance(@p0, @p1)";
+        await _context.Database
+            .ExecuteSqlRawAsync(sql, routeId, distance);
+    }
+
+    // 10. Get attended events for a user
+    public async Task<List<AttendedEvent>> GetAttendedEventsAsync(Guid userId)
+    {
+        var sql = "SELECT * FROM get_attended_events(@p0) AS \"Value\"";
+        return await _context.Database
+            .SqlQueryRaw<AttendedEvent>(sql, userId)
+            .ToListAsync();
+    }
+
+    // 11. Get event report (admin)
+    public async Task<string> GetEventReportAsync(Guid eventId)
+    {
+        var sql = "SELECT get_event_report(@p0) AS \"Value\"";
+        return await _context.Database
+            .SqlQueryRaw<string>(sql, eventId)
+            .FirstOrDefaultAsync() ?? "No report available";
+    }
+
+    // 12. Get inactive users (admin)
+    public async Task<List<InactiveUser>> GetInactiveUsersAsync()
+    {
+        var sql = "SELECT * FROM get_inactive_users() AS \"Value\"";
+        return await _context.Database
+            .SqlQueryRaw<InactiveUser>(sql)
+            .ToListAsync();
+    }
+
+    // 13. Get total event count
+    public async Task<int> GetTotalEventCountAsync()
+    {
+        var sql = "SELECT get_total_event_count() AS \"Value\"";
+        return await _context.Database
+            .SqlQueryRaw<int>(sql)
+            .FirstOrDefaultAsync();
+    }
+
 }

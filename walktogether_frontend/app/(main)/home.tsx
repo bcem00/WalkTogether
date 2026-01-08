@@ -23,6 +23,7 @@ export default function HomeScreen() {
   const [maxDist, setMaxDist] = useState('');
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const [isFiltered, setIsFiltered] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [destinations, setDestinations] = useState<any[]>([]);
@@ -120,18 +121,52 @@ export default function HomeScreen() {
     Alert.alert("Kopyalandı", `Davet kodu kopyalandı: ${code}`);
   };
 
+  const handleDeleteEvent = async (eventId: string) => {
+    Alert.alert(
+      "Etkinliği Sil",
+      "Bu etkinliği silmek istediğinizden emin misiniz?",
+      [
+        { text: "İptal", onPress: () => {} },
+        {
+          text: "Sil",
+          onPress: async () => {
+            setDeleting(eventId);
+            const result = await eventsApi.deleteEvent(eventId);
+            setDeleting(null);
+            if (result.data) {
+              Alert.alert("Başarılı", "Etkinlik silindi.");
+              fetchEvents();
+            } else {
+              Alert.alert("Hata", result.error || "Etkinlik silinemedi.");
+            }
+          },
+          style: "destructive",
+        },
+      ]
+    );
+  };
+
   const renderEventCard = ({ item }: { item: any }) => (
     <TouchableOpacity style={styles.card} onPress={() => {}}>
       <View style={styles.cardTop}>
         <Text style={styles.cardTitle}>{item.title}</Text>
-        <TouchableOpacity 
-          style={styles.codeBadge} 
-          onPress={() => copyToClipboard(item.invitation_code)}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="copy-outline" size={12} color="#007AFF" style={{marginRight: 4}} />
-          <Text style={styles.codeText}>{item.invitation_code}</Text>
-        </TouchableOpacity>
+        <View style={{flexDirection: 'row', gap: 8, alignItems: 'center'}}>
+          <TouchableOpacity 
+            style={styles.codeBadge} 
+            onPress={() => copyToClipboard(item.invitation_code)}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="copy-outline" size={12} color="#007AFF" style={{marginRight: 4}} />
+            <Text style={styles.codeText}>{item.invitation_code}</Text>
+          </TouchableOpacity>
+          {deleting === item.event_id ? (
+            <ActivityIndicator size="small" color="#FF3B30" />
+          ) : (
+            <TouchableOpacity onPress={() => handleDeleteEvent(item.event_id)}>
+              <Ionicons name="trash-outline" size={16} color="#FF3B30" />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
       <Text style={styles.cardDesc} numberOfLines={2}>{item.description}</Text>
       <View style={styles.cardStats}>

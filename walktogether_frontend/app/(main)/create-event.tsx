@@ -98,6 +98,18 @@ export default function CreateEventScreen() {
       const routeResult = await eventsApi.createRoute(eventId, waypoints, token || undefined);
 
       if (routeResult.data) {
+        // Add destinations
+        for (let i = 0; i < stops.length; i++) {
+          await eventsApi.createDestination(eventId, {
+            latitude: stops[i].latitude,
+            longitude: stops[i].longitude,
+            orderInRoute: i + 1,
+          });
+        }
+
+        // Update route distance
+        const distanceMeters = Math.round(routeResult.data.distance * 1000);
+        await eventsApi.updateRouteDistance(eventId, distanceMeters);
         
         Alert.alert(
           "Başarılı", 

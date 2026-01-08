@@ -225,6 +225,103 @@ public class EventsController : ControllerBase
         }
     }
 
+    [HttpPost("{eventId}/add-distance-to-attendees")]
+    public async Task<IActionResult> AddEventDistanceToAttendees(Guid eventId)
+    {
+        try
+        {
+            // 1. Get User ID from Token
+            var userId = GetUserId();
+
+            // 2. Validate Event
+            var eventEntity = await _context.Events.FindAsync(eventId);
+            if (eventEntity == null)
+                return NotFound(new { message = "Event not found" });
+
+            // 3. Security Check: Only event creator can add distance
+            if (eventEntity.CreatorId != userId)
+                return StatusCode(403, new { message = "Only the event creator can add distance to attendees." });
+
+            // 4. Add distance to attendees
+            var updatedCount = await _eventService.AddEventDistanceToAttendeesAsync(eventId);
+
+            return Ok(new { message = $"Distance added to {updatedCount} attendees", updatedCount });
+        }
+        catch (UnauthorizedAccessException) { return Unauthorized(); }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("{eventId}/create-destination")]
+    public async Task<IActionResult> CreateDestination(Guid eventId, [FromBody] CreateDestinationRequest request)
+    {
+        try
+        {
+            // 1. Get User ID from Token
+            var userId = GetUserId();
+
+            // 2. Validate Event and Route
+            var eventEntity = await _context.Events.FindAsync(eventId);
+            if (eventEntity == null)
+                return NotFound(new { message = "Event not found" });
+
+            if (!eventEntity.RouteId.HasValue)
+                return BadRequest(new { message = "Event does not have a route" });
+
+            // 3. Security Check: Only event creator can add destinations
+            if (eventEntity.CreatorId != userId)
+                return StatusCode(403, new { message = "Only the event creator can add destinations." });
+
+            // 4. Create destination
+            var destinationId = await _eventService.CreateDestinationAsync(
+                eventEntity.RouteId.Value,
+                request.Latitude,
+                request.Longitude,
+                request.OrderInRoute);
+
+            return Ok(new { message = "Destination created successfully", destinationId });
+        }
+        catch (UnauthorizedAccessException) { return Unauthorized(); }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("{eventId}/update-route-distance")]
+    public async Task<IActionResult> UpdateRouteDistance(Guid eventId, [FromBody] UpdateRouteDistanceRequest request)
+    {
+        try
+        {
+            // 1. Get User ID from Token
+            var userId = GetUserId();
+
+            // 2. Validate Event and Route
+            var eventEntity = await _context.Events.FindAsync(eventId);
+            if (eventEntity == null)
+                return NotFound(new { message = "Event not found" });
+
+            if (!eventEntity.RouteId.HasValue)
+                return BadRequest(new { message = "Event does not have a route" });
+
+            // 3. Security Check: Only event creator can update route distance
+            if (eventEntity.CreatorId != userId)
+                return StatusCode(403, new { message = "Only the event creator can update route distance." });
+
+            // 4. Update route distance
+            await _eventService.UpdateRouteDistanceAsync(eventEntity.RouteId.Value, request.Distance);
+
+            return Ok(new { message = "Route distance updated successfully" });
+        }
+        catch (UnauthorizedAccessException) { return Unauthorized(); }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = ex.Message });
+        }
+    }
+
     // ==================================================================================
     // 🔓 GENERAL READ-ONLY ENDPOINTS (Still requires Auth, but safe to share)
     // ==================================================================================
@@ -278,6 +375,77 @@ public class EventsController : ControllerBase
         {
             var destinations = await _eventService.GetDestinationsForEventAsync(eventId);
             return Ok(destinations);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
+    [HttpGet("attended-events")]
+    public async Task<IActionResult> GetAttendedEvents()
+    {
+        try
+        {
+            var userId = GetUserId();
+            var attendedEvents = await _eventService.GetAttendedEventsAsync(userId);
+            return Ok(attendedEvents);
+        }
+        catch (UnauthorizedAccessException) { return Unauthorized(); }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
+    [HttpGet("{eventId}/report")]
+    public async Task<IActionResult> GetEventReport(Guid eventId)
+    {
+        try
+        {
+            var userId = GetUserId();
+
+            // Validate event exists and user is creator
+            var eventEntity = await _context.Events.FindAsync(eventId);
+            if (eventEntity == null)
+                return NotFound(new { message = "Event not found" });
+
+            if (eventEntity.CreatorId != userId)
+                return StatusCode(403, new { message = "Only the event creator can view this report." });
+
+            var report = await _eventService.GetEventReportAsync(eventId);
+            return Ok(new { report });
+        }
+        catch (UnauthorizedAccessException) { return Unauthorized(); }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
+    [HttpGet("admin/inactive-users")]
+    public async Task<IActionResult> GetInactiveUsers()
+    {
+        try
+        {
+            // Note: Add role-based authorization here if needed
+            var inactiveUsers = await _eventService.GetInactiveUsersAsync();
+            return Ok(inactiveUsers);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
+    [HttpGet("admin/total-count")]
+    public async Task<IActionResult> GetTotalEventCount()
+    {
+        try
+        {
+            // Note: Add role-based authorization here if needed
+            var count = await _eventService.GetTotalEventCountAsync();
+            return Ok(new { totalEventCount = count });
         }
         catch (Exception ex)
         {

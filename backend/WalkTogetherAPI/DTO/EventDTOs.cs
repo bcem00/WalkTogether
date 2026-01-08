@@ -69,5 +69,23 @@ namespace WalkTogetherAPI.DTO
         public int? EstimatedDurationSeconds { get; set; }
     }
 
-    
+    public class AttendedEvent
+    {
+        public Guid event_id { get; set; }
+        public string title { get; set; }
+        public string description { get; set; }
+        public DateTime start_date { get; set; }
+        public string invitation_code { get; set; }
+        public string creator_username { get; set; }
+        public string creator_full_name { get; set; }
+        public int route_distance_meters { get; set; }
+        public long participant_count { get; set; }
+    }
+
+    public class InactiveUser
+    {
+        public string out_username { get; set; }
+        public string out_email { get; set; }
+    }
+
 }

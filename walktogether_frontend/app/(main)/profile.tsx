@@ -8,7 +8,7 @@ import {
   StyleSheet,
   Text, TextInput, TouchableOpacity, View
 } from 'react-native';
-import { authApi } from '../apiClient';
+import { authApi, eventsApi } from '../apiClient';
 
 export default function ProfileScreen() {
   const [loading, setLoading] = useState(true);
@@ -18,10 +18,36 @@ export default function ProfileScreen() {
   const [passModal, setPassModal] = useState(false);
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [attendedEvents, setAttendedEvents] = useState<any[]>([]);
+  const [inactiveUsers, setInactiveUsers] = useState<any[]>([]);
+  const [totalEventCount, setTotalEventCount] = useState(0);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
     fetchUserProfile();
+    fetchAttendedEvents();
+    checkAdminRole();
   }, []);
+
+  const checkAdminRole = async () => {
+    const role = await AsyncStorage.getItem('userRole');
+    setUserRole(role);
+  };
+
+  const fetchAttendedEvents = async () => {
+    const result = await eventsApi.getAttendedEvents();
+    if (result.data) {
+      setAttendedEvents(result.data);
+    }
+  };
+
+  const fetchAdminData = async () => {
+    const usersResult = await eventsApi.getInactiveUsers();
+    const countResult = await eventsApi.getTotalEventCount();
+    if (usersResult.data) setInactiveUsers(usersResult.data);
+    if (countResult.data) setTotalEventCount(countResult.data.totalEventCount);
+  };
 
   const fetchUserProfile = async () => {
     try {
@@ -140,6 +166,30 @@ export default function ProfileScreen() {
             </View>
           </View>
         )}
+
+        {userRole === 'admin' && (
+          <TouchableOpacity style={styles.adminBtn} onPress={() => {
+            setShowAdminPanel(!showAdminPanel);
+            if (!showAdminPanel) fetchAdminData();
+          }}>
+            <Ionicons name="shield-checkmark-outline" size={20} color="#FF9500" />
+            <Text style={styles.adminBtnText}>Admin Paneli</Text>
+          </TouchableOpacity>
+        )}
+
+        {showAdminPanel && userRole === 'admin' && (
+          <View style={styles.adminPanel}>
+            <View style={styles.adminStat}>
+              <Text style={styles.adminLabel}>Toplam Etkinlik</Text>
+              <Text style={styles.adminValue}>{totalEventCount}</Text>
+            </View>
+            <View style={styles.adminStat}>
+              <Text style={styles.adminLabel}>Pasif Kullanıcılar</Text>
+              <Text style={styles.adminValue}>{inactiveUsers.length}</Text>
+            </View>
+          </View>
+        )}
+
         <TouchableOpacity style={styles.passwordRow} onPress={() => setPassModal(true)}>
           <View style={styles.passwordLeft}>
             <Ionicons name="lock-closed-outline" size={20} color="#666" />
@@ -256,7 +306,7 @@ const styles = StyleSheet.create({
   badgeCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF9E6', // Hafif altın tonlu arka plan
+    backgroundColor: '#FFF9E6',
     padding: 15,
     borderRadius: 15,
     borderWidth: 1,
@@ -271,5 +321,44 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#856404',
     opacity: 0.8,
+  },
+  adminBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 30,
+    padding: 15,
+    backgroundColor: '#FFF3E0',
+    borderRadius: 12,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: '#FFB74D',
+  },
+  adminBtnText: {
+    fontWeight: '600',
+    color: '#FF9500',
+  },
+  adminPanel: {
+    backgroundColor: '#FFF9E6',
+    padding: 15,
+    borderRadius: 12,
+    marginTop: 15,
+    borderWidth: 1,
+    borderColor: '#FFE082',
+  },
+  adminStat: {
+    marginBottom: 10,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#FFE082',
+  },
+  adminLabel: {
+    fontSize: 12,
+    color: '#856404',
+  },
+  adminValue: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FF9500',
+    marginTop: 5,
   },
 });

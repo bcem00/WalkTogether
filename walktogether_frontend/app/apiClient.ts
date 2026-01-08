@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_BASE_URL = 'http://192.168.1.3:5070'; // Adjust if needed (backend URL)
+const API_BASE_URL = 'http://192.168.1.221:5070'; // Adjust if needed (backend URL)
 
 interface ApiResponse<T> {
   data?: T;
@@ -219,6 +219,48 @@ export const eventsApi = {
       method: 'POST',
       body: JSON.stringify(eventData),
     });
+  },
+
+  deleteEvent: async (eventId: string) => {
+    return apiRequest<{ message: string }>(`/api/events/${eventId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  addEventDistanceToAttendees: async (eventId: string) => {
+    return apiRequest<{ message: string; updatedCount: number }>(`/api/events/${eventId}/add-distance-to-attendees`, {
+      method: 'POST',
+    });
+  },
+
+  createDestination: async (eventId: string, destinationData: { latitude: number; longitude: number; orderInRoute: number }) => {
+    return apiRequest<{ message: string; destinationId: string }>(`/api/events/${eventId}/create-destination`, {
+      method: 'POST',
+      body: JSON.stringify(destinationData),
+    });
+  },
+
+  updateRouteDistance: async (eventId: string, distance: number) => {
+    return apiRequest<{ message: string }>(`/api/events/${eventId}/update-route-distance`, {
+      method: 'POST',
+      body: JSON.stringify({ distance }),
+    });
+  },
+
+  getAttendedEvents: async () => {
+    return apiRequest<{ event_id: string; title: string; description: string; start_date: string; invitation_code: string; creator_username: string; creator_full_name: string; route_distance_meters: number; participant_count: number }[]>('/api/events/attended-events');
+  },
+
+  getEventReport: async (eventId: string) => {
+    return apiRequest<{ report: string }>(`/api/events/${eventId}/report`);
+  },
+
+  getInactiveUsers: async () => {
+    return apiRequest<{ out_username: string; out_email: string }[]>('/api/events/admin/inactive-users');
+  },
+
+  getTotalEventCount: async () => {
+    return apiRequest<{ totalEventCount: number }>('/api/events/admin/total-count');
   },
 };
 
