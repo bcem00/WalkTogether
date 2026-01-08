@@ -47,11 +47,11 @@ export default function JoinedEventsScreen() {
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [leaveLoading, setLeaveLoading] = useState(false); // Yeni: Ayrılma işlemi için
+  const [leaveLoading, setLeaveLoading] = useState(false); 
   
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
-  const [destinations, setDestinations] = useState<any[]>([]); // Markers
-  const [routeCoords, setRouteCoords] = useState<any[]>([]);   // The path line
+  const [destinations, setDestinations] = useState<any[]>([]); 
+  const [routeCoords, setRouteCoords] = useState<any[]>([]);   
   const [infoLoading, setInfoLoading] = useState(false);
   
   const GOOGLE_MAPS_APIKEY = 'AIzaSyDFYEsvv3CUOa07f13Go1T2XKul0HbtfnU';
@@ -76,33 +76,25 @@ export default function JoinedEventsScreen() {
   }, [destinations, routeCoords]);
 
   const fetchJoinedEvents = async () => {
-  if (!refreshing) setLoading(true); 
-  const username = await AsyncStorage.getItem('username');
-  console.log("Kullanıcı adına göre etkinlikler çekiliyor:", username);
-  
-  const result = await eventsApi.getEventsByUsername(username || '');
-  
-  // LOG: Gelen verinin yapısını terminalde mutlaka kontrol et
-  if (result.error) {
-    console.log("❌ API HATASI:", result.error);
-  } else {
-    console.log("✅ GELEN VERİ:", result.data);
-    setEvents(result.data || []);
-  }
-
-  if (result.data) {
-    setEvents(result.data);
-  }
-  setLoading(false);
-  setRefreshing(false);
-};
+    if (!refreshing) setLoading(true); 
+    const username = await AsyncStorage.getItem('username');
+    
+    const result = await eventsApi.getEventsByUsername(username || '');
+    
+    if (result.error) {
+      console.log("❌ API HATASI:", result.error);
+    } else {
+      setEvents(result.data || []);
+    }
+    setLoading(false);
+    setRefreshing(false);
+  };
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     fetchJoinedEvents();
   }, []);
 
-  // --- YENİ: ETKİNLİKTEN AYRILMA (LEAVE EVENT) FONKSİYONU ---
   const handleLeaveEvent = async () => {
     if (!selectedEvent) return;
 
@@ -116,7 +108,7 @@ export default function JoinedEventsScreen() {
 
     Alert.alert(
       "Etkinlikten Ayrıl",
-      "Bu yürüyüşten ayrılmak istediğinize emin misiniz? Katılım kaydınız silinecektir.",
+      "Bu yürüyüşten ayrılmak istediğinize emin misiniz?",
       [
         { text: "Vazgeç", style: "cancel" },
         { 
@@ -129,9 +121,8 @@ export default function JoinedEventsScreen() {
 
             if (result.data) {
               Alert.alert("Başarılı", "Etkinlikten ayrıldınız.");
-              // Listeyi yerel olarak güncelle (silineni listeden at)
               setEvents(prev => prev.filter(e => (e.id || e.event_id || e.eventId) !== eventId));
-              setSelectedEvent(null); // Modalı kapat
+              setSelectedEvent(null); 
             } else {
               Alert.alert("Hata", result.error || "Ayrılma işlemi başarısız oldu.");
             }
@@ -178,34 +169,31 @@ export default function JoinedEventsScreen() {
     setInfoLoading(false);
   };
 
-  const origin = destinations.length > 0 ? { latitude: destinations[0].latitude, longitude: destinations[0].longitude } : null;
-  const destination = destinations.length > 1 ? { latitude: destinations[destinations.length - 1].latitude, longitude: destinations[destinations.length - 1].longitude } : null;
-  const waypoints = destinations.length > 2 ? destinations.slice(1, -1).map(d => ({ latitude: d.latitude, longitude: d.longitude })) : [];
-
   const renderEventCard = ({ item }: { item: any }) => (
-  // DTO'daki 'eventId' alanını kullandığından emin ol
-  <TouchableOpacity style={styles.card} onPress={() => handleOpenInfo(item)}>
-    <View style={styles.cardTop}>
-      <Text style={styles.cardTitle}>{item.title}</Text>
-      <View style={styles.codeBadge}>
-        {/* Hem camelCase hem snake_case kontrolü */}
-        <Text style={styles.codeText}>{item.invitationCode || item.invitation_code}</Text>
+    <TouchableOpacity style={styles.card} onPress={() => handleOpenInfo(item)}>
+      <View style={styles.cardTop}>
+        <Text style={styles.cardTitle}>{item.title}</Text>
+        <View style={styles.codeBadge}>
+          <Text style={styles.codeText}>{item.invitationCode || item.invitation_code}</Text>
+        </View>
       </View>
-    </View>
-    <Text style={styles.cardDesc} numberOfLines={2}>{item.description}</Text>
-    <View style={styles.cardBottom}>
-      <Ionicons name="calendar-outline" size={14} color="#888" />
-      <Text style={styles.cardDate}>
-        {new Date(item.startDate || item.start_date).toLocaleDateString('tr-TR')}
-      </Text>
-      {(item.totalDistanceMeters || item.total_distance_meters) && (
-           <Text style={[styles.cardDate, { marginLeft: 10 }]}>
-             {((item.totalDistanceMeters || item.total_distance_meters) / 1000).toFixed(2)} km
-           </Text>
-      )}
-    </View>
-  </TouchableOpacity>
-);
+      <Text style={styles.cardDesc} numberOfLines={2}>{item.description}</Text>
+      <View style={styles.cardBottom}>
+        <Ionicons name="calendar-outline" size={14} color="#888" />
+        <Text style={styles.cardDate}>
+          {/* SAAT EKLENDİ */}
+          {new Date(item.startDate || item.start_date).toLocaleString('tr-TR', {
+            day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+          })}
+        </Text>
+        {(item.totalDistanceMeters || item.total_distance_meters) && (
+             <Text style={[styles.cardDate, { marginLeft: 10 }]}>
+               {((item.totalDistanceMeters || item.total_distance_meters) / 1000).toFixed(2)} km
+             </Text>
+        )}
+      </View>
+    </TouchableOpacity>
+  );
 
   return (
     <View style={styles.container}>
@@ -220,7 +208,7 @@ export default function JoinedEventsScreen() {
         <FlatList
           data={events}
           renderItem={renderEventCard}
-          keyExtractor={item => (item.id || item.event_id || Math.random()).toString()}
+          keyExtractor={item => (item.id || item.event_id || item.eventId || Math.random()).toString()}
           contentContainerStyle={{ padding: 20 }}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#007AFF"]} />
@@ -262,9 +250,11 @@ export default function JoinedEventsScreen() {
                       {routeCoords.length > 0 ? (
                         <Polyline coordinates={routeCoords} strokeWidth={4} strokeColor="#007AFF" />
                       ) : (
-                        origin && destination && (
+                        destinations.length > 1 && (
                           <MapViewDirections
-                            origin={origin} destination={destination} waypoints={waypoints}
+                            origin={{latitude: destinations[0].latitude, longitude: destinations[0].longitude}} 
+                            destination={{latitude: destinations[destinations.length-1].latitude, longitude: destinations[destinations.length-1].longitude}} 
+                            waypoints={destinations.slice(1, -1).map(d => ({latitude: d.latitude, longitude: d.longitude}))}
                             apikey={GOOGLE_MAPS_APIKEY} strokeWidth={4} strokeColor="#007AFF" mode="WALKING"
                           />
                         )
@@ -272,6 +262,16 @@ export default function JoinedEventsScreen() {
                     </MapView>
                   </View>
                   
+                  {/* SAAT BİLGİSİ MODALA EKLENDİ */}
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Tarih ve Saat:</Text>
+                    <Text style={styles.detailValue}>
+                      {new Date(selectedEvent?.startDate || selectedEvent?.start_date).toLocaleString('tr-TR', {
+                        day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                      })}
+                    </Text>
+                  </View>
+
                   <View style={styles.detailRow}>
                     <Text style={styles.detailLabel}>Davet Kodu:</Text>
                     <Text style={styles.detailValue}>{selectedEvent?.invitationCode || selectedEvent?.invitation_code}</Text>
@@ -286,7 +286,6 @@ export default function JoinedEventsScreen() {
 
                   <Text style={styles.detailDesc}>{selectedEvent?.description}</Text>
 
-                  {/* --- AYRILMA BUTONU --- */}
                   <TouchableOpacity 
                     style={[styles.leaveBtn, leaveLoading && { opacity: 0.7 }]} 
                     onPress={handleLeaveEvent}
@@ -337,7 +336,6 @@ const styles = StyleSheet.create({
   emptyText: { textAlign: 'center', marginTop: 50, color: '#999' },
   markerBadge: { backgroundColor: '#fff', borderRadius: 10, paddingHorizontal: 5, borderWidth: 1, borderColor: '#007AFF', position: 'absolute', top: -15, alignSelf: 'center', zIndex: 1 },
   markerText: { fontSize: 10, fontWeight: 'bold', color: '#007AFF' },
-  // YENİ BUTON STİLLERİ
   leaveBtn: { 
     backgroundColor: '#FF3B30', 
     flexDirection: 'row', 

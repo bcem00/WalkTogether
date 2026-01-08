@@ -148,9 +148,17 @@ export default function HomeScreen() {
          </View>
       </View>
       <View style={styles.cardBottom}>
-        <Ionicons name="calendar-outline" size={14} color="#888" />
-        <Text style={styles.cardDate}>{new Date(item.start_date).toLocaleDateString('tr-TR')}</Text>
-      </View>
+  <Ionicons name="calendar-outline" size={14} color="#888" />
+  <Text style={styles.cardDate}>
+    {new Date(item.start_date).toLocaleString('tr-TR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })}
+  </Text>
+</View>
     </TouchableOpacity>
   );
 
