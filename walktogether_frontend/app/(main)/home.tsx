@@ -161,6 +161,18 @@ export default function HomeScreen() {
     }
   };
 
+  const handleJoinEventFromModal = async (inviteCode: string) => {
+    if (!inviteCode) return;
+    const result = await eventsApi.joinEvent(inviteCode);
+    if (result.data) {
+      Alert.alert("Başarılı", "Etkinliğe katıldınız!");
+      setSelectedEvent(null);
+      fetchEvents();
+    } else {
+      Alert.alert("Hata", result.error || "Kod geçersiz.");
+    }
+  };
+
   const copyToClipboard = (code: string) => {
     Clipboard.setString(code);
     Alert.alert("Kopyalandı", `Davet kodu kopyalandı: ${code}`);
@@ -457,10 +469,7 @@ export default function HomeScreen() {
                   <View style={{gap: 10, marginBottom: 30, marginTop: 20}}>
                     <TouchableOpacity 
                       style={styles.joinBtn2}
-                      onPress={() => {
-                        handleQuickJoin();
-                        setSelectedEvent(null);
-                      }}
+                      onPress={() => handleJoinEventFromModal(selectedEvent?.invitation_code)}
                     >
                       <Ionicons name="log-in-outline" size={20} color="#fff" />
                       <Text style={styles.joinBtnText2}>Etkinliğe Katıl</Text>
