@@ -1,15 +1,47 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator, Alert, Clipboard, FlatList,
-  Keyboard,
+  Keyboard, Modal,
   RefreshControl,
+  ScrollView,
   StyleSheet,
   Text, TextInput, TouchableOpacity, View
 } from 'react-native';
-import MapView from 'react-native-maps';
+import MapView, { Marker, Polyline } from 'react-native-maps';
+import MapViewDirections from 'react-native-maps-directions';
 import { eventsApi } from '../apiClient';
+
+
+const decodePolyline = (t: string) => {
+  let points = [];
+  let index = 0, len = t.length;
+  let lat = 0, lng = 0;
+  while (index < len) {
+    let b, shift = 0, result = 0;
+    do {
+      b = t.charCodeAt(index++) - 63;
+      result |= (b & 0x1f) << shift;
+      shift += 5;
+    } while (b >= 0x20);
+    let dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
+    lat += dlat;
+    shift = 0;
+    result = 0;
+    do {
+      b = t.charCodeAt(index++) - 63;
+      result |= (b & 0x1f) << shift;
+      shift += 5;
+    } while (b >= 0x20);
+    let dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
+    lng += dlng;
+    
+    
+    points.push({ latitude: (lat / 1e5), longitude: (lng / 1e5) });
+  }
+  return points;
+};
 
 export default function HomeScreen() {
   const [events, setEvents] = useState<any[]>([]);
@@ -30,12 +62,26 @@ export default function HomeScreen() {
   const [infoLoading, setInfoLoading] = useState(false);
 
   const mapRef = useRef<MapView>(null);
+  const GOOGLE_MAPS_APIKEY = 'AIzaSyDFYEsvv3CUOa07f13Go1T2XKul0HbtfnU';
+  const [routeCoords, setRouteCoords] = useState<any[]>([]);
 
   useFocusEffect(
     useCallback(() => {
       fetchEvents();
     }, [])
   );
+
+  useEffect(() => {
+    if ((destinations.length > 0 || routeCoords.length > 0) && mapRef.current) {
+      const allPoints = [...destinations, ...routeCoords];
+      if(allPoints.length > 0) {
+        mapRef.current.fitToCoordinates(allPoints, {
+          edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
+          animated: true,
+        });
+      }
+    }
+  }, [destinations, routeCoords]);
 
   const fetchEvents = async () => {
     if (!refreshing) setLoading(true);
@@ -81,7 +127,6 @@ export default function HomeScreen() {
         event_id: item.event_id || Math.random().toString(),
         title: item.event_title || item.title,
         start_date: item.event_start_date || item.start_date,
-        // DÜZELTME: Backend zaten METRE gönderdiği için burada tekrar 1000 ile ÇARPMIYORUZ.
         route_distance_meters: item.route_distance || item.route_distance_meters
       }));
       
@@ -146,8 +191,46 @@ export default function HomeScreen() {
     );
   };
 
+  const handleOpenInfo = async (event: any) => {
+    setSelectedEvent(event);
+    setInfoLoading(true);
+    setRouteCoords([]); 
+    setDestinations([]); 
+
+    // Try to load route polyline and waypoints from event data first
+    if (event.waypointsJson && event.routePolyline) {
+      try {
+        const parsedWaypoints = JSON.parse(event.waypointsJson);
+        setDestinations(parsedWaypoints);
+        const decodedPath = decodePolyline(event.routePolyline);
+        setRouteCoords(decodedPath);
+        setInfoLoading(false);
+        return;
+      } catch (e) {
+        console.log("Error parsing local data", e);
+      }
+    }
+
+    const eventId = event.event_id || event.id || event.eventId;
+    if (!eventId) {
+      setInfoLoading(false);
+      return;
+    }
+
+    const result = await eventsApi.getDestinationsForEvent(eventId);
+    if (result.data) {
+      const mappedDestinations = result.data.map((d: any) => ({
+        ...d,
+        latitude: d.latitude || d.lat || d.Lat,
+        longitude: d.longitude || d.lng || d.Lng || d.Long,
+      })).sort((a: any, b: any) => a.order_in_route - b.order_in_route);
+      setDestinations(mappedDestinations);
+    }
+    setInfoLoading(false);
+  };
+
   const renderEventCard = ({ item }: { item: any }) => (
-    <TouchableOpacity style={styles.card} onPress={() => {}}>
+    <TouchableOpacity style={styles.card} onPress={() => handleOpenInfo(item)}>
       <View style={styles.cardTop}>
         <Text style={styles.cardTitle}>{item.title}</Text>
         <View style={{flexDirection: 'row', gap: 8, alignItems: 'center'}}>
@@ -178,7 +261,7 @@ export default function HomeScreen() {
             <Ionicons name="walk" size={14} color="#28a745" />
             <Text style={styles.statText}>
                 {/* Metreyi KM'ye çevirip gösteriyoruz */}
-                {(item.route_distance_meters / 1000).toFixed(1)} km
+                {(item.route_distance_meters / 1000000).toFixed(1)} km
             </Text>
          </View>
       </View>
@@ -297,6 +380,98 @@ export default function HomeScreen() {
           }
         />
       )}
+
+      <Modal visible={!!selectedEvent} animationType="slide" transparent={true}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{selectedEvent?.title}</Text>
+              <TouchableOpacity onPress={() => { setSelectedEvent(null); setDestinations([]); setRouteCoords([]); }}>
+                <Ionicons name="close-circle" size={32} color="#ccc" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {infoLoading ? (
+                <ActivityIndicator color="#007AFF" style={{margin: 20}} />
+              ) : (
+                <>
+                  <View style={styles.mapBox}>
+                    <MapView 
+                      ref={mapRef}
+                      style={styles.map}
+                      initialRegion={{
+                        latitude: 41.0082, longitude: 28.9784,
+                        latitudeDelta: 0.05, longitudeDelta: 0.05
+                      }}
+                    >
+                      {destinations.map((d, i) => (
+                        <Marker key={i} coordinate={{latitude: d.latitude, longitude: d.longitude}}>
+                           <View style={styles.markerBadge}><Text style={styles.markerText}>{i + 1}</Text></View>
+                           <Ionicons name="location" size={26} color="#007AFF" />
+                        </Marker>
+                      ))}
+                      {routeCoords.length > 0 ? (
+                        <Polyline coordinates={routeCoords} strokeWidth={4} strokeColor="#007AFF" />
+                      ) : (
+                        destinations.length > 1 && (
+                          <MapViewDirections
+                            origin={{latitude: destinations[0].latitude, longitude: destinations[0].longitude}} 
+                            destination={{latitude: destinations[destinations.length-1].latitude, longitude: destinations[destinations.length-1].longitude}} 
+                            waypoints={destinations.slice(1, -1).map(d => ({latitude: d.latitude, longitude: d.longitude}))}
+                            apikey={GOOGLE_MAPS_APIKEY} strokeWidth={4} strokeColor="#007AFF" mode="WALKING"
+                          />
+                        )
+                      )}
+                    </MapView>
+                  </View>
+                  
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Tarih ve Saat:</Text>
+                    <Text style={styles.detailValue}>
+                      {new Date(selectedEvent?.start_date).toLocaleString('tr-TR', {
+                        day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                      })}
+                    </Text>
+                  </View>
+
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Davet Kodu:</Text>
+                    <Text style={styles.detailValue}>{selectedEvent?.invitation_code}</Text>
+                  </View>
+                  
+                  {selectedEvent?.route_distance_meters && (
+                    <View style={styles.detailRow}>
+                        <Text style={styles.detailLabel}>Mesafe:</Text>
+                        <Text style={styles.detailValue}>{(selectedEvent.route_distance_meters / 1000000).toFixed(2)} km</Text>
+                    </View>
+                  )}
+
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Katılımcılar:</Text>
+                    <Text style={styles.detailValue}>{selectedEvent?.participant_count}</Text>
+                  </View>
+
+                  <Text style={styles.detailDesc}>{selectedEvent?.description}</Text>
+
+                  <View style={{gap: 10, marginBottom: 30, marginTop: 20}}>
+                    <TouchableOpacity 
+                      style={styles.joinBtn2}
+                      onPress={() => {
+                        handleQuickJoin();
+                        setSelectedEvent(null);
+                      }}
+                    >
+                      <Ionicons name="log-in-outline" size={20} color="#fff" />
+                      <Text style={styles.joinBtnText2}>Etkinliğe Katıl</Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
+              )}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -338,5 +513,28 @@ const styles = StyleSheet.create({
   cardBottom: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   cardDate: { fontSize: 12, color: '#888' },
   emptyContainer: { alignItems: 'center', marginTop: 80 },
-  emptyText: { textAlign: 'center', marginTop: 15, color: '#999', fontSize: 14 }
+  emptyText: { textAlign: 'center', marginTop: 15, color: '#999', fontSize: 14 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalContent: { backgroundColor: '#fff', borderTopLeftRadius: 25, borderTopRightRadius: 25, height: '85%', padding: 20 },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 },
+  modalTitle: { fontSize: 20, fontWeight: 'bold' },
+  mapBox: { height: 250, borderRadius: 15, overflow: 'hidden', marginBottom: 20 },
+  map: { width: '100%', height: '100%' },
+  detailRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 15, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: '#eee' },
+  detailLabel: { color: '#888' },
+  detailValue: { fontWeight: 'bold', color: '#007AFF' },
+  detailDesc: { color: '#444', lineHeight: 22 },
+  markerBadge: { backgroundColor: '#fff', borderRadius: 10, paddingHorizontal: 5, borderWidth: 1, borderColor: '#007AFF', position: 'absolute', top: -15, alignSelf: 'center', zIndex: 1 },
+  markerText: { fontSize: 10, fontWeight: 'bold', color: '#007AFF' },
+  joinBtn2: {
+    backgroundColor: '#4CAF50',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 15,
+    borderRadius: 12,
+    gap: 10,
+    marginBottom: 30,
+  },
+  joinBtnText2: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
 });

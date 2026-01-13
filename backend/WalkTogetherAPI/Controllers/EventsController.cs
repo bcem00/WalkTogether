@@ -37,6 +37,15 @@ public class EventsController : ControllerBase
     }
 
     // ---------------------------------------------------------
+    // 🔒 HELPER: Check if User is Admin
+    // ---------------------------------------------------------
+    private bool IsUserAdmin()
+    {
+        var role = User.FindFirst(ClaimTypes.Role)?.Value;
+        return role == "admin" || role == "Admin";
+    }
+
+    // ---------------------------------------------------------
     // 🔒 SECURED ENDPOINTS
     // ---------------------------------------------------------
 
@@ -206,9 +215,10 @@ public class EventsController : ControllerBase
             if (eventEntity == null)
                 return NotFound(new { message = "Event not found" });
 
-            // 3. Security Check: Only event creator can delete
-            if (eventEntity.CreatorId != userId)
-                return StatusCode(403, new { message = "Only the event creator can delete this event." });
+            // 3. Security Check: Only event creator or admin can delete
+            var isAdmin = IsUserAdmin();
+            if (eventEntity.CreatorId != userId && !isAdmin)
+                return StatusCode(403, new { message = "Only the event creator or admin can delete this event." });
 
             // 4. Delete the event
             var success = await _eventService.DeleteEventAsync(eventId);

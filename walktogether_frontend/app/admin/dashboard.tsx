@@ -1,11 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { eventsApi } from '../apiClient'; // Dosya yoluna dikkat
+import { ActivityIndicator, Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { authApi, eventsApi } from '../apiClient'; // Dosya yoluna dikkat
 
 export default function AdminDashboard() {
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigation = useNavigation();
 
   // Sayfa açıldığında veritabanından etkinlikleri çek
   useEffect(() => {
@@ -22,6 +24,61 @@ export default function AdminDashboard() {
     setLoading(false);
   };
 
+  const handleDeleteEvent = async (eventId: string, eventTitle: string) => {
+    Alert.alert(
+      'Delete Event',
+      `Are you sure you want to delete "${eventTitle}"?`,
+      [
+        {
+          text: 'Cancel',
+          onPress: () => {},
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          onPress: async () => {
+            const result = await eventsApi.deleteEvent(eventId);
+            if (result.data) {
+              Alert.alert('Success', result.data.message);
+              // Refresh the events list
+              loadAllEvents();
+            } else {
+              Alert.alert('Error', result.error || 'Failed to delete event');
+            }
+          },
+          style: 'destructive',
+        },
+      ],
+      { cancelable: false }
+    );
+  };
+
+  const handleQuit = async () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to quit?',
+      [
+        {
+          text: 'Cancel',
+          onPress: () => {},
+          style: 'cancel',
+        },
+        {
+          text: 'Quit',
+          onPress: async () => {
+            await authApi.logout();
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'index' as never }],
+            });
+          },
+          style: 'destructive',
+        },
+      ],
+      { cancelable: false }
+    );
+  };
+
   const renderAdminItem = ({ item }: { item: any }) => (
     <View style={styles.card}>
       <View style={styles.info}>
@@ -29,7 +86,10 @@ export default function AdminDashboard() {
         <Text style={styles.creator}>Oluşturan: @{item.creator_username}</Text>
         <Text style={styles.details}>Kod: {item.invitation_code} | Katılımcı: {item.participant_count}</Text>
       </View>
-      <TouchableOpacity style={styles.deleteBtn}>
+      <TouchableOpacity 
+        style={styles.deleteBtn}
+        onPress={() => handleDeleteEvent(item.event_id, item.title)}
+      >
         <Ionicons name="trash-outline" size={22} color="#FF3B30" />
       </TouchableOpacity>
     </View>
@@ -37,18 +97,30 @@ export default function AdminDashboard() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Admin Paneli</Text>
-      <Text style={styles.subHeader}>Sistemdeki Tüm Etkinlikler</Text>
+      <View style={styles.headerContainer}>
+        <View>
+          <Text style={styles.header}>Admin Paneli</Text>
+          <Text style={styles.subHeader}>Sistemdeki Tüm Etkinlikler</Text>
+        </View>
+        <TouchableOpacity style={styles.quitBtn} onPress={handleQuit}>
+          <Ionicons name="log-out-outline" size={20} color="#fff" />
+          <Text style={styles.quitBtnText}>Çık</Text>
+        </TouchableOpacity>
+      </View>
 
       {loading ? (
-        <ActivityIndicator size="large" color="#007AFF" />
+        <ActivityIndicator size="large" color="#007AFF" style={{ marginTop: 50 }} />
       ) : (
         <FlatList
           data={events}
           renderItem={renderAdminItem}
-          keyExtractor={(item) => item.event_id}
-          contentContainerStyle={{ padding: 20 }}
-          ListEmptyComponent={<Text>Henüz etkinlik yok.</Text>}
+          keyExtractor={(item) => item.event_id.toString()}
+          contentContainerStyle={{ padding: 20, flexGrow: 1 }}
+          ListEmptyComponent={
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+              <Text style={{ color: '#999' }}>Henüz etkinlik yok.</Text>
+            </View>
+          }
         />
       )}
     </View>
@@ -57,8 +129,11 @@ export default function AdminDashboard() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8f9fa' },
-  header: { fontSize: 24, fontWeight: 'bold', paddingHorizontal: 20, paddingTop: 40 },
-  subHeader: { fontSize: 14, color: '#666', paddingHorizontal: 20, marginBottom: 20 },
+  headerContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingHorizontal: 20, paddingTop: 40, backgroundColor: '#fff', paddingBottom: 20, borderBottomWidth: 1, borderBottomColor: '#eee' },
+  header: { fontSize: 24, fontWeight: 'bold' },
+  subHeader: { fontSize: 14, color: '#666', marginTop: 5 },
+  quitBtn: { backgroundColor: '#FF3B30', flexDirection: 'row', alignItems: 'center', gap: 6, padding: 10, borderRadius: 8 },
+  quitBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 14 },
   card: { backgroundColor: '#fff', flexDirection: 'row', padding: 15, borderRadius: 12, marginBottom: 10, elevation: 2, marginHorizontal: 2 },
   info: { flex: 1 },
   title: { fontSize: 16, fontWeight: 'bold' },
