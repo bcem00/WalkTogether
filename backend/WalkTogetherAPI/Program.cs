@@ -37,6 +37,9 @@ builder.Services.AddScoped<EventService>();
 builder.Services.AddScoped<TokenHelper>();
 builder.Services.AddHttpClient<WalkTogetherAPI.Services.GoogleRoutesService>();
 
+// Register background service for deleting past events
+builder.Services.AddHostedService<WalkTogetherAPI.Services.DeletePastEventsService>();
+
 // --- AUTHENTICATION CONFIGURATION ---
 builder.Services.AddAuthentication(options =>
 {

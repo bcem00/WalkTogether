@@ -23,9 +23,7 @@ public class EventsController : ControllerBase
         _eventService = eventService;
     }
 
-    // ---------------------------------------------------------
-    // 🔒 HELPER: Get User ID Securely
-    // ---------------------------------------------------------
+
     private Guid GetUserId()
     {
         var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -33,28 +31,24 @@ public class EventsController : ControllerBase
         {
             return userId;
         }
-        throw new UnauthorizedAccessException("Invalid or missing User ID in token.");
+        throw new UnauthorizedAccessException("Token içinde geçersiz veya eksik Kullanıcı Kimliği.");
     }
 
-    // ---------------------------------------------------------
-    // 🔒 HELPER: Check if User is Admin
-    // ---------------------------------------------------------
+
     private bool IsUserAdmin()
     {
         var role = User.FindFirst(ClaimTypes.Role)?.Value;
         return role == "admin" || role == "Admin";
     }
 
-    // ---------------------------------------------------------
-    // 🔒 SECURED ENDPOINTS
-    // ---------------------------------------------------------
+
 
     [HttpGet("user-id/{userId}")]
     public async Task<IActionResult> GetEventsByUserId(Guid userId)
     {
         try
         {
-            // Security Check: Ensure user is only requesting their own data
+            
             var tokenUserId = GetUserId();
             if (userId != tokenUserId)
                 return Forbid();
@@ -75,7 +69,7 @@ public class EventsController : ControllerBase
     {
         try
         {
-            // 1. Force CreatorId from Token (Ignore whatever the client sent)
+           
             var userId = GetUserId();
             request.CreatorId = userId;
 
@@ -85,7 +79,7 @@ public class EventsController : ControllerBase
             return Ok(new
             {
                 eventId = newEventId,
-                message = "Event created successfully",
+                message = "Etkinlik başarıyla oluşturuldu",
                 invitationCode = createdEvent?.InvitationCode.ToString()
             });
         }
@@ -102,22 +96,22 @@ public class EventsController : ControllerBase
     {
         try
         {
-            // 1. Get User ID
+            
             var userId = GetUserId();
 
-            // 2. Validate Event
-            var eventEntity = await _context.Events.FindAsync(eventId); // use the same DbContext instance we save with
-            if (eventEntity == null) return NotFound("Event not found");
+            
+            var eventEntity = await _context.Events.FindAsync(eventId); 
+            if (eventEntity == null) return NotFound("Etkinlik bulunamadı.");
 
             // 3. Security Check: Compare Token ID vs Event Creator ID
             if (eventEntity.CreatorId != userId)
-                return StatusCode(403, "Only the event creator can add a route.");
+                return StatusCode(403, "Sadece etkinlik oluşturucusu rota ekleyebilir.");
 
             // 4. Call Google Routes API
             var routeResult = await _routeService.ComputeRouteAsync(waypoints);
 
             if (routeResult?.Routes == null || !routeResult.Routes.Any())
-                return BadRequest("Could not calculate a route.");
+                return BadRequest("Rota hesaplanamadı.");
 
             var bestRoute = routeResult.Routes.First();
 
@@ -139,7 +133,7 @@ public class EventsController : ControllerBase
 
             return Ok(new
             {
-                message = "Route saved successfully",
+                message = "Rota başarıyla kaydedildi",
                 polyline = eventEntity.RoutePolyline,
                 distance = eventEntity.TotalDistanceMeters
             });
@@ -156,43 +150,43 @@ public class EventsController : ControllerBase
     {
         try
         {
-            // 1. Get User ID from Token
+            
             var userId = GetUserId();
 
-            // 2. Call Service
+            
             var result = await _eventService.JoinEventByCodeAsync(userId, request.InviteCode);
 
             return result switch
             {
-                JoinResult.Success => Ok(new { message = "Joined event successfully." }),
-                JoinResult.AlreadyJoined => Ok(new { message = "You are already a participant of this event." }),
-                JoinResult.InvalidCode => NotFound(new { message = "Invalid invitation code." }),
-                _ => BadRequest(new { message = "Unable to join event." })
+                JoinResult.Success => Ok(new { message = "Etkinliğe başarıyla katıldınız." }),
+                JoinResult.AlreadyJoined => Ok(new { message = "Zaten bu etkinliğin bir katılımcısısınız." }),
+                JoinResult.InvalidCode => NotFound(new { message = "Geçersiz davet kodu." }),
+                _ => BadRequest(new { message = "Etkinliğe katılamadı." })
             };
         }
         catch (UnauthorizedAccessException) { return Unauthorized(); }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "An internal error occurred." });
+            return StatusCode(500, new { message = "Bir server hatası oluştu." });
         }
     }
 
-    // POST: api/events/leave
+    
     [HttpPost("leave")]
     public async Task<IActionResult> LeaveEvent([FromBody] LeaveEventRequest request)
     {
         try
         {
-            // 1. Force User ID from Token (Ignore client body userId)
+            
             var userId = GetUserId();
 
-            // 2. Perform Action
+            
             var success = await _eventService.LeaveEventAsync(userId, request.EventId);
 
             if (success)
-                return Ok(new { message = "Left event successfully" });
+                return Ok(new { message = "Etkinlikten başarıyla ayrıldınız." });
             else
-                return BadRequest(new { message = "Failed to leave event" });
+                return BadRequest(new { message = "Etkinlikten ayrılamadı." });
         }
         catch (UnauthorizedAccessException) { return Unauthorized(); }
         catch (Exception ex)
@@ -201,7 +195,7 @@ public class EventsController : ControllerBase
         }
     }
 
-    // DELETE: api/events/{eventId}
+    
     [HttpDelete("{eventId}")]
     public async Task<IActionResult> DeleteEvent(Guid eventId)
     {
@@ -213,20 +207,20 @@ public class EventsController : ControllerBase
             // 2. Validate Event
             var eventEntity = await _context.Events.FindAsync(eventId);
             if (eventEntity == null)
-                return NotFound(new { message = "Event not found" });
+                return NotFound(new { message = "Etkinlik bulunamadı" });
 
             // 3. Security Check: Only event creator or admin can delete
             var isAdmin = IsUserAdmin();
             if (eventEntity.CreatorId != userId && !isAdmin)
-                return StatusCode(403, new { message = "Only the event creator or admin can delete this event." });
+                return StatusCode(403, new { message = "Sadece etkinlik yaratıcısı veya admin bu etkinliği silebilir." });
 
             // 4. Delete the event
             var success = await _eventService.DeleteEventAsync(eventId);
 
             if (success)
-                return Ok(new { message = "Event deleted successfully" });
+                return Ok(new { message = "Etkinlik başarıyla silindi" });
             else
-                return BadRequest(new { message = "Failed to delete event" });
+                return BadRequest(new { message = "Etkinlik silinemedi" });
         }
         catch (UnauthorizedAccessException) { return Unauthorized(); }
         catch (Exception ex)
@@ -240,22 +234,21 @@ public class EventsController : ControllerBase
     {
         try
         {
-            // 1. Get User ID from Token
+            
             var userId = GetUserId();
 
-            // 2. Validate Event
+            
             var eventEntity = await _context.Events.FindAsync(eventId);
             if (eventEntity == null)
-                return NotFound(new { message = "Event not found" });
+                return NotFound(new { message = "Etkinlik bulunamadı" });
 
-            // 3. Security Check: Only event creator can add distance
+            
             if (eventEntity.CreatorId != userId)
-                return StatusCode(403, new { message = "Only the event creator can add distance to attendees." });
-
-            // 4. Add distance to attendees
+                return StatusCode(403, new { message = "Sadece etkinlik yaratıcısı katılımcılara mesafe ekleyebilir." });
+            
             var updatedCount = await _eventService.AddEventDistanceToAttendeesAsync(eventId);
 
-            return Ok(new { message = $"Distance added to {updatedCount} attendees", updatedCount });
+            return Ok(new { message = $"Katılımcılara mesafe başarıyla eklendi: {updatedCount}", updatedCount });
         }
         catch (UnauthorizedAccessException) { return Unauthorized(); }
         catch (Exception ex)
@@ -275,14 +268,14 @@ public class EventsController : ControllerBase
             // 2. Validate Event and Route
             var eventEntity = await _context.Events.FindAsync(eventId);
             if (eventEntity == null)
-                return NotFound(new { message = "Event not found" });
+                return NotFound(new { message = "Etkinlik bulunamadı" });
 
             if (!eventEntity.RouteId.HasValue)
-                return BadRequest(new { message = "Event does not have a route" });
+                return BadRequest(new { message = "Etkinlik bir rotaya sahip değil" });
 
             // 3. Security Check: Only event creator can add destinations
             if (eventEntity.CreatorId != userId)
-                return StatusCode(403, new { message = "Only the event creator can add destinations." });
+                return StatusCode(403, new { message = "Sadece etkinlik yaratıcısı destinasyon ekleyebilir." });
 
             // 4. Create destination
             var destinationId = await _eventService.CreateDestinationAsync(
@@ -291,7 +284,7 @@ public class EventsController : ControllerBase
                 request.Longitude,
                 request.OrderInRoute);
 
-            return Ok(new { message = "Destination created successfully", destinationId });
+            return Ok(new { message = "Destinasyon başarıyla oluşturuldu", destinationId });
         }
         catch (UnauthorizedAccessException) { return Unauthorized(); }
         catch (Exception ex)
@@ -311,19 +304,19 @@ public class EventsController : ControllerBase
             // 2. Validate Event and Route
             var eventEntity = await _context.Events.FindAsync(eventId);
             if (eventEntity == null)
-                return NotFound(new { message = "Event not found" });
+                return NotFound(new { message = "Etkinlik bulunamadı" });
 
             if (!eventEntity.RouteId.HasValue)
-                return BadRequest(new { message = "Event does not have a route" });
+                return BadRequest(new { message = "Etkinlik bir rotaya sahip değil" });
 
             // 3. Security Check: Only event creator can update route distance
             if (eventEntity.CreatorId != userId)
-                return StatusCode(403, new { message = "Only the event creator can update route distance." });
+                return StatusCode(403, new { message = "Sadece etkinlik yaratıcısı rota mesafesini güncelleyebilir." });
 
             // 4. Update route distance
             await _eventService.UpdateRouteDistanceAsync(eventEntity.RouteId.Value, request.Distance);
 
-            return Ok(new { message = "Route distance updated successfully" });
+            return Ok(new { message = "Rota mesafesi başarıyla güncellendi" });
         }
         catch (UnauthorizedAccessException) { return Unauthorized(); }
         catch (Exception ex)
@@ -332,10 +325,7 @@ public class EventsController : ControllerBase
         }
     }
 
-    // ==================================================================================
-    // 🔓 GENERAL READ-ONLY ENDPOINTS (Still requires Auth, but safe to share)
-    // ==================================================================================
-
+   
     [HttpGet("upcoming")]
     public async Task<IActionResult> GetUpcomingEvents()
     {
@@ -418,10 +408,10 @@ public class EventsController : ControllerBase
             // Validate event exists and user is creator
             var eventEntity = await _context.Events.FindAsync(eventId);
             if (eventEntity == null)
-                return NotFound(new { message = "Event not found" });
+                return NotFound(new { message = "Etkinlik bulunamadı" });
 
             if (eventEntity.CreatorId != userId)
-                return StatusCode(403, new { message = "Only the event creator can view this report." });
+                return StatusCode(403, new { message = "Sadece etkinlik yaratıcısı bu raporu görüntüleyebilir." });
 
             var report = await _eventService.GetEventReportAsync(eventId);
             return Ok(new { report });
@@ -438,7 +428,7 @@ public class EventsController : ControllerBase
     {
         try
         {
-            // Note: Add role-based authorization here if needed
+            
             var inactiveUsers = await _eventService.GetInactiveUsersAsync();
             return Ok(inactiveUsers);
         }
@@ -453,7 +443,7 @@ public class EventsController : ControllerBase
     {
         try
         {
-            // Note: Add role-based authorization here if needed
+            
             var count = await _eventService.GetTotalEventCountAsync();
             return Ok(new { totalEventCount = count });
         }

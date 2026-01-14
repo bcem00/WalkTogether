@@ -282,7 +282,7 @@ export default function CreateEventScreen() {
         </View>
 
         <TouchableOpacity style={styles.createBtn} onPress={handleCreateEvent} disabled={loading}>
-          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.createBtnText}>Etkinliği Veritabanına Kaydet</Text>}
+          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.createBtnText}>Etkinliği Kaydet</Text>}
         </TouchableOpacity>
       </View>
     </ScrollView>

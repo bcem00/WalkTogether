@@ -6,11 +6,13 @@ import {
   ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View
 } from 'react-native';
 import { authApi } from './apiClient';
+import WalkingBackground from '../components/WalkingBackground';
 
 export default function LoginScreen() {
   const router = useRouter();
   const [isLogin, setIsLogin] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
 
   // Form State'leri - TypeScript otomatik olarak 'string' atar
   const [username, setUsername] = useState('');
@@ -80,7 +82,7 @@ export default function LoginScreen() {
         }
       }
     } catch (err: any) {
-      // TypeScript'te catch blogundaki hata 'any' veya 'unknown' olmalıdır
+      
       Alert.alert("Bağlantı Hatası", "Sunucuya ulaşılamıyor.");
     } finally {
       setLoading(false);
@@ -89,6 +91,7 @@ export default function LoginScreen() {
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
+      <WalkingBackground />
       <ScrollView contentContainerStyle={styles.inner}>
         <Text style={styles.logo}>WALK TOGETHER</Text>
         <Text style={styles.title}>{isLogin ? 'Oturum Aç' : 'Hesap Oluştur'}</Text>
@@ -118,7 +121,31 @@ export default function LoginScreen() {
           <TextInput style={styles.input} placeholder="Kullanıcı adı" value={username} onChangeText={setUsername} autoCapitalize="none" />
 
           <Text style={styles.label}>Şifre</Text>
-          <TextInput style={styles.input} placeholder="••••••••" value={password} onChangeText={setPassword} secureTextEntry />
+          <View style={styles.passwordContainer}>
+            {showPassword ? (
+              <TextInput 
+                style={styles.passwordInput} 
+                placeholder="••••••••" 
+                value={password} 
+                onChangeText={setPassword}
+                secureTextEntry={false}
+              />
+            ) : (
+              <TextInput 
+                style={styles.passwordInput} 
+                placeholder="••••••••" 
+                value={password} 
+                onChangeText={setPassword}
+                secureTextEntry={true}
+              />
+            )}
+            <TouchableOpacity 
+              style={styles.showPasswordButton}
+              onPress={() => setShowPassword(!showPassword)}
+            >
+              <Text style={styles.eyeIcon}>{showPassword ? '👁' : '🔒'}</Text>
+            </TouchableOpacity>
+          </View>
 
           <TouchableOpacity style={styles.button} onPress={handleAction} disabled={loading}>
             {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>{isLogin ? 'Giriş Yap' : 'Kaydol'}</Text>}
@@ -137,13 +164,17 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1, backgroundColor: '#B3D9FF' },
   inner: { flexGrow: 1, justifyContent: 'center', padding: 30 },
-  logo: { fontSize: 32, fontWeight: 'bold', textAlign: 'center', color: '#007AFF', marginBottom: 10 },
+  logo: { fontSize: 32, fontWeight: 'bold', textAlign: 'center', color: '#007AFF', marginBottom: 10, textShadowColor: 'rgba(255, 255, 255, 0.8)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 },
   title: { fontSize: 18, textAlign: 'center', marginBottom: 30, color: '#555' },
   form: { width: '100%' },
   label: { fontSize: 14, fontWeight: '600', color: '#333', marginBottom: 5, marginLeft: 5 },
   input: { backgroundColor: '#f9f9f9', padding: 15, borderRadius: 10, borderWidth: 1, borderColor: '#eee', marginBottom: 15 },
+  passwordContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 15, backgroundColor: '#f9f9f9', borderRadius: 10, borderWidth: 1, borderColor: '#eee' },
+  passwordInput: { flex: 1, padding: 15, fontSize: 16 },
+  showPasswordButton: { padding: 10, marginRight: 5 },
+  eyeIcon: { width: 24, height: 24 },
   button: { backgroundColor: '#007AFF', padding: 18, borderRadius: 10, alignItems: 'center', marginTop: 10 },
   buttonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
   switchContainer: { flexDirection: 'row', justifyContent: 'center', marginTop: 25 },
