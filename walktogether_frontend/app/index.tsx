@@ -3,13 +3,17 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
   ActivityIndicator, Alert, KeyboardAvoidingView, Platform,
-  ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View
+  ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, useColorScheme
 } from 'react-native';
+import { Colors } from '../constants/theme';
 import { authApi } from './apiClient';
 import WalkingBackground from '../components/WalkingBackground';
 
 export default function LoginScreen() {
   const router = useRouter();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const themeColors = isDark ? Colors.dark : Colors.light;
   const [isLogin, setIsLogin] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
@@ -90,25 +94,26 @@ export default function LoginScreen() {
   };
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={[styles.container, { backgroundColor: themeColors.background }]}>
       <WalkingBackground />
-      <ScrollView contentContainerStyle={styles.inner}>
+      <ScrollView contentContainerStyle={[styles.inner, { backgroundColor: themeColors.background }]}>
         <Text style={styles.logo}>WALK TOGETHER</Text>
         <Text style={styles.title}>{isLogin ? 'Oturum Aç' : 'Hesap Oluştur'}</Text>
 
         <View style={styles.form}>
           {!isLogin && (
             <>
-              <Text style={styles.label}>Ad</Text>
-              <TextInput style={styles.input} placeholder="Ad" value={firstName} onChangeText={setFirstName} />
+              <Text style={[styles.label, { color: themeColors.label }]}>Ad</Text>
+              <TextInput style={[styles.input, { backgroundColor: themeColors.inputBackground, borderColor: themeColors.inputBorder, color: themeColors.text }]} placeholder="Ad" placeholderTextColor={themeColors.placeholder} value={firstName} onChangeText={setFirstName} />
               
-              <Text style={styles.label}>Soyad</Text>
-              <TextInput style={styles.input} placeholder="Soyad" value={lastName} onChangeText={setLastName} />
+              <Text style={[styles.label, { color: themeColors.label }]}>Soyad</Text>
+              <TextInput style={[styles.input, { backgroundColor: themeColors.inputBackground, borderColor: themeColors.inputBorder, color: themeColors.text }]} placeholder="Soyad" placeholderTextColor={themeColors.placeholder} value={lastName} onChangeText={setLastName} />
 
-              <Text style={styles.label}>E-posta</Text>
+              <Text style={[styles.label, { color: themeColors.label }]}>E-posta</Text>
               <TextInput 
-                style={styles.input} 
+                style={[styles.input, { backgroundColor: themeColors.inputBackground, borderColor: themeColors.inputBorder, color: themeColors.text }]} 
                 placeholder="email@example.com" 
+                placeholderTextColor={themeColors.placeholder}
                 value={email} 
                 onChangeText={setEmail} 
                 autoCapitalize="none"
@@ -117,23 +122,25 @@ export default function LoginScreen() {
             </>
           )}
 
-          <Text style={styles.label}>Kullanıcı Adı</Text>
-          <TextInput style={styles.input} placeholder="Kullanıcı adı" value={username} onChangeText={setUsername} autoCapitalize="none" />
+          <Text style={[styles.label, { color: themeColors.label }]}>Kullanıcı Adı</Text>
+          <TextInput style={[styles.input, { backgroundColor: themeColors.inputBackground, borderColor: themeColors.inputBorder, color: themeColors.text }]} placeholder="Kullanıcı adı" placeholderTextColor={themeColors.placeholder} value={username} onChangeText={setUsername} autoCapitalize="none" />
 
-          <Text style={styles.label}>Şifre</Text>
-          <View style={styles.passwordContainer}>
+          <Text style={[styles.label, { color: themeColors.label }]}>Şifre</Text>
+          <View style={[styles.passwordContainer, { backgroundColor: themeColors.inputBackground, borderColor: themeColors.inputBorder }]}>
             {showPassword ? (
               <TextInput 
-                style={styles.passwordInput} 
+                style={[styles.passwordInput, { color: themeColors.text }]} 
                 placeholder="••••••••" 
+                placeholderTextColor={themeColors.placeholder}
                 value={password} 
                 onChangeText={setPassword}
                 secureTextEntry={false}
               />
             ) : (
               <TextInput 
-                style={styles.passwordInput} 
+                style={[styles.passwordInput, { color: themeColors.text }]} 
                 placeholder="••••••••" 
+                placeholderTextColor={themeColors.placeholder}
                 value={password} 
                 onChangeText={setPassword}
                 secureTextEntry={true}
@@ -143,18 +150,18 @@ export default function LoginScreen() {
               style={styles.showPasswordButton}
               onPress={() => setShowPassword(!showPassword)}
             >
-              <Text style={styles.eyeIcon}>{showPassword ? '👁' : '🔒'}</Text>
+              <Text style={styles.eyeIcon}>{showPassword ? '🔒' : '👁'}</Text>
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity style={styles.button} onPress={handleAction} disabled={loading}>
-            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>{isLogin ? 'Giriş Yap' : 'Kaydol'}</Text>}
+          <TouchableOpacity style={[styles.button, { backgroundColor: themeColors.buttonBackground }]} onPress={handleAction} disabled={loading}>
+            {loading ? <ActivityIndicator color="#fff" /> : <Text style={[styles.buttonText, { color: themeColors.buttonText }]}>{isLogin ? 'Giriş Yap' : 'Kaydol'}</Text>}
           </TouchableOpacity>
 
           <View style={styles.switchContainer}>
-            <Text style={styles.switchTextNormal}>{isLogin ? 'Hesabın yok mu?' : 'Zaten üye misin?'}</Text>
+            <Text style={[styles.switchTextNormal, { color: themeColors.lightText }]}>{isLogin ? 'Hesabın yok mu?' : 'Zaten üye misin?'}</Text>
             <TouchableOpacity onPress={() => setIsLogin(!isLogin)}>
-              <Text style={styles.switchTextBlue}>{isLogin ? ' Kayıt Ol' : ' Giriş Yap'}</Text>
+              <Text style={[styles.switchTextBlue, { color: themeColors.tint }]}>{isLogin ? ' Kayıt Ol' : ' Giriş Yap'}</Text>
             </TouchableOpacity>
           </View>
         </View>

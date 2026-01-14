@@ -4,13 +4,17 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useState } from 'react';
 import {
   ActivityIndicator, Alert, ScrollView, StyleSheet,
-  Text, TextInput, TouchableOpacity, View
+  Text, TextInput, TouchableOpacity, View, useColorScheme
 } from 'react-native';
+import { Colors } from '../../constants/theme';
 import MapView, { Marker } from 'react-native-maps';
 import MapViewDirections from 'react-native-maps-directions';
 import { eventsApi } from '../apiClient';
 
 export default function CreateEventScreen() {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const themeColors = isDark ? Colors.dark : Colors.light;
   const [loading, setLoading] = useState(false);
   const GOOGLE_MAPS_APIKEY = 'AIzaSyDFYEsvv3CUOa07f13Go1T2XKul0HbtfnU';
 
@@ -138,19 +142,20 @@ export default function CreateEventScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 50 }}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Yeni Etkinlik Oluştur</Text>
-        <Text style={styles.headerSubtitle}>Rotayı belirle ve arkadaşlarına kodunu gönder.</Text>
+    <ScrollView style={[styles.container, { backgroundColor: themeColors.background }]} contentContainerStyle={{ paddingBottom: 50 }}>
+      <View style={[styles.header, { backgroundColor: themeColors.inputBackground }]}>
+        <Text style={[styles.headerTitle, { color: themeColors.text }]}>Yeni Etkinlik Oluştur</Text>
+        <Text style={[styles.headerSubtitle, { color: themeColors.lightText }]}>Rotayı belirle ve arkadaşlarına kodunu gönder.</Text>
       </View>
 
       <View style={styles.form}>
-        <Text style={styles.label}>Etkinlik Başlığı *</Text>
-        <TextInput style={styles.input} value={title} onChangeText={setTitle} placeholder="Örn: Sabah Koşusu" />
+        <Text style={[styles.label, { color: themeColors.label }]}>Etkinlik Başlığı *</Text>
+        <TextInput style={[styles.input, { backgroundColor: themeColors.inputBackground, borderColor: themeColors.inputBorder, color: themeColors.text }]} placeholderTextColor={themeColors.placeholder} value={title} onChangeText={setTitle} placeholder="Örn: Sabah Koşusu" />
 
-        <Text style={styles.label}>Açıklama</Text>
+        <Text style={[styles.label, { color: themeColors.label }]}>Açıklama</Text>
         <TextInput 
-          style={[styles.input, { height: 80 }]} 
+          style={[styles.input, { height: 80, backgroundColor: themeColors.inputBackground, borderColor: themeColors.inputBorder, color: themeColors.text }]} 
+          placeholderTextColor={themeColors.placeholder}
           value={description} 
           onChangeText={setDescription} 
           placeholder="Etkinlik hakkında bilgi ver..." 
@@ -159,18 +164,18 @@ export default function CreateEventScreen() {
 
         <View style={styles.row}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.label}>Tarih</Text>
-            <TouchableOpacity style={styles.dateBtn} onPress={() => setShowDatePicker(true)}>
-              <Ionicons name="calendar-outline" size={18} color="#007AFF" />
-              <Text style={styles.dateText}>{startDate.toLocaleDateString('tr-TR')}</Text>
+            <Text style={[styles.label, { color: themeColors.label }]}>Tarih</Text>
+            <TouchableOpacity style={[styles.dateBtn, { backgroundColor: themeColors.inputBackground, borderColor: themeColors.inputBorder }]} onPress={() => setShowDatePicker(true)}>
+              <Ionicons name="calendar-outline" size={18} color={themeColors.tint} />
+              <Text style={[styles.dateText, { color: themeColors.text }]}>{startDate.toLocaleDateString('tr-TR')}</Text>
             </TouchableOpacity>
           </View>
           
           <View style={{ flex: 1, marginLeft: 15 }}>
-            <Text style={styles.label}>Saat</Text>
-            <TouchableOpacity style={styles.dateBtn} onPress={() => setShowTimePicker(true)}>
-              <Ionicons name="time-outline" size={18} color="#007AFF" />
-              <Text style={styles.dateText}>
+            <Text style={[styles.label, { color: themeColors.label }]}>Saat</Text>
+            <TouchableOpacity style={[styles.dateBtn, { backgroundColor: themeColors.inputBackground, borderColor: themeColors.inputBorder }]} onPress={() => setShowTimePicker(true)}>
+              <Ionicons name="time-outline" size={18} color={themeColors.tint} />
+              <Text style={[styles.dateText, { color: themeColors.text }]}>
                 {startDate.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
               </Text>
             </TouchableOpacity>

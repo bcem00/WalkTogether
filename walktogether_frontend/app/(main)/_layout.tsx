@@ -4,7 +4,8 @@ import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import { Tabs } from 'expo-router';
 import React, { useEffect, useRef } from 'react';
-import { Platform } from 'react-native';
+import { Platform, useColorScheme } from 'react-native';
+import { Colors } from '../../constants/theme';
 import { authApi } from '../apiClient';
 
 // 1. DÜZELTME (image_b39ac3.png): Eksik olan shouldShowBanner ve shouldShowList eklendi
@@ -20,6 +21,9 @@ Notifications.setNotificationHandler({
 
 export default function MainLayout() {
   // 2. DÜZELTME (image_b39b5e.png): useRef için (null) başlangıç değeri eklendi
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const themeColors = isDark ? Colors.dark : Colors.light;
   const notificationListener = useRef<Notifications.Subscription | null>(null);
   const responseListener = useRef<Notifications.Subscription | null>(null);
 
@@ -84,26 +88,35 @@ export default function MainLayout() {
  return (
     <Tabs 
       screenOptions={{ 
-        tabBarActiveTintColor: '#007AFF', 
+        tabBarActiveTintColor: themeColors.tint,
+        tabBarInactiveTintColor: themeColors.placeholder,
+        tabBarStyle: {
+          backgroundColor: themeColors.inputBackground,
+          borderTopColor: themeColors.border,
+        },
         headerShown: true,
         
         // --- BURASI DÜZELDİ: Tüm stil özellikleri artık screenOptions içinde ---
         headerStyle: {
           height: 40,            // Header yüksekliğini azalttık
-          backgroundColor: '#fff',
+          backgroundColor: themeColors.inputBackground,
           elevation: 2,          // Android gölge
           shadowOpacity: 0.1,    // iOS gölge
+          borderBottomColor: themeColors.border,
+          borderBottomWidth: 1,
         },
         headerTitleStyle: {
           fontSize: 16,          // Daha kompakt yazı boyutu
           fontWeight: 'bold',
+          color: themeColors.text,
         },
         headerTitleContainerStyle: {
         marginTop: -10,        // Negatif değer yazıyı yukarı fırlatır
         paddingTop: 0,
       },
         headerStatusBarHeight: 0, // Header'ı yukarı çekerek boşluğu azaltır
-        headerTitleAlign: 'center' // Başlığı ortalayarak daha şık görünmesini sağlar
+        headerTitleAlign: 'center', // Başlığı ortalayarak daha şık görünmesini sağlar
+        headerTintColor: themeColors.text, // Back button ve icons color
       }}
     >
       <Tabs.Screen 

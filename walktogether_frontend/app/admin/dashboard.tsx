@@ -1,10 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, StyleSheet, Text, TouchableOpacity, View, useColorScheme } from 'react-native';
+import { Colors } from '../../constants/theme';
 import { authApi, eventsApi } from '../apiClient'; // Dosya yoluna dikkat
 
 export default function AdminDashboard() {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const themeColors = isDark ? Colors.dark : Colors.light;
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
@@ -80,11 +84,11 @@ export default function AdminDashboard() {
   };
 
   const renderAdminItem = ({ item }: { item: any }) => (
-    <View style={styles.card}>
+    <View style={[styles.card, { backgroundColor: themeColors.inputBackground, borderColor: themeColors.border }]}>
       <View style={styles.info}>
-        <Text style={styles.title}>{item.title}</Text>
-        <Text style={styles.creator}>Oluşturan: @{item.creator_username}</Text>
-        <Text style={styles.details}>Kod: {item.invitation_code} | Katılımcı: {item.participant_count}</Text>
+        <Text style={[styles.title, { color: themeColors.text }]}>{item.title}</Text>
+        <Text style={[styles.creator, { color: themeColors.tint }]}>Oluşturan: @{item.creator_username}</Text>
+        <Text style={[styles.details, { color: themeColors.placeholder }]}>Kod: {item.invitation_code} | Katılımcı: {item.participant_count}</Text>
       </View>
       <TouchableOpacity 
         style={styles.deleteBtn}
@@ -96,11 +100,11 @@ export default function AdminDashboard() {
   );
 
   return (
-    <View style={styles.container}>
-      <View style={styles.headerContainer}>
+    <View style={[styles.container, { backgroundColor: themeColors.background }]}>
+      <View style={[styles.headerContainer, { backgroundColor: themeColors.inputBackground, borderBottomColor: themeColors.border }]}>
         <View>
-          <Text style={styles.header}>Admin Paneli</Text>
-          <Text style={styles.subHeader}>Sistemdeki Tüm Etkinlikler</Text>
+          <Text style={[styles.header, { color: themeColors.text }]}>Admin Paneli</Text>
+          <Text style={[styles.subHeader, { color: themeColors.lightText }]}>Sistemdeki Tüm Etkinlikler</Text>
         </View>
         <TouchableOpacity style={styles.quitBtn} onPress={handleQuit}>
           <Ionicons name="log-out-outline" size={20} color="#fff" />
@@ -109,7 +113,7 @@ export default function AdminDashboard() {
       </View>
 
       {loading ? (
-        <ActivityIndicator size="large" color="#007AFF" style={{ marginTop: 50 }} />
+        <ActivityIndicator size="large" color={themeColors.tint} style={{ marginTop: 50 }} />
       ) : (
         <FlatList
           data={events}
@@ -118,7 +122,7 @@ export default function AdminDashboard() {
           contentContainerStyle={{ padding: 20, flexGrow: 1 }}
           ListEmptyComponent={
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-              <Text style={{ color: '#999' }}>Henüz etkinlik yok.</Text>
+              <Text style={{ color: themeColors.placeholder }}>Henüz etkinlik yok.</Text>
             </View>
           }
         />

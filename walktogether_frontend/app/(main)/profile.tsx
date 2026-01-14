@@ -6,11 +6,15 @@ import {
   ActivityIndicator, Alert, Modal,
   ScrollView,
   StyleSheet,
-  Text, TextInput, TouchableOpacity, View
+  Text, TextInput, TouchableOpacity, View, useColorScheme
 } from 'react-native';
+import { Colors } from '../../constants/theme';
 import { authApi, eventsApi } from '../apiClient';
 
 export default function ProfileScreen() {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const themeColors = isDark ? Colors.dark : Colors.light;
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   
@@ -134,13 +138,13 @@ export default function ProfileScreen() {
   if (loading) return <ActivityIndicator style={{ flex: 1 }} />;
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.fullName}>{user?.firstName} {user?.lastName}</Text>
+    <ScrollView style={[styles.container, { backgroundColor: themeColors.background }]}>
+      <View style={[styles.header, { backgroundColor: themeColors.inputBackground, borderBottomColor: themeColors.border }]}>
+        <Text style={[styles.fullName, { color: themeColors.text }]}>{user?.firstName} {user?.lastName}</Text>
       </View>
 
-      <View style={styles.content}>
-        <Text style={styles.sectionTitle}>Hesap Bilgileri</Text>
+      <View style={[styles.content, { backgroundColor: themeColors.background }]}>
+        <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Hesap Bilgileri</Text>
         
         <ProfileItem 
           label="Kullanıcı Adı" 
@@ -155,52 +159,52 @@ export default function ProfileScreen() {
 
        {/* YENİ: ROZETLER BÖLÜMÜ */}
         {user?.hasBadge && (
-          <View style={styles.badgeSection}>
-            <Text style={styles.sectionTitle}>Kazanılan Rozetler</Text>
-            <View style={styles.badgeCard}>
+          <View style={[styles.badgeSection, { backgroundColor: themeColors.inputBackground, borderColor: themeColors.border }]}>
+            <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Kazanılan Rozetler</Text>
+            <View style={[styles.badgeCard, { backgroundColor: themeColors.background, borderColor: themeColors.border }]}>
               <Ionicons name="trophy" size={24} color="#FFD700" />
               <View style={{marginLeft: 12}}>
-                <Text style={styles.badgeName}>Usta Yürüyüşçü</Text>
-                <Text style={styles.badgeDesc}>Uygulamada ilk etkinliğini tamamladın!</Text>
+                <Text style={[styles.badgeName, { color: themeColors.text }]}>Usta Yürüyüşçü</Text>
+                <Text style={[styles.badgeDesc, { color: themeColors.lightText }]}>Uygulamada ilk etkinliğini tamamladın!</Text>
               </View>
             </View>
           </View>
         )}
 
         {userRole === 'admin' && (
-          <TouchableOpacity style={styles.adminBtn} onPress={() => {
+          <TouchableOpacity style={[styles.adminBtn, { backgroundColor: themeColors.inputBackground }]} onPress={() => {
             setShowAdminPanel(!showAdminPanel);
             if (!showAdminPanel) fetchAdminData();
           }}>
             <Ionicons name="shield-checkmark-outline" size={20} color="#FF9500" />
-            <Text style={styles.adminBtnText}>Admin Paneli</Text>
+            <Text style={[styles.adminBtnText, { color: themeColors.text }]}>Admin Paneli</Text>
           </TouchableOpacity>
         )}
 
         {showAdminPanel && userRole === 'admin' && (
-          <View style={styles.adminPanel}>
+          <View style={[styles.adminPanel, { backgroundColor: themeColors.inputBackground, borderColor: themeColors.border }]}>
             <View style={styles.adminStat}>
-              <Text style={styles.adminLabel}>Toplam Etkinlik</Text>
-              <Text style={styles.adminValue}>{totalEventCount}</Text>
+              <Text style={[styles.adminLabel, { color: themeColors.lightText }]}>Toplam Etkinlik</Text>
+              <Text style={[styles.adminValue, { color: themeColors.text }]}>{totalEventCount}</Text>
             </View>
             <View style={styles.adminStat}>
-              <Text style={styles.adminLabel}>Pasif Kullanıcılar</Text>
-              <Text style={styles.adminValue}>{inactiveUsers.length}</Text>
+              <Text style={[styles.adminLabel, { color: themeColors.lightText }]}>Pasif Kullanıcılar</Text>
+              <Text style={[styles.adminValue, { color: themeColors.text }]}>{inactiveUsers.length}</Text>
             </View>
           </View>
         )}
 
-        <TouchableOpacity style={styles.passwordRow} onPress={() => setPassModal(true)}>
+        <TouchableOpacity style={[styles.passwordRow, { backgroundColor: themeColors.inputBackground, borderColor: themeColors.border }]} onPress={() => setPassModal(true)}>
           <View style={styles.passwordLeft}>
-            <Ionicons name="lock-closed-outline" size={20} color="#666" />
-            <Text style={styles.passwordText}>Güvenlik ve Şifre</Text>
+            <Ionicons name="lock-closed-outline" size={20} color={themeColors.text} />
+            <Text style={[styles.passwordText, { color: themeColors.text }]}>Güvenlik ve Şifre</Text>
           </View>
-          <Ionicons name="chevron-forward" size={20} color="#ccc" />
+          <Ionicons name="chevron-forward" size={20} color={themeColors.border} />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <TouchableOpacity style={[styles.logoutButton, { backgroundColor: themeColors.inputBackground }]} onPress={handleLogout}>
           <Ionicons name="log-out-outline" size={20} color="#FF3B30" />
-          <Text style={styles.logoutText}>Çıkış Yap</Text>
+          <Text style={[styles.logoutText, { color: themeColors.text }]}>Çıkış Yap</Text>
         </TouchableOpacity>
 
         
@@ -209,11 +213,12 @@ export default function ProfileScreen() {
       {/* KULLANICI ADI MODAL */}
       <Modal visible={userModal.visible} transparent animationType="fade">
         <View style={styles.modalOverlay}>
-          <View style={styles.modalBox}>
-            <Text style={styles.modalTitle}>Kullanıcı Adını Değiştir</Text>
-            <Text style={styles.inputLabel}>Yeni Kullanıcı Adı</Text>
+          <View style={[styles.modalBox, { backgroundColor: themeColors.background, borderColor: themeColors.border }]}>
+            <Text style={[styles.modalTitle, { color: themeColors.text }]}>Kullanıcı Adını Değiştir</Text>
+            <Text style={[styles.inputLabel, { color: themeColors.label }]}>Yeni Kullanıcı Adı</Text>
             <TextInput 
-              style={styles.modalInput} 
+              style={[styles.modalInput, { backgroundColor: themeColors.inputBackground, borderColor: themeColors.inputBorder, color: themeColors.text }]} 
+              placeholderTextColor={themeColors.placeholder} 
               value={userModal.newValue} 
               onChangeText={(t) => setUserModal({...userModal, newValue: t})} 
             />

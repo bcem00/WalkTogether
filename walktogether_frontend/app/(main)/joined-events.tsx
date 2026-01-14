@@ -9,8 +9,9 @@ import {
   RefreshControl,
   ScrollView,
   StyleSheet,
-  Text, TouchableOpacity, View
+  Text, TouchableOpacity, View, useColorScheme
 } from 'react-native';
+import { Colors } from '../../constants/theme';
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import MapViewDirections from 'react-native-maps-directions';
 import { eventsApi } from '../apiClient';
@@ -44,6 +45,9 @@ const decodePolyline = (t: string) => {
 };
 
 export default function JoinedEventsScreen() {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const themeColors = isDark ? Colors.dark : Colors.light;
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -201,24 +205,24 @@ export default function JoinedEventsScreen() {
   };
 
   const renderEventCard = ({ item }: { item: any }) => (
-    <TouchableOpacity style={styles.card} onPress={() => handleOpenInfo(item)}>
+    <TouchableOpacity style={[styles.card, { backgroundColor: themeColors.inputBackground, borderColor: themeColors.border }]} onPress={() => handleOpenInfo(item)}>
       <View style={styles.cardTop}>
-        <Text style={styles.cardTitle}>{item.title}</Text>
-        <View style={styles.codeBadge}>
-          <Text style={styles.codeText}>{item.invitationCode || item.invitation_code}</Text>
+        <Text style={[styles.cardTitle, { color: themeColors.text }]}>{item.title}</Text>
+        <View style={[styles.codeBadge, { backgroundColor: themeColors.background, borderColor: themeColors.border }]}>
+          <Text style={[styles.codeText, { color: themeColors.tint }]}>{item.invitationCode || item.invitation_code}</Text>
         </View>
       </View>
-      <Text style={styles.cardDesc} numberOfLines={2}>{item.description}</Text>
+      <Text style={[styles.cardDesc, { color: themeColors.lightText }]} numberOfLines={2}>{item.description}</Text>
       <View style={styles.cardBottom}>
-        <Ionicons name="calendar-outline" size={14} color="#888" />
-        <Text style={styles.cardDate}>
+        <Ionicons name="calendar-outline" size={14} color={themeColors.placeholder} />
+        <Text style={[styles.cardDate, { color: themeColors.lightText }]}>
           {/* SAAT EKLENDİ */}
           {new Date(item.startDate || item.start_date).toLocaleString('tr-TR', {
             day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
           })}
         </Text>
         {(item.totalDistanceMeters || item.total_distance_meters) && (
-             <Text style={[styles.cardDate, { marginLeft: 10 }]}>
+             <Text style={[styles.cardDate, { marginLeft: 10, color: themeColors.lightText }]}>
                {((item.totalDistanceMeters || item.total_distance_meters) / 1000).toFixed(2)} km
              </Text>
         )}
@@ -227,14 +231,14 @@ export default function JoinedEventsScreen() {
   );
 
   return (
-    <View style={styles.container}>
-      <View style={styles.pageHeader}>
-        <Text style={styles.headerTitle}>Katıldığım Etkinlikler</Text>
-        <Text style={styles.headerSubtitle}>Yürüyüş takviminiz burada listelenir.</Text>
+    <View style={[styles.container, { backgroundColor: themeColors.background }]}>
+      <View style={[styles.pageHeader, { backgroundColor: themeColors.inputBackground, borderBottomColor: themeColors.border }]}>
+        <Text style={[styles.headerTitle, { color: themeColors.text }]}>Katıldığım Etkinlikler</Text>
+        <Text style={[styles.headerSubtitle, { color: themeColors.lightText }]}>Yürüyüş takviminiz burada listelenir.</Text>
       </View>
 
       {loading && !refreshing ? (
-        <ActivityIndicator color="#007AFF" style={{marginTop: 50}} />
+        <ActivityIndicator color={themeColors.tint} style={{marginTop: 50}} />
       ) : (
         <FlatList
           data={events}
@@ -242,25 +246,25 @@ export default function JoinedEventsScreen() {
           keyExtractor={item => (item.id || item.event_id || item.eventId || Math.random()).toString()}
           contentContainerStyle={{ padding: 20 }}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#007AFF"]} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[themeColors.tint]} />
           }
           ListEmptyComponent={<Text style={styles.emptyText}>Henüz bir etkinliğe katılmadınız.</Text>}
         />
       )}
 
       <Modal visible={!!selectedEvent} animationType="slide" transparent={true}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>{selectedEvent?.title}</Text>
+        <View style={[styles.modalOverlay, { backgroundColor: isDark ? 'rgba(0,0,0,0.7)' : 'rgba(0,0,0,0.45)' }]}>
+          <View style={[styles.modalContent, { backgroundColor: themeColors.inputBackground, borderColor: themeColors.border }]}>            
+            <View style={[styles.modalHeader, { backgroundColor: themeColors.inputBackground, borderBottomColor: themeColors.border, borderBottomWidth: 1 }]}>
+              <Text style={[styles.modalTitle, { color: themeColors.text }]}>{selectedEvent?.title}</Text>
               <TouchableOpacity onPress={() => { setSelectedEvent(null); setDestinations([]); setRouteCoords([]); }}>
-                <Ionicons name="close-circle" size={32} color="#ccc" />
+                <Ionicons name="close-circle" size={32} color={themeColors.placeholder} />
               </TouchableOpacity>
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
               {infoLoading ? (
-                <ActivityIndicator color="#007AFF" style={{margin: 20}} />
+                <ActivityIndicator color={themeColors.tint} style={{margin: 20}} />
               ) : (
                 <>
                   <View style={styles.mapBox}>
@@ -274,19 +278,19 @@ export default function JoinedEventsScreen() {
                     >
                       {destinations.map((d, i) => (
                         <Marker key={i} coordinate={{latitude: d.latitude, longitude: d.longitude}}>
-                           <View style={styles.markerBadge}><Text style={styles.markerText}>{i + 1}</Text></View>
-                           <Ionicons name="location" size={26} color="#007AFF" />
+                           <View style={[styles.markerBadge, { backgroundColor: themeColors.background, borderColor: themeColors.tint }]}><Text style={[styles.markerText, { color: themeColors.tint }]}>{i + 1}</Text></View>
+                           <Ionicons name="location" size={26} color={themeColors.tint} />
                         </Marker>
                       ))}
                       {routeCoords.length > 0 ? (
-                        <Polyline coordinates={routeCoords} strokeWidth={4} strokeColor="#007AFF" />
+                        <Polyline coordinates={routeCoords} strokeWidth={4} strokeColor={themeColors.tint} />
                       ) : (
                         destinations.length > 1 && (
                           <MapViewDirections
                             origin={{latitude: destinations[0].latitude, longitude: destinations[0].longitude}} 
                             destination={{latitude: destinations[destinations.length-1].latitude, longitude: destinations[destinations.length-1].longitude}} 
                             waypoints={destinations.slice(1, -1).map(d => ({latitude: d.latitude, longitude: d.longitude}))}
-                            apikey={GOOGLE_MAPS_APIKEY} strokeWidth={4} strokeColor="#007AFF" mode="WALKING"
+                            apikey={GOOGLE_MAPS_APIKEY} strokeWidth={4} strokeColor={themeColors.tint} mode="WALKING"
                           />
                         )
                       )}
@@ -294,28 +298,28 @@ export default function JoinedEventsScreen() {
                   </View>
                   
                   {/* SAAT BİLGİSİ MODALA EKLENDİ */}
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>Tarih ve Saat:</Text>
-                    <Text style={styles.detailValue}>
+                  <View style={[styles.detailRow, { borderBottomColor: themeColors.border }]}>
+                    <Text style={[styles.detailLabel, { color: themeColors.lightText }]}>Tarih ve Saat:</Text>
+                    <Text style={[styles.detailValue, { color: themeColors.text }]}>
                       {new Date(selectedEvent?.startDate || selectedEvent?.start_date).toLocaleString('tr-TR', {
                         day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
                       })}
                     </Text>
                   </View>
 
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>Davet Kodu:</Text>
-                    <Text style={styles.detailValue}>{selectedEvent?.invitationCode || selectedEvent?.invitation_code}</Text>
+                  <View style={[styles.detailRow, { borderBottomColor: themeColors.border }]}>
+                    <Text style={[styles.detailLabel, { color: themeColors.lightText }]}>Davet Kodu:</Text>
+                    <Text style={[styles.detailValue, { color: themeColors.text }]}>{selectedEvent?.invitationCode || selectedEvent?.invitation_code}</Text>
                   </View>
                   
                   {selectedEvent?.totalDistanceMeters && (
-                    <View style={styles.detailRow}>
-                        <Text style={styles.detailLabel}>Mesafe:</Text>
-                        <Text style={styles.detailValue}>{(selectedEvent.totalDistanceMeters / 1000).toFixed(2)} km</Text>
+                    <View style={[styles.detailRow, { borderBottomColor: themeColors.border }]}>
+                        <Text style={[styles.detailLabel, { color: themeColors.lightText }]}>Mesafe:</Text>
+                        <Text style={[styles.detailValue, { color: themeColors.text }]}>{(selectedEvent.totalDistanceMeters / 1000).toFixed(2)} km</Text>
                     </View>
                   )}
 
-                  <Text style={styles.detailDesc}>{selectedEvent?.description}</Text>
+                  <Text style={[styles.detailDesc, { color: themeColors.lightText }]}>{selectedEvent?.description}</Text>
 
                   <View style={{gap: 10, marginBottom: 30, marginTop: 20}}>
                     <TouchableOpacity 
@@ -371,19 +375,19 @@ export default function JoinedEventsScreen() {
       </Modal>
 
       <Modal visible={showReport} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.reportModalContent}>
+        <View style={[styles.modalOverlay, { backgroundColor: isDark ? 'rgba(0,0,0,0.7)' : 'rgba(0,0,0,0.45)' }]}>
+          <View style={[styles.reportModalContent, { backgroundColor: themeColors.inputBackground }]}>            
             <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20}}>
-              <Text style={styles.reportTitle}>Etkinlik Raporu</Text>
+              <Text style={[styles.reportTitle, { color: themeColors.text }]}>Etkinlik Raporu</Text>
               <TouchableOpacity onPress={() => setShowReport(false)}>
-                <Ionicons name="close-circle" size={28} color="#ccc" />
+                <Ionicons name="close-circle" size={28} color={themeColors.placeholder} />
               </TouchableOpacity>
             </View>
-            <View style={styles.reportContent}>
-              <Text style={styles.reportText}>{eventReport}</Text>
+            <View style={[styles.reportContent, { backgroundColor: themeColors.background }]}>
+              <Text style={[styles.reportText, { color: themeColors.text }]}>{eventReport}</Text>
             </View>
-            <TouchableOpacity style={styles.closeBtn} onPress={() => setShowReport(false)}>
-              <Text style={styles.closeBtnText}>Kapat</Text>
+            <TouchableOpacity style={[styles.closeBtn, { backgroundColor: themeColors.buttonBackground }]} onPress={() => setShowReport(false)}>
+              <Text style={[styles.closeBtnText, { color: themeColors.buttonText }]}>Kapat</Text>
             </TouchableOpacity>
           </View>
         </View>
