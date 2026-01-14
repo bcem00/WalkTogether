@@ -2,12 +2,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  ActivityIndicator, Alert, KeyboardAvoidingView, Platform,
+  ActivityIndicator, Alert, Image, KeyboardAvoidingView, Platform,
   ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, useColorScheme
 } from 'react-native';
 import { Colors } from '../constants/theme';
 import { authApi } from './apiClient';
-import WalkingBackground from '../components/WalkingBackground';
+
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -95,9 +95,15 @@ export default function LoginScreen() {
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={[styles.container, { backgroundColor: themeColors.background }]}>
-      <WalkingBackground />
+    
       <ScrollView contentContainerStyle={[styles.inner, { backgroundColor: themeColors.background }]}>
-        <Text style={styles.logo}>WALK TOGETHER</Text>
+        <Image
+          source={require('../assets/images/walktogether-logo.png')}
+          style={styles.logoImage}
+          resizeMode="contain"
+          accessible
+          accessibilityLabel="WalkTogether logo"
+        />
         <Text style={styles.title}>{isLogin ? 'Oturum Aç' : 'Hesap Oluştur'}</Text>
 
         <View style={styles.form}>
@@ -173,7 +179,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#B3D9FF' },
   inner: { flexGrow: 1, justifyContent: 'center', padding: 30 },
-  logo: { fontSize: 32, fontWeight: 'bold', textAlign: 'center', color: '#007AFF', marginBottom: 10, textShadowColor: 'rgba(255, 255, 255, 0.8)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 },
+  logoImage: { width: 450, height: 225, alignSelf: 'center', marginBottom: 5 },
   title: { fontSize: 18, textAlign: 'center', marginBottom: 30, color: '#555' },
   form: { width: '100%' },
   label: { fontSize: 14, fontWeight: '600', color: '#333', marginBottom: 5, marginLeft: 5 },

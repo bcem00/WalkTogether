@@ -501,7 +501,7 @@ const styles = StyleSheet.create({
   searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#eee', elevation: 2, height: 45 },
   searchInput: { flex: 1, paddingLeft: 10, fontSize: 14, color: '#333' },
   filterSection: { paddingHorizontal: 20, marginTop: 15 },
-  filterToggle: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  filterToggle: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 12, borderWidth: 1 },
   filterToggleText: { fontSize: 14, fontWeight: '600', color: '#333' },
   filterDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#007AFF' },
   filterContainer: { backgroundColor: '#fff', padding: 12, borderRadius: 12, marginTop: 10, elevation: 1 },
