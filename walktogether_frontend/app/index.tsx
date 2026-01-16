@@ -6,8 +6,7 @@ import {
   ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, useColorScheme
 } from 'react-native';
 import { Colors } from '../constants/theme';
-import { authApi } from './apiClient';
-
+import { authApi, getUserInfoFromToken } from './apiClient'; // getUserInfoFromToken eklendi
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -18,20 +17,17 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
 
-  // Form State'leri - TypeScript otomatik olarak 'string' atar
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
 
-  // Parametreye ': string' ekleyerek hatayı çözüyoruz
   const validateEmail = (email: string): boolean => {
     return /\S+@\S+\.\S+/.test(email);
   };
 
   const handleAction = async () => {
-    // Validasyon
     if (isLogin) {
       if (!username.trim() || !password.trim()) {
         Alert.alert("Eksik Bilgi", "Lütfen kullanıcı adı ve şifrenizi girin.");
@@ -52,14 +48,16 @@ export default function LoginScreen() {
 
     try {
       if (isLogin) {
-        // --- GİRİŞ İŞLEMİ ---
+        // loginWithStorage: Token'ı alır, decode eder ve AsyncStorage'a (userToken, userRole vb.) kaydeder.
         const result = await authApi.loginWithStorage({ identifier: username, password });
 
         if (result.data) {
-          await AsyncStorage.setItem('userToken', result.data.token);
-          await AsyncStorage.setItem('username', username);
-          
-          if (username.toLowerCase() === 'admin') {
+          // ✅ DOĞRU YÖNTEM: Rolü token'dan alıyoruz
+          const userInfo = getUserInfoFromToken(result.data.token);
+          const role = userInfo.role; 
+
+          // Rol kontrolüne göre yönlendirme
+          if (role === 'admin') {
             router.replace('/admin/dashboard');
           } else {
             router.replace('/(main)/home');
@@ -68,7 +66,6 @@ export default function LoginScreen() {
           Alert.alert("Giriş Başarısız", result.error || "Hatalı bilgiler.");
         }
       } else {
-        
         const result = await authApi.register({
           firstName,
           lastName,
@@ -86,7 +83,6 @@ export default function LoginScreen() {
         }
       }
     } catch (err: any) {
-      
       Alert.alert("Bağlantı Hatası", "Sunucuya ulaşılamıyor.");
     } finally {
       setLoading(false);
@@ -94,17 +90,17 @@ export default function LoginScreen() {
   };
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={[styles.container, { backgroundColor: themeColors.background }]}>
-    
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
+      style={[styles.container, { backgroundColor: themeColors.background }]}
+    >
       <ScrollView contentContainerStyle={[styles.inner, { backgroundColor: themeColors.background }]}>
         <Image
           source={require('../assets/images/walktogether-logo.png')}
           style={styles.logoImage}
           resizeMode="contain"
-          accessible
-          accessibilityLabel="WalkTogether logo"
         />
-        <Text style={styles.title}>{isLogin ? 'Oturum Aç' : 'Hesap Oluştur'}</Text>
+        <Text style={[styles.title, { color: themeColors.text }]}>{isLogin ? 'Oturum Aç' : 'Hesap Oluştur'}</Text>
 
         <View style={styles.form}>
           {!isLogin && (
@@ -133,29 +129,15 @@ export default function LoginScreen() {
 
           <Text style={[styles.label, { color: themeColors.label }]}>Şifre</Text>
           <View style={[styles.passwordContainer, { backgroundColor: themeColors.inputBackground, borderColor: themeColors.inputBorder }]}>
-            {showPassword ? (
-              <TextInput 
-                style={[styles.passwordInput, { color: themeColors.text }]} 
-                placeholder="••••••••" 
-                placeholderTextColor={themeColors.placeholder}
-                value={password} 
-                onChangeText={setPassword}
-                secureTextEntry={false}
-              />
-            ) : (
-              <TextInput 
-                style={[styles.passwordInput, { color: themeColors.text }]} 
-                placeholder="••••••••" 
-                placeholderTextColor={themeColors.placeholder}
-                value={password} 
-                onChangeText={setPassword}
-                secureTextEntry={true}
-              />
-            )}
-            <TouchableOpacity 
-              style={styles.showPasswordButton}
-              onPress={() => setShowPassword(!showPassword)}
-            >
+            <TextInput 
+              style={[styles.passwordInput, { color: themeColors.text }]} 
+              placeholder="••••••••" 
+              placeholderTextColor={themeColors.placeholder}
+              value={password} 
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+            />
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.showPasswordButton}>
               <Text style={styles.eyeIcon}>{showPassword ? '🔒' : '👁'}</Text>
             </TouchableOpacity>
           </View>
@@ -177,20 +159,20 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#B3D9FF' },
+  container: { flex: 1 },
   inner: { flexGrow: 1, justifyContent: 'center', padding: 30 },
-  logoImage: { width: 450, height: 225, alignSelf: 'center', marginBottom: 5 },
-  title: { fontSize: 18, textAlign: 'center', marginBottom: 30, color: '#555' },
+  logoImage: { width: 300, height: 150, alignSelf: 'center', marginBottom: 5 },
+  title: { fontSize: 22, fontWeight: 'bold', textAlign: 'center', marginBottom: 30 },
   form: { width: '100%' },
-  label: { fontSize: 14, fontWeight: '600', color: '#333', marginBottom: 5, marginLeft: 5 },
-  input: { backgroundColor: '#f9f9f9', padding: 15, borderRadius: 10, borderWidth: 1, borderColor: '#eee', marginBottom: 15 },
-  passwordContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 15, backgroundColor: '#f9f9f9', borderRadius: 10, borderWidth: 1, borderColor: '#eee' },
+  label: { fontSize: 14, fontWeight: '600', marginBottom: 5, marginLeft: 5 },
+  input: { padding: 15, borderRadius: 12, borderWidth: 1, marginBottom: 15 },
+  passwordContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 15, borderRadius: 10, borderWidth: 1 },
   passwordInput: { flex: 1, padding: 15, fontSize: 16 },
-  showPasswordButton: { padding: 10, marginRight: 5 },
-  eyeIcon: { width: 24, height: 24 },
-  button: { backgroundColor: '#007AFF', padding: 18, borderRadius: 10, alignItems: 'center', marginTop: 10 },
-  buttonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+  showPasswordButton: { padding: 10 },
+  eyeIcon: { fontSize: 20 },
+  button: { padding: 18, borderRadius: 12, alignItems: 'center', marginTop: 10 },
+  buttonText: { fontWeight: 'bold', fontSize: 16 },
   switchContainer: { flexDirection: 'row', justifyContent: 'center', marginTop: 25 },
-  switchTextNormal: { color: '#666', fontSize: 15 },
-  switchTextBlue: { color: '#007AFF', fontSize: 15, fontWeight: 'bold' },
+  switchTextNormal: { fontSize: 15 },
+  switchTextBlue: { fontSize: 15, fontWeight: 'bold' },
 });
