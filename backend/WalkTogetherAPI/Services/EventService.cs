@@ -197,4 +197,23 @@ public class EventService
             .FirstOrDefaultAsync();
     }
 
+    // 14. Get event participants
+    public async Task<List<EventParticipantDto>> GetEventParticipantsAsync(Guid eventId)
+    {
+        var participants = await _context.Attendances
+            .Where(a => a.EventId == eventId)
+            .Include(a => a.User)
+            .Select(a => new EventParticipantDto
+            {
+                UserId = a.UserId,
+                Username = a.User!.Username,
+                FirstName = a.User.FirstName,
+                LastName = a.User.LastName,
+                HasCompleted = a.HasCompleted
+            })
+            .ToListAsync();
+
+        return participants;
+    }
+
 }

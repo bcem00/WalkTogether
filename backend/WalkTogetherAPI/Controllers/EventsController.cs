@@ -426,6 +426,33 @@ public class EventsController : ControllerBase
         }
     }
 
+    [HttpGet("{eventId}/participants")]
+    public async Task<IActionResult> GetEventParticipants(Guid eventId)
+    {
+        try
+        {
+            var userId = GetUserId();
+
+            // Validate event exists
+            var eventEntity = await _context.Events.FindAsync(eventId);
+            if (eventEntity == null)
+                return NotFound(new { message = "Etkinlik bulunamadı" });
+
+            // Authorization: Admin can see all, creator can see their own events
+            var isAdmin = IsUserAdmin();
+            if (eventEntity.CreatorId != userId && !isAdmin)
+                return StatusCode(403, new { message = "Sadece etkinlik yaratıcısı veya admin katılımcıları görüntüleyebilir." });
+
+            var participants = await _eventService.GetEventParticipantsAsync(eventId);
+            return Ok(participants);
+        }
+        catch (UnauthorizedAccessException) { return Unauthorized(); }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = ex.Message });
+        }
+    }
+
     [HttpGet("admin/inactive-users")]
     public async Task<IActionResult> GetInactiveUsers()
     {
