@@ -61,6 +61,9 @@ export default function JoinedEventsScreen() {
   const [showReport, setShowReport] = useState(false);
   const [reportLoading, setReportLoading] = useState(false);
   const [completeLoading, setCompleteLoading] = useState(false);
+  const [participants, setParticipants] = useState<any[]>([]);
+  const [showParticipants, setShowParticipants] = useState(false);
+  const [participantsLoading, setParticipantsLoading] = useState(false);
   
   const GOOGLE_MAPS_APIKEY = 'AIzaSyDFYEsvv3CUOa07f13Go1T2XKul0HbtfnU';
   const mapRef = useRef<MapView>(null);
@@ -164,6 +167,20 @@ export default function JoinedEventsScreen() {
       Alert.alert("Başarılı", `${result.data.updatedCount} katılımcıya mesafe eklendi!`);
     } else {
       Alert.alert("Hata", result.error);
+    }
+  };
+
+  const handleViewParticipants = async () => {
+    if (!selectedEvent) return;
+    setParticipantsLoading(true);
+    const eventId = selectedEvent.id || selectedEvent.event_id || selectedEvent.eventId;
+    const result = await eventsApi.getEventParticipants(eventId);
+    setParticipantsLoading(false);
+    if (result.data) {
+      setParticipants(result.data);
+      setShowParticipants(true);
+    } else {
+      Alert.alert("Hata", result.error || "Katılımcılar yüklenemedi.");
     }
   };
 
@@ -320,6 +337,24 @@ export default function JoinedEventsScreen() {
                   <Text style={[styles.detailDesc, { color: themeColors.lightText }]}>{selectedEvent?.description}</Text>
 
                   <View style={{gap: 10, marginBottom: 30, marginTop: 20}}>
+                    {/* View Participants Button - Only for event creators */}
+                    {selectedEvent?.isCreator && (
+                      <TouchableOpacity 
+                        style={[styles.participantsBtn, participantsLoading && { opacity: 0.7 }]} 
+                        onPress={handleViewParticipants}
+                        disabled={participantsLoading}
+                      >
+                        {participantsLoading ? (
+                          <ActivityIndicator color="#fff" />
+                        ) : (
+                          <>
+                            <Ionicons name="people-outline" size={20} color="#fff" />
+                            <Text style={styles.participantsBtnText}>Katılımcıları Görüntüle</Text>
+                          </>
+                        )}
+                      </TouchableOpacity>
+                    )}
+                    
                     {/* Gereksiz butonlar kaldırıldı, sadece Ayrıl butonu kaldı */}
                     <TouchableOpacity 
                       style={[styles.leaveBtn, leaveLoading && { opacity: 0.7 }]} 
@@ -339,6 +374,52 @@ export default function JoinedEventsScreen() {
                 </>
               )}
             </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Participants Modal */}
+      <Modal visible={showParticipants} animationType="slide" transparent={true}>
+        <View style={[styles.modalOverlay, { backgroundColor: isDark ? 'rgba(0,0,0,0.7)' : 'rgba(0,0,0,0.45)' }]}>
+          <View style={[styles.participantsModalContent, { backgroundColor: themeColors.inputBackground }]}>
+            <View style={[styles.modalHeader, { borderBottomColor: themeColors.border, borderBottomWidth: 1 }]}>
+              <Text style={[styles.modalTitle, { color: themeColors.text }]}>Katılımcılar ({participants.length})</Text>
+              <TouchableOpacity onPress={() => setShowParticipants(false)}>
+                <Ionicons name="close-circle" size={32} color={themeColors.placeholder} />
+              </TouchableOpacity>
+            </View>
+            
+            <FlatList
+              data={participants}
+              keyExtractor={(item) => item.userId}
+              renderItem={({ item }) => (
+                <View style={[styles.participantItem, { borderBottomColor: themeColors.border }]}>
+                  <View style={[styles.participantAvatar, { backgroundColor: themeColors.tint }]}>
+                    <Text style={styles.participantAvatarText}>
+                      {item.firstName?.[0]}{item.lastName?.[0]}
+                    </Text>
+                  </View>
+                  <View style={styles.participantInfo}>
+                    <Text style={[styles.participantName, { color: themeColors.text }]}>
+                      {item.firstName} {item.lastName}
+                    </Text>
+                    <Text style={[styles.participantUsername, { color: themeColors.placeholder }]}>
+                      @{item.username}
+                    </Text>
+                  </View>
+                  <View style={[styles.completionBadge, { backgroundColor: item.hasCompleted ? '#4CAF50' : '#FF9800' }]}>
+                    <Text style={styles.completionText}>
+                      {item.hasCompleted ? 'Tamamladı' : 'Devam Ediyor'}
+                    </Text>
+                  </View>
+                </View>
+              )}
+              ListEmptyComponent={
+                <Text style={[styles.emptyText, { color: themeColors.placeholder }]}>
+                  Henüz katılımcı yok.
+                </Text>
+              }
+            />
           </View>
         </View>
       </Modal>
@@ -424,5 +505,47 @@ const styles = StyleSheet.create({
   },
   reportText: { fontSize: 13, color: '#555', lineHeight: 20 },
   closeBtn: { backgroundColor: '#007AFF', padding: 15, borderRadius: 12, alignItems: 'center' },
-  closeBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 16 }
+  closeBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+  participantsBtn: {
+    backgroundColor: '#2196F3',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 15,
+    borderRadius: 12,
+    gap: 10,
+  },
+  participantsBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+  participantsModalContent: { 
+    backgroundColor: '#fff', 
+    borderTopLeftRadius: 25, 
+    borderTopRightRadius: 25, 
+    height: '60%', 
+    padding: 20 
+  },
+  participantItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  participantAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#007AFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  participantAvatarText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  participantInfo: { flex: 1, marginLeft: 12 },
+  participantName: { fontSize: 15, fontWeight: '600' },
+  participantUsername: { fontSize: 12, color: '#888', marginTop: 2 },
+  completionBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  completionText: { color: '#fff', fontSize: 11, fontWeight: 'bold' },
 });

@@ -6,7 +6,6 @@ DECLARE
     v_distance INTEGER;
     v_updated_count INTEGER;
 BEGIN
-    -- Get the route distance for the event
     SELECT r.distance INTO v_distance
     FROM events e
     JOIN routes r ON e.route_id = r.route_id
@@ -16,7 +15,6 @@ BEGIN
         RETURN 0;
     END IF;
 
-    -- Add the distance to motivation_point for all attendees
     UPDATE users u
     SET motivation_point = motivation_point + v_distance
     WHERE u.user_id IN (

@@ -211,7 +211,64 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </View>
       
-      {/* Modallar aynı kalıyor */}
+      {/* Username Change Modal */}
+      <Modal visible={userModal.visible} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <Text style={styles.modalTitle}>Kullanıcı Adını Değiştir</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Yeni kullanıcı adı"
+              value={userModal.newValue}
+              onChangeText={(text) => setUserModal({ ...userModal, newValue: text })}
+              autoCapitalize="none"
+            />
+            <View style={styles.modalActions}>
+              <TouchableOpacity onPress={() => setUserModal({ visible: false, newValue: '' })}>
+                <Text style={styles.cancelText}>İptal</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleUpdateUsername}>
+                <Text style={styles.saveText}>Kaydet</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Password Change Modal */}
+      <Modal visible={passModal} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <Text style={styles.modalTitle}>Şifre Değiştir</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Mevcut şifre"
+              value={oldPassword}
+              onChangeText={setOldPassword}
+              secureTextEntry
+            />
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Yeni şifre"
+              value={newPassword}
+              onChangeText={setNewPassword}
+              secureTextEntry
+            />
+            <View style={styles.modalActions}>
+              <TouchableOpacity onPress={() => {
+                setPassModal(false);
+                setOldPassword('');
+                setNewPassword('');
+              }}>
+                <Text style={styles.cancelText}>İptal</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleChangePassword}>
+                <Text style={styles.saveText}>Değiştir</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }

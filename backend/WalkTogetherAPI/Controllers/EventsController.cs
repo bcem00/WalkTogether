@@ -407,13 +407,14 @@ public class EventsController : ControllerBase
         {
             var userId = GetUserId();
 
-            // Validate event exists and user is creator
+            // Validate event exists and user is creator or admin
             var eventEntity = await _context.Events.FindAsync(eventId);
             if (eventEntity == null)
                 return NotFound(new { message = "Etkinlik bulunamadı" });
 
-            if (eventEntity.CreatorId != userId)
-                return StatusCode(403, new { message = "Sadece etkinlik yaratıcısı bu raporu görüntüleyebilir." });
+            var isAdmin = IsUserAdmin();
+            if (eventEntity.CreatorId != userId && !isAdmin)
+                return StatusCode(403, new { message = "Sadece etkinlik yaratıcısı veya admin bu raporu görüntüleyebilir." });
 
             var report = await _eventService.GetEventReportAsync(eventId);
             return Ok(new { report });

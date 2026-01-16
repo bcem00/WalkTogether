@@ -3,7 +3,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { 
-  ActivityIndicator, Alert, FlatList, StyleSheet, 
+  ActivityIndicator, Alert, FlatList, Modal, StyleSheet, 
   Text, TextInput, TouchableOpacity, View, useColorScheme,
   Share 
 } from 'react-native';
@@ -22,6 +22,10 @@ export default function AdminDashboard() {
   
   const [searchTitle, setSearchTitle] = useState('');
   const [searchUser, setSearchUser] = useState('');
+  const [participants, setParticipants] = useState<any[]>([]);
+  const [showParticipants, setShowParticipants] = useState(false);
+  const [participantsLoading, setParticipantsLoading] = useState(false);
+  const [selectedEventTitle, setSelectedEventTitle] = useState('');
   
   const navigation = useNavigation();
 
@@ -104,6 +108,20 @@ export default function AdminDashboard() {
     ]);
   };
 
+  const handleViewParticipants = async (eventId: string, eventTitle: string) => {
+    setSelectedEventTitle(eventTitle);
+    setParticipantsLoading(true);
+    setShowParticipants(true);
+    const result = await eventsApi.getEventParticipants(eventId);
+    setParticipantsLoading(false);
+    if (result.data) {
+      setParticipants(result.data);
+    } else {
+      Alert.alert("Hata", result.error || "Katılımcılar yüklenemedi.");
+      setShowParticipants(false);
+    }
+  };
+
   const renderAdminItem = ({ item }: { item: any }) => (
     <View style={[styles.card, { backgroundColor: themeColors.inputBackground, borderColor: themeColors.border }]}>
       <View style={styles.info}>
@@ -113,9 +131,14 @@ export default function AdminDashboard() {
           Kod: {item.invitation_code} | Katılımcı: {item.participant_count}
         </Text>
       </View>
-      <TouchableOpacity onPress={() => handleDeleteEvent(item.event_id, item.title)}>
-        <Ionicons name="trash-outline" size={22} color="#FF3B30" />
-      </TouchableOpacity>
+      <View style={styles.cardActions}>
+        <TouchableOpacity onPress={() => handleViewParticipants(item.event_id, item.title)} style={styles.actionBtn}>
+          <Ionicons name="people-outline" size={20} color="#2196F3" />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => handleDeleteEvent(item.event_id, item.title)} style={styles.actionBtn}>
+          <Ionicons name="trash-outline" size={20} color="#FF3B30" />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 
@@ -176,6 +199,59 @@ export default function AdminDashboard() {
           ListEmptyComponent={<Text style={styles.emptyText}>Sonuç bulunamadı.</Text>}
         />
       )}
+
+      {/* Participants Modal */}
+      <Modal visible={showParticipants} animationType="slide" transparent={true}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.participantsModalContent, { backgroundColor: themeColors.inputBackground }]}>
+            <View style={[styles.modalHeader, { borderBottomColor: themeColors.border }]}>
+              <View>
+                <Text style={[styles.modalTitle, { color: themeColors.text }]}>Katılımcılar</Text>
+                <Text style={[styles.modalSubtitle, { color: themeColors.placeholder }]}>{selectedEventTitle}</Text>
+              </View>
+              <TouchableOpacity onPress={() => { setShowParticipants(false); setParticipants([]); }}>
+                <Ionicons name="close-circle" size={32} color={themeColors.placeholder} />
+              </TouchableOpacity>
+            </View>
+            
+            {participantsLoading ? (
+              <ActivityIndicator size="large" color={themeColors.tint} style={{ marginTop: 50 }} />
+            ) : (
+              <FlatList
+                data={participants}
+                keyExtractor={(item) => item.userId}
+                renderItem={({ item }) => (
+                  <View style={[styles.participantItem, { borderBottomColor: themeColors.border }]}>
+                    <View style={[styles.participantAvatar, { backgroundColor: themeColors.tint }]}>
+                      <Text style={styles.participantAvatarText}>
+                        {item.firstName?.[0]}{item.lastName?.[0]}
+                      </Text>
+                    </View>
+                    <View style={styles.participantInfo}>
+                      <Text style={[styles.participantName, { color: themeColors.text }]}>
+                        {item.firstName} {item.lastName}
+                      </Text>
+                      <Text style={[styles.participantUsername, { color: themeColors.placeholder }]}>
+                        @{item.username}
+                      </Text>
+                    </View>
+                    <View style={[styles.completionBadge, { backgroundColor: item.hasCompleted ? '#4CAF50' : '#FF9800' }]}>
+                      <Text style={styles.completionText}>
+                        {item.hasCompleted ? 'Tamamladı' : 'Devam Ediyor'}
+                      </Text>
+                    </View>
+                  </View>
+                )}
+                ListEmptyComponent={
+                  <Text style={[styles.emptyText, { color: themeColors.placeholder }]}>
+                    Henüz katılımcı yok.
+                  </Text>
+                }
+              />
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -200,5 +276,48 @@ const styles = StyleSheet.create({
   title: { fontSize: 15, fontWeight: 'bold' },
   creator: { fontSize: 12, marginTop: 4 },
   details: { fontSize: 11, marginTop: 4 },
-  emptyText: { textAlign: 'center', marginTop: 50, color: '#999' }
+  cardActions: { flexDirection: 'row', gap: 12 },
+  actionBtn: { padding: 6 },
+  emptyText: { textAlign: 'center', marginTop: 50, color: '#999' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  participantsModalContent: { 
+    backgroundColor: '#fff', 
+    borderTopLeftRadius: 25, 
+    borderTopRightRadius: 25, 
+    height: '60%', 
+    padding: 20 
+  },
+  modalHeader: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center',
+    marginBottom: 15,
+    paddingBottom: 15,
+    borderBottomWidth: 1,
+  },
+  modalTitle: { fontSize: 18, fontWeight: 'bold' },
+  modalSubtitle: { fontSize: 13, marginTop: 2 },
+  participantItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+  },
+  participantAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  participantAvatarText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  participantInfo: { flex: 1, marginLeft: 12 },
+  participantName: { fontSize: 15, fontWeight: '600' },
+  participantUsername: { fontSize: 12, marginTop: 2 },
+  completionBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  completionText: { color: '#fff', fontSize: 11, fontWeight: 'bold' },
 });

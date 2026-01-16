@@ -255,6 +255,16 @@ export const eventsApi = {
     return apiRequest<{ report: string }>(`/api/events/${eventId}/report`);
   },
 
+  getEventParticipants: async (eventId: string) => {
+    return apiRequest<{
+      userId: string;
+      username: string;
+      firstName: string;
+      lastName: string;
+      hasCompleted: boolean;
+    }[]>(`/api/events/${eventId}/participants`);
+  },
+
   getInactiveUsers: async () => {
     return apiRequest<{ out_username: string; out_email: string }[]>('/api/events/admin/inactive-users');
   },
