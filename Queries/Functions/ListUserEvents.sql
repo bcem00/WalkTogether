@@ -13,11 +13,12 @@ RETURNS TABLE (
 )
 LANGUAGE plpgsql
 AS $$
+DECLARE
+    v_user_id uuid;
 BEGIN
+    SELECT user_id INTO v_user_id FROM users WHERE username = p_username;
+    
     RETURN QUERY
-    WITH cu AS (
-        SELECT user_id FROM users WHERE username = p_username
-    )
     SELECT 
         e.event_id AS "EventId",
         e.title::text AS "Title",
@@ -26,18 +27,11 @@ BEGIN
         e.total_distance_meters AS "TotalDistanceMeters",
         e.invitation_code::text AS "InvitationCode",
         u.username::text AS "CreatorUsername",
-        (u.username = p_username) AS "IsCreator",
+        (e.creator_id = v_user_id) AS "IsCreator",
         e.route_polyline::text AS "RoutePolyline",
         e.waypoints_json::text AS "WaypointsJson"
     FROM events e
     JOIN users u ON u.user_id = e.creator_id
-    JOIN cu ON TRUE
-    WHERE e.creator_id = cu.user_id
-       OR EXISTS (
-            SELECT 1
-             FROM attendances a
-            WHERE a.event_id = e.event_id
-              AND a.user_id = cu.user_id
-       );
+    JOIN attendances a ON a.event_id = e.event_id AND a.user_id = v_user_id;
 END;
 $$;

@@ -8,7 +8,7 @@ namespace WalkTogetherAPI.Services
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<DeletePastEventsService> _logger;
-        private readonly TimeSpan _period = TimeSpan.FromHours(1); 
+        private readonly TimeSpan _period = TimeSpan.FromMinutes(1); 
 
         public DeletePastEventsService(
             IServiceProvider serviceProvider,
@@ -67,8 +67,8 @@ namespace WalkTogetherAPI.Services
                 {
                     await dbContext.Database.ExecuteSqlRawAsync(
                         "SELECT add_event_distance_to_attendees({0})",
-                        cancellationToken,
-                        pastEvent.Id);
+                        new object[] { pastEvent.Id },
+                        cancellationToken);
                 }
 
                 _logger.LogInformation("Awarded motivation points to attendees of past events");

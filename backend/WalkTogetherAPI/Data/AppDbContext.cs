@@ -15,6 +15,7 @@ namespace WalkTogether.Data
         public DbSet<Route> Routes { get; set; }
         public DbSet<Destination> Destinations { get; set; }
         public DbSet<Attendance> Attendances { get; set; }
+        public DbSet<SystemLog> SystemLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -23,6 +24,7 @@ namespace WalkTogether.Data
             modelBuilder.Entity<Route>().ToTable("routes");
             modelBuilder.Entity<Destination>().ToTable("destinations");
             modelBuilder.Entity<Attendance>().ToTable("attendances");
+            modelBuilder.Entity<SystemLog>().ToTable("system_logs");
 
             modelBuilder.Entity<Event>()
                 .HasOne(e => e.Creator)

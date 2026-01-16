@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using System.Text.Json;
 using WalkTogether.Data;
@@ -342,7 +343,8 @@ public class EventsController : ControllerBase
 
     [HttpGet("user/{username}")]
     public async Task<IActionResult> GetEventsByUsername(string username)
-    {
+    {   
+        
         try
         {
             var events = await _eventService.GetEventsByUsernameAsync(username);
@@ -450,6 +452,54 @@ public class EventsController : ControllerBase
         catch (Exception ex)
         {
             return StatusCode(500, ex.Message);
+        }
+    }
+
+    [HttpGet("admin/system-logs")]
+    public async Task<IActionResult> GetSystemLogs([FromQuery] int limit = 100, [FromQuery] string? severity = null, [FromQuery] string? tableName = null)
+    {
+        try
+        {
+            if (!IsUserAdmin())
+            {
+                return StatusCode(403, new { message = "Bu endpoint'e sadece adminler erişebilir." });
+            }
+
+            var query = _context.SystemLogs
+                .OrderByDescending(l => l.CreatedAt)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(severity))
+            {
+                query = query.Where(l => l.Severity == severity.ToUpper());
+            }
+
+            if (!string.IsNullOrEmpty(tableName))
+            {
+                query = query.Where(l => l.TableName == tableName);
+            }
+
+            var logs = await query
+                .Take(limit)
+                .Select(l => new
+                {
+                    logId = l.LogId,
+                    userId = l.UserId,
+                    actionType = l.ActionType,
+                    tableName = l.TableName,
+                    recordId = l.RecordId,
+                    oldData = l.OldData,
+                    newData = l.NewData,
+                    severity = l.Severity,
+                    createdAt = l.CreatedAt
+                })
+                .ToListAsync();
+
+            return Ok(logs);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = ex.Message });
         }
     }
 }

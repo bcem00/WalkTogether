@@ -30,12 +30,6 @@ BEGIN
         e.waypoints_json     
     FROM events e
     JOIN users u ON u.user_id = e.creator_id
-    WHERE e.creator_id = p_user_id
-       OR EXISTS (
-            SELECT 1
-            FROM attendances a
-            WHERE a.event_id = e.event_id
-              AND a.user_id = p_user_id
-       );
+    JOIN attendances a ON a.event_id = e.event_id AND a.user_id = p_user_id;
 END;
 $$;
