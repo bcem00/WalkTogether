@@ -14,7 +14,7 @@ import MapView, { Marker, Polyline } from 'react-native-maps';
 import MapViewDirections from 'react-native-maps-directions';
 import { eventsApi } from '../apiClient';
 
-// Polylines decoding helper
+// Helper to decode Google Polyline
 const decodePolyline = (t: string) => {
   let points = [];
   let index = 0, len = t.length;
@@ -75,17 +75,21 @@ export default function HomeScreen() {
     }, [])
   );
 
+  // Harita odaklama mantığı (Destinations veya RouteCoords değişince tetiklenir)
   useEffect(() => {
-    if ((destinations.length > 0 || routeCoords.length > 0) && mapRef.current) {
+    if (selectedEvent && (destinations.length > 0 || routeCoords.length > 0) && mapRef.current) {
       const allPoints = [...destinations, ...routeCoords];
       if(allPoints.length > 0) {
-        mapRef.current.fitToCoordinates(allPoints, {
-          edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
-          animated: true,
-        });
+        // Küçük bir gecikme ile haritayı sığdırır (Modal animasyonu bitmesi için)
+        setTimeout(() => {
+            mapRef.current?.fitToCoordinates(allPoints, {
+                edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
+                animated: true,
+            });
+        }, 500);
       }
     }
-  }, [destinations, routeCoords]);
+  }, [destinations, routeCoords, selectedEvent]);
 
   const fetchEvents = async () => {
     if (!refreshing) setLoading(true);
@@ -144,10 +148,15 @@ export default function HomeScreen() {
     setLoading(true);
     const result = await eventsApi.filterEventsByDistance(minMeters, maxMeters);
     if (result.data) {
-      // API returns: event_id, title, description, start_date, invitation_code, 
-      // creator_full_name, creator_username, route_distance_meters, participant_count
-      setEvents(result.data);
-      setAllEvents(result.data);
+      const mapped = result.data.map((item: any) => ({
+        ...item,
+        event_id: item.event_id || Math.random().toString(),
+        title: item.event_title || item.title,
+        start_date: item.event_start_date || item.start_date,
+        route_distance_meters: item.route_distance || item.route_distance_meters
+      }));
+      setEvents(mapped);
+      setAllEvents(mapped);
       setIsFiltered(true);
     }
     setLoading(false);
@@ -160,32 +169,53 @@ export default function HomeScreen() {
     fetchEvents();
   }, []);
 
+  // --- SORUNUN ÇÖZÜMÜ BURADA ---
   const handleOpenInfo = async (event: any) => {
     setSelectedEvent(event);
     setInfoLoading(true);
     setRouteCoords([]); 
     setDestinations([]); 
 
-    if (event.waypointsJson && event.routePolyline) {
+    // 1. Önce event nesnesinin kendisinde veri var mı diye bakarız (Listeden gelen)
+    // Backend'den gelen veri yapısı bazen 'route_polyline' bazen 'routePolyline' olabilir, her ihtimali kontrol et.
+    const polylineString = event.routePolyline || event.route_polyline; 
+    const waypointsData = event.waypointsJson || event.waypoints_json;
+
+    if (waypointsData && polylineString) {
       try {
-        const parsedWaypoints = JSON.parse(event.waypointsJson);
+        const parsedWaypoints = typeof waypointsData === 'string' ? JSON.parse(waypointsData) : waypointsData;
         setDestinations(parsedWaypoints);
-        const decodedPath = decodePolyline(event.routePolyline);
+        const decodedPath = decodePolyline(polylineString);
         setRouteCoords(decodedPath);
         setInfoLoading(false);
-        return;
-      } catch (e) { console.log("Error", e); }
+        return; // Veri varsa API'ye gitmeye gerek yok
+      } catch (e) { 
+        console.log("Error parsing local data", e); 
+      }
     }
 
+    // 2. Eğer yerel veri yoksa API'den çekeriz
     const eventId = event.event_id || event.id || event.eventId;
+    if (!eventId) {
+        setInfoLoading(false);
+        return;
+    }
+
+    // Hem rotayı hem de noktaları çekmeye çalışalım (Eğer API destekliyorsa)
+    // Şimdilik sadece noktaları çekiyoruz, eğer rota API'den gelmiyorsa MapViewDirections çizecek.
     const result = await eventsApi.getDestinationsForEvent(eventId);
+    
     if (result.data) {
       const mapped = result.data.map((d: any) => ({
         ...d,
         latitude: d.latitude || d.lat,
         longitude: d.longitude || d.lng,
       })).sort((a: any, b: any) => a.order_in_route - b.order_in_route);
+      
       setDestinations(mapped);
+      
+      // Eğer API'den Polyline gelmediyse ve elimizde noktalar varsa, routeCoords boş kalır
+      // Bu durumda MapViewDirections devreye girecek (aşağıdaki return bloğunda)
     }
     setInfoLoading(false);
   };
@@ -216,13 +246,7 @@ export default function HomeScreen() {
          <View style={styles.statItem}>
             <Ionicons name="walk" size={14} color="#28a745" />
             <Text style={[styles.statText, { color: themeColors.text }]}>
-                {(item.route_distance_meters / 1000000).toFixed(1)} km
-            </Text>
-         </View>
-         <View style={styles.statItem}>
-            <Ionicons name="time-outline" size={14} color="#888" />
-            <Text style={[styles.statText, { color: themeColors.text }]}>
-              {new Date(item.start_date).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                {(item.route_distance_meters / 1000).toFixed(1)} km
             </Text>
          </View>
       </View>
@@ -319,8 +343,6 @@ export default function HomeScreen() {
         keyExtractor={item => (item.event_id || Math.random()).toString()}
         contentContainerStyle={{ paddingBottom: 20 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#007AFF"]} />}
-        
-        // ✅ KRİTİK: SAYI ARTIK LİSTENİN EN ALTINDA
         ListFooterComponent={
           !loading && events.length > 0 ? (
             <View style={styles.listFooter}>
@@ -353,7 +375,24 @@ export default function HomeScreen() {
                        <Ionicons name="location" size={26} color={themeColors.tint} />
                     </Marker>
                   ))}
-                  {routeCoords.length > 0 && <Polyline coordinates={routeCoords} strokeWidth={4} strokeColor={themeColors.tint} />}
+                  
+                  {/* ÖNCE POLYLINE (ÇİZİLMİŞ ROTA) VAR MI DİYE BAKARIZ */}
+                  {routeCoords.length > 0 ? (
+                    <Polyline coordinates={routeCoords} strokeWidth={4} strokeColor={themeColors.tint} />
+                  ) : (
+                    /* YOKSA VE 1'DEN FAZLA NOKTA VARSA API (DIRECTIONS) İLE ÇİZERİZ */
+                    destinations.length > 1 && (
+                      <MapViewDirections
+                        origin={{latitude: destinations[0].latitude, longitude: destinations[0].longitude}} 
+                        destination={{latitude: destinations[destinations.length-1].latitude, longitude: destinations[destinations.length-1].longitude}} 
+                        waypoints={destinations.slice(1, -1).map(d => ({latitude: d.latitude, longitude: d.longitude}))}
+                        apikey={GOOGLE_MAPS_APIKEY} 
+                        strokeWidth={4} 
+                        strokeColor={themeColors.tint} 
+                        mode="WALKING"
+                      />
+                    )
+                  )}
                 </MapView>
               </View>
               <View style={styles.modalDetailContainer}>
@@ -411,7 +450,6 @@ const styles = StyleSheet.create({
   headerRow: { paddingHorizontal: 20, marginTop: 5 },
   sectionHeader: { fontSize: 18, fontWeight: 'bold', paddingVertical: 10 },
   
-  // ✅ YENİ: LİSTE ALTI SAYI STİLLERİ
   listFooter: { 
     padding: 30, 
     alignItems: 'center', 
