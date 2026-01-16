@@ -71,11 +71,39 @@ public class EventService
     {
         try
         {
-            var eventEntity = await _context.Events.FindAsync(eventId);
+            var eventEntity = await _context.Events
+                .Include(e => e.Attendances)
+                .FirstOrDefaultAsync(e => e.Id == eventId);
+            
             if (eventEntity == null)
                 return false;
 
+            // Store the RouteId before deleting the event
+            var routeId = eventEntity.RouteId;
+
+            // Delete all attendances for this event
+            if (eventEntity.Attendances != null && eventEntity.Attendances.Any())
+            {
+                _context.Attendances.RemoveRange(eventEntity.Attendances);
+            }
+
+            // Delete the event
             _context.Events.Remove(eventEntity);
+
+            // Delete the route and its destinations (destinations cascade-delete with route)
+            if (routeId.HasValue)
+            {
+                var route = await _context.Routes
+                    .Include(r => r.Destinations)
+                    .FirstOrDefaultAsync(r => r.Id == routeId.Value);
+                
+                if (route != null)
+                {
+                    // Destinations will be cascade-deleted when route is removed
+                    _context.Routes.Remove(route);
+                }
+            }
+
             await _context.SaveChangesAsync();
             return true;
         }
