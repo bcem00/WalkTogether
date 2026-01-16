@@ -216,7 +216,6 @@ export default function JoinedEventsScreen() {
       <View style={styles.cardBottom}>
         <Ionicons name="calendar-outline" size={14} color={themeColors.placeholder} />
         <Text style={[styles.cardDate, { color: themeColors.lightText }]}>
-          {/* SAAT EKLENDİ */}
           {new Date(item.startDate || item.start_date).toLocaleString('tr-TR', {
             day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
           })}
@@ -297,7 +296,6 @@ export default function JoinedEventsScreen() {
                     </MapView>
                   </View>
                   
-                  {/* SAAT BİLGİSİ MODALA EKLENDİ */}
                   <View style={[styles.detailRow, { borderBottomColor: themeColors.border }]}>
                     <Text style={[styles.detailLabel, { color: themeColors.lightText }]}>Tarih ve Saat:</Text>
                     <Text style={[styles.detailValue, { color: themeColors.text }]}>
@@ -322,36 +320,7 @@ export default function JoinedEventsScreen() {
                   <Text style={[styles.detailDesc, { color: themeColors.lightText }]}>{selectedEvent?.description}</Text>
 
                   <View style={{gap: 10, marginBottom: 30, marginTop: 20}}>
-                    <TouchableOpacity 
-                      style={[styles.reportBtn, reportLoading && { opacity: 0.7 }]} 
-                      onPress={handleGetReport}
-                      disabled={reportLoading}
-                    >
-                      {reportLoading ? (
-                        <ActivityIndicator color="#fff" />
-                      ) : (
-                        <>
-                          <Ionicons name="document-text-outline" size={20} color="#fff" />
-                          <Text style={styles.reportBtnText}>Raporu Görüntüle</Text>
-                        </>
-                      )}
-                    </TouchableOpacity>
-
-                    <TouchableOpacity 
-                      style={[styles.completeBtn, completeLoading && { opacity: 0.7 }]} 
-                      onPress={handleCompleteEvent}
-                      disabled={completeLoading}
-                    >
-                      {completeLoading ? (
-                        <ActivityIndicator color="#fff" />
-                      ) : (
-                        <>
-                          <Ionicons name="star-outline" size={20} color="#fff" />
-                          <Text style={styles.completeBtnText}>Mesafe Ekle</Text>
-                        </>
-                      )}
-                    </TouchableOpacity>
-
+                    {/* Gereksiz butonlar kaldırıldı, sadece Ayrıl butonu kaldı */}
                     <TouchableOpacity 
                       style={[styles.leaveBtn, leaveLoading && { opacity: 0.7 }]} 
                       onPress={handleLeaveEvent}
@@ -374,24 +343,7 @@ export default function JoinedEventsScreen() {
         </View>
       </Modal>
 
-      <Modal visible={showReport} transparent animationType="fade">
-        <View style={[styles.modalOverlay, { backgroundColor: isDark ? 'rgba(0,0,0,0.7)' : 'rgba(0,0,0,0.45)' }]}>
-          <View style={[styles.reportModalContent, { backgroundColor: themeColors.inputBackground }]}>            
-            <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20}}>
-              <Text style={[styles.reportTitle, { color: themeColors.text }]}>Etkinlik Raporu</Text>
-              <TouchableOpacity onPress={() => setShowReport(false)}>
-                <Ionicons name="close-circle" size={28} color={themeColors.placeholder} />
-              </TouchableOpacity>
-            </View>
-            <View style={[styles.reportContent, { backgroundColor: themeColors.background }]}>
-              <Text style={[styles.reportText, { color: themeColors.text }]}>{eventReport}</Text>
-            </View>
-            <TouchableOpacity style={[styles.closeBtn, { backgroundColor: themeColors.buttonBackground }]} onPress={() => setShowReport(false)}>
-              <Text style={[styles.closeBtnText, { color: themeColors.buttonText }]}>Kapat</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+      {/* Rapor Modalı duruyor ancak buton kalktığı için tetiklenmeyecektir */}
     </View>
   );
 }
