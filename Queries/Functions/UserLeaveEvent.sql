@@ -4,6 +4,6 @@ LANGUAGE plpgsql
 AS $$
 BEGIN
     DELETE FROM attendances WHERE user_id = p_user_id AND event_id = p_event_id;
-    RETURN FOUND; -- Satır silindiyse true döner
+    RETURN FOUND;
 END;
 $$;

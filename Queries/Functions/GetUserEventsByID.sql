@@ -5,13 +5,13 @@ RETURNS TABLE (
     event_id UUID,
     title VARCHAR,
     description TEXT,
-    start_date TIMESTAMPTZ, -- or TIMESTAMP WITH TIME ZONE depending on your DB setup
+    start_date TIMESTAMPTZ,
     total_distance_meters INT,
     invitation_code VARCHAR,
     creator_username VARCHAR,
     is_creator BOOLEAN,
-    route_polyline VARCHAR,  -- ✅ Added
-    waypoints_json VARCHAR   -- ✅ Added
+    route_polyline VARCHAR,
+    waypoints_json VARCHAR
 )
 LANGUAGE plpgsql
 AS $$

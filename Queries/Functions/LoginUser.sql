@@ -1,10 +1,5 @@
--- ================================================================
--- 2. LOGIN (Giriş İçin Kullanıcı Getir)
--- E-posta veya Kullanıcı Adı ile arama yapar.
--- Backend'e şifreyi doğrulaması için Hash'i ve Rol bilgisini döner.
--- ================================================================
 CREATE OR REPLACE FUNCTION auth_get_user_for_login(
-    p_identifier VARCHAR -- Hem email hem username olabilir
+    p_identifier VARCHAR
 )
 RETURNS TABLE (
     user_id UUID,
