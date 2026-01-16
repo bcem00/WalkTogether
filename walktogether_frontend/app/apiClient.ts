@@ -206,7 +206,7 @@ export const eventsApi = {
   },
 
   filterEventsByDistance: async (minDist: number, maxDist: number) => {
-    return apiRequest<{ event_title: string; event_start_date: string; route_distance: number; participant_count: number }[]>(`/api/events/filter?minDist=${minDist}&maxDist=${maxDist}`);
+    return apiRequest<{ event_id: string; title: string; description: string; start_date: string; invitation_code: string; creator_full_name: string; creator_username: string; route_distance_meters: number; participant_count: number}[]>(`/api/events/filter?minDist=${minDist}&maxDist=${maxDist}`);
   },
 
   getDestinationsForEvent: async (eventId: string) => {

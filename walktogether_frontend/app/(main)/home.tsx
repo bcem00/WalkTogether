@@ -144,15 +144,10 @@ export default function HomeScreen() {
     setLoading(true);
     const result = await eventsApi.filterEventsByDistance(minMeters, maxMeters);
     if (result.data) {
-      const mapped = result.data.map((item: any) => ({
-        ...item,
-        event_id: item.event_id || Math.random().toString(),
-        title: item.event_title || item.title,
-        start_date: item.event_start_date || item.start_date,
-        route_distance_meters: item.route_distance || item.route_distance_meters
-      }));
-      setEvents(mapped);
-      setAllEvents(mapped);
+      // API returns: event_id, title, description, start_date, invitation_code, 
+      // creator_full_name, creator_username, route_distance_meters, participant_count
+      setEvents(result.data);
+      setAllEvents(result.data);
       setIsFiltered(true);
     }
     setLoading(false);
@@ -297,11 +292,11 @@ export default function HomeScreen() {
           <View style={[styles.filterContainer, { backgroundColor: themeColors.inputBackground, borderColor: themeColors.border }]}>
             <View style={styles.filterInputs}>
               <View style={styles.inputWrapper}>
-                <Text style={styles.inputLabel}>Min (KM)</Text>
+                <Text style={styles.inputLabel}>Min (m)</Text>
                 <TextInput style={styles.smallInput} keyboardType="numeric" value={minDist} onChangeText={setMinDist} />
               </View>
               <View style={styles.inputWrapper}>
-                <Text style={styles.inputLabel}>Max (KM)</Text>
+                <Text style={styles.inputLabel}>Max (m)</Text>
                 <TextInput style={styles.smallInput} keyboardType="numeric" value={maxDist} onChangeText={setMaxDist} />
               </View>
               <TouchableOpacity style={styles.applyBtn} onPress={handleFilter}>

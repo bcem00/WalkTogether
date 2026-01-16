@@ -31,9 +31,14 @@ namespace WalkTogetherAPI.DTO
 
     public class EventDistanceSummary
     {
-        public string event_title { get; set; }
-        public DateTime event_start_date { get; set; }
-        public int route_distance { get; set; }
+        public Guid event_id { get; set; }
+        public string title { get; set; }
+        public string description { get; set; }
+        public DateTime start_date { get; set; }
+        public string invitation_code { get; set; }
+        public string creator_full_name { get; set; }
+        public string creator_username { get; set; }
+        public int route_distance_meters { get; set; }
         public long participant_count { get; set; }
     }
 
