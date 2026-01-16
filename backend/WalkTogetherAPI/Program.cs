@@ -8,18 +8,16 @@ using WalkTogetherAPI.Helpers;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Add Services (BEFORE Build)
-// -------------------------------------------------------------------------
 
-// --- 1. ADIM: CORS SERVİSİNİ EKLEYİN ---
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
         builder =>
         {
-            builder.AllowAnyOrigin()   // Her yerden gelen isteğe izin ver (Geliştirme aşaması için)
-                   .AllowAnyMethod()   // GET, POST, PUT, DELETE vb. hepsine izin ver
-                   .AllowAnyHeader();  // Authorization vb. tüm başlıklara izin ver
+            builder.AllowAnyOrigin()   
+                   .AllowAnyMethod()   
+                   .AllowAnyHeader();  
         });
 });
 
@@ -31,16 +29,16 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Register your custom services
+
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<EventService>();
 builder.Services.AddScoped<TokenHelper>();
 builder.Services.AddHttpClient<WalkTogetherAPI.Services.GoogleRoutesService>();
 
-// Register background service for deleting past events
+
 builder.Services.AddHostedService<WalkTogetherAPI.Services.DeletePastEventsService>();
 
-// --- AUTHENTICATION CONFIGURATION ---
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -61,12 +59,9 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// 2. Build the App
-// -------------------------------------------------------------------------
+
 var app = builder.Build();
 
-// 3. Middleware & Initialization (AFTER Build)
-// -------------------------------------------------------------------------
 
 using (var scope = app.Services.CreateScope())
 {
@@ -91,8 +86,7 @@ if (app.Environment.IsDevelopment())
 
 
 
-// --- 2. ADIM: CORS MIDDLEWARE'I EKLEYİN ---
-// ÖNEMLİ: UseAuthentication ve UseAuthorization'dan ÖNCE gelmelidir.
+
 app.UseCors("AllowAll");
 
 app.UseAuthentication();

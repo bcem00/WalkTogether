@@ -104,11 +104,11 @@ public class EventsController : ControllerBase
             var eventEntity = await _context.Events.FindAsync(eventId); 
             if (eventEntity == null) return NotFound("Etkinlik bulunamadı.");
 
-            // 3. Security Check: Compare Token ID vs Event Creator ID
+            
             if (eventEntity.CreatorId != userId)
                 return StatusCode(403, "Sadece etkinlik oluşturucusu rota ekleyebilir.");
 
-            // 4. Call Google Routes API
+            
             var routeResult = await _routeService.ComputeRouteAsync(waypoints);
 
             if (routeResult?.Routes == null || !routeResult.Routes.Any())
@@ -116,12 +116,12 @@ public class EventsController : ControllerBase
 
             var bestRoute = routeResult.Routes.First();
 
-            // 5. Save Data
+            
             eventEntity.RoutePolyline = bestRoute.Polyline.EncodedPolyline;
             eventEntity.TotalDistanceMeters = bestRoute.DistanceMeters;
             eventEntity.WaypointsJson = JsonSerializer.Serialize(waypoints);
 
-            // Parse duration string like "123s" into seconds if present
+            
             if (!string.IsNullOrWhiteSpace(bestRoute.Duration) && bestRoute.Duration.EndsWith("s"))
             {
                 if (int.TryParse(bestRoute.Duration.TrimEnd('s'), out var seconds))
@@ -202,20 +202,20 @@ public class EventsController : ControllerBase
     {
         try
         {
-            // 1. Get User ID from Token
+            
             var userId = GetUserId();
 
-            // 2. Validate Event
+            
             var eventEntity = await _context.Events.FindAsync(eventId);
             if (eventEntity == null)
                 return NotFound(new { message = "Etkinlik bulunamadı" });
 
-            // 3. Security Check: Only event creator or admin can delete
+            
             var isAdmin = IsUserAdmin();
             if (eventEntity.CreatorId != userId && !isAdmin)
                 return StatusCode(403, new { message = "Sadece etkinlik yaratıcısı veya admin bu etkinliği silebilir." });
 
-            // 4. Delete the event
+            
             var success = await _eventService.DeleteEventAsync(eventId);
 
             if (success)
@@ -263,10 +263,10 @@ public class EventsController : ControllerBase
     {
         try
         {
-            // 1. Get User ID from Token
+            
             var userId = GetUserId();
 
-            // 2. Validate Event and Route
+            
             var eventEntity = await _context.Events.FindAsync(eventId);
             if (eventEntity == null)
                 return NotFound(new { message = "Etkinlik bulunamadı" });
@@ -274,11 +274,11 @@ public class EventsController : ControllerBase
             if (!eventEntity.RouteId.HasValue)
                 return BadRequest(new { message = "Etkinlik bir rotaya sahip değil" });
 
-            // 3. Security Check: Only event creator can add destinations
+            
             if (eventEntity.CreatorId != userId)
                 return StatusCode(403, new { message = "Sadece etkinlik yaratıcısı destinasyon ekleyebilir." });
 
-            // 4. Create destination
+            
             var destinationId = await _eventService.CreateDestinationAsync(
                 eventEntity.RouteId.Value,
                 request.Latitude,
@@ -299,10 +299,10 @@ public class EventsController : ControllerBase
     {
         try
         {
-            // 1. Get User ID from Token
+           
             var userId = GetUserId();
 
-            // 2. Validate Event and Route
+            
             var eventEntity = await _context.Events.FindAsync(eventId);
             if (eventEntity == null)
                 return NotFound(new { message = "Etkinlik bulunamadı" });
@@ -310,11 +310,11 @@ public class EventsController : ControllerBase
             if (!eventEntity.RouteId.HasValue)
                 return BadRequest(new { message = "Etkinlik bir rotaya sahip değil" });
 
-            // 3. Security Check: Only event creator can update route distance
+            
             if (eventEntity.CreatorId != userId)
                 return StatusCode(403, new { message = "Sadece etkinlik yaratıcısı rota mesafesini güncelleyebilir." });
 
-            // 4. Update route distance
+            
             await _eventService.UpdateRouteDistanceAsync(eventEntity.RouteId.Value, request.Distance);
 
             return Ok(new { message = "Rota mesafesi başarıyla güncellendi" });
@@ -407,7 +407,7 @@ public class EventsController : ControllerBase
         {
             var userId = GetUserId();
 
-            // Validate event exists and user is creator or admin
+            
             var eventEntity = await _context.Events.FindAsync(eventId);
             if (eventEntity == null)
                 return NotFound(new { message = "Etkinlik bulunamadı" });
@@ -433,12 +433,12 @@ public class EventsController : ControllerBase
         {
             var userId = GetUserId();
 
-            // Validate event exists
+            
             var eventEntity = await _context.Events.FindAsync(eventId);
             if (eventEntity == null)
                 return NotFound(new { message = "Etkinlik bulunamadı" });
 
-            // Authorization: Admin can see all, creator can see their own events
+           
             var isAdmin = IsUserAdmin();
             if (eventEntity.CreatorId != userId && !isAdmin)
                 return StatusCode(403, new { message = "Sadece etkinlik yaratıcısı veya admin katılımcıları görüntüleyebilir." });

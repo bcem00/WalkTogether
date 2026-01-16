@@ -78,10 +78,10 @@ public class EventService
             if (eventEntity == null)
                 return false;
 
-            // Store the RouteId before deleting the event
+       
             var routeId = eventEntity.RouteId;
 
-            // Mark all attendances as completed instead of deleting
+        
             if (eventEntity.Attendances != null && eventEntity.Attendances.Any())
             {
                 foreach (var attendance in eventEntity.Attendances)
@@ -90,10 +90,10 @@ public class EventService
                 }
             }
 
-            // Delete the event
+           
             _context.Events.Remove(eventEntity);
 
-            // Delete the route and its destinations (destinations cascade-delete with route)
+          
             if (routeId.HasValue)
             {
                 var route = await _context.Routes
@@ -102,7 +102,7 @@ public class EventService
                 
                 if (route != null)
                 {
-                    // Destinations will be cascade-deleted when route is removed
+                   
                     _context.Routes.Remove(route);
                 }
             }
@@ -116,7 +116,7 @@ public class EventService
         }
     }
 
-    // 4. Get upcoming events (using the view)
+
     public async Task<List<UpcomingEvent>> GetUpcomingEventsAsync()
     {
         var sql = "SELECT * FROM view_upcoming_events_detailed AS \"Value\"";
@@ -125,7 +125,7 @@ public class EventService
             .ToListAsync();
     }
 
-    // 5. Filter events by distance
+
     public async Task<List<EventDistanceSummary>> FilterEventsByDistanceAsync(int minDist, int maxDist)
     {
         var sql = "SELECT * FROM filter_events_by_distance(@p0, @p1) AS \"Value\"";
@@ -134,7 +134,7 @@ public class EventService
             .ToListAsync();
     }
 
-    // 6. Get destinations for an event
+
     public async Task<List<EventDestination>> GetDestinationsForEventAsync(Guid eventId)
     {
         var sql = "SELECT * FROM get_all_destinations_for_event(@p0) AS \"Value\"";
@@ -166,7 +166,7 @@ public class EventService
         return await _context.Events.FindAsync(eventId);
     }
 
-    // 7. Add event distance to attendees
+
     public async Task<int> AddEventDistanceToAttendeesAsync(Guid eventId)
     {
         var sql = "SELECT add_event_distance_to_attendees(@p0) AS \"Value\"";
@@ -175,7 +175,7 @@ public class EventService
             .FirstOrDefaultAsync();
     }
 
-    // 8. Create destination for a route
+    
     public async Task<Guid> CreateDestinationAsync(Guid routeId, double latitude, double longitude, int orderInRoute)
     {
         var sql = "SELECT create_destination(@p0, @p1, @p2, @p3) AS \"Value\"";
@@ -184,7 +184,7 @@ public class EventService
             .FirstOrDefaultAsync();
     }
 
-    // 9. Update route distance
+    
     public async Task UpdateRouteDistanceAsync(Guid routeId, int distance)
     {
         var sql = "SELECT update_route_distance(@p0, @p1)";
@@ -192,7 +192,7 @@ public class EventService
             .ExecuteSqlRawAsync(sql, routeId, distance);
     }
 
-    // 10. Get attended events for a user
+   
     public async Task<List<AttendedEvent>> GetAttendedEventsAsync(Guid userId)
     {
         var sql = "SELECT * FROM get_attended_events(@p0) AS \"Value\"";
@@ -201,7 +201,7 @@ public class EventService
             .ToListAsync();
     }
 
-    // 11. Get event report (admin)
+  
     public async Task<string> GetEventReportAsync(Guid eventId)
     {
         var sql = "SELECT get_event_report(@p0) AS \"Value\"";
@@ -210,7 +210,7 @@ public class EventService
             .FirstOrDefaultAsync() ?? "No report available";
     }
 
-    // 12. Get inactive users (admin)
+   
     public async Task<List<InactiveUser>> GetInactiveUsersAsync()
     {
         var sql = "SELECT * FROM get_inactive_users() AS \"Value\"";
@@ -219,7 +219,7 @@ public class EventService
             .ToListAsync();
     }
 
-    // 13. Get total event count
+
     public async Task<int> GetTotalEventCountAsync()
     {
         var sql = "SELECT get_total_event_count() AS \"Value\"";
@@ -228,7 +228,7 @@ public class EventService
             .FirstOrDefaultAsync();
     }
 
-    // 14. Get event participants
+
     public async Task<List<EventParticipantDto>> GetEventParticipantsAsync(Guid eventId)
     {
         var participants = await _context.Attendances

@@ -2,7 +2,7 @@
 {
     public class UserLoginResult
     {
-        public Guid user_id { get; set; }       // SQL'deki sütun adıyla birebir aynı olmalı
+        public Guid user_id { get; set; }       
         public string username { get; set; }
         public string email { get; set; }
         public string password_hash { get; set; }

@@ -19,10 +19,10 @@ public class AuthService
         _tokenHelper = new TokenHelper(_configuration);
     }
 
-    // 1. REGISTER
+   
     public async Task<Guid> RegisterAsync(RegisterRequest request)
     {
-        // DÜZELTİLEN KISIM BURASI:
+        
         string passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
 
         var sql = "SELECT auth_register(@p0, @p1, @p2, @p3, @p4) AS \"Value\"";
@@ -49,7 +49,7 @@ public class AuthService
         }
     }
 
-    // 2. LOGIN
+   
     public async Task<string> LoginAsync(LoginRequest request)
     {
         var sql = "SELECT * FROM auth_get_user_for_login(@p0) AS \"Value\"";
@@ -70,18 +70,18 @@ public class AuthService
         return _tokenHelper.GenerateJwtToken(user);
     }
 
-    // 3. CHANGE PASSWORD
+   
     public async Task<bool> ChangePasswordAsync(ChangePasswordRequest request)
     {
-        // Önce kullanıcının mevcut şifresini kontrol etmek için kullanıcıyı çekmeliyiz
+      
         var user = await _context.Users.FindAsync(request.UserId);
         if (user == null) throw new Exception("Kullanıcı bulunamadı.");
 
-        // Eski şifre doğru mu?
+      
         if (!BCrypt.Net.BCrypt.Verify(request.OldPassword, user.PasswordHash)) 
             throw new Exception("Eski şifreniz hatalı.");
 
-        // Yeni şifreyi hashle
+       
         string newHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
 
         var sql = "SELECT * FROM user_change_password(@p0, @p1) AS \"Value\"";
@@ -110,7 +110,7 @@ public class AuthService
         }
     }
 
-    // 4. GET USER PROFILE
+   
     public async Task<UserProfileDto> GetUserProfileAsync(Guid userId)
     {
         var user = await _context.Users.FindAsync(userId);
@@ -130,7 +130,7 @@ public class AuthService
         };
     }
 
-    // 5. GET INACTIVE USERS (Admin only)
+   
     public async Task<List<InactiveUserDto>> GetInactiveUsersAsync()
     {
         var sql = "SELECT * FROM get_inactive_users()";

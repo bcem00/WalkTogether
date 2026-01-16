@@ -39,21 +39,21 @@ namespace WalkTogether.Data
                 .HasForeignKey(a => a.EventId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // User (1) <- (M) Attendance
+            
             modelBuilder.Entity<Attendance>()
                 .HasOne(a => a.User)
                 .WithMany(u => u.Attendances)
                 .HasForeignKey(a => a.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Route (1) <- (M) Destination
+            
             modelBuilder.Entity<Destination>()
                 .HasOne(d => d.Route)
                 .WithMany(r => r.Destinations)
                 .HasForeignKey(d => d.RouteId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Route (1) <- (M) Event
+            
             modelBuilder.Entity<Event>()
                 .HasOne(e => e.Route)
                 .WithMany(r => r.Events)

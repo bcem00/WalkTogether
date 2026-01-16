@@ -95,6 +95,7 @@ export default function JoinedEventsScreen() {
     if (result.error) {
       console.log("❌ API HATASI:", result.error);
     } else {
+    
       setEvents(result.data || []);
     }
     setLoading(false);
@@ -187,6 +188,7 @@ export default function JoinedEventsScreen() {
   };
 
   const handleOpenInfo = async (event: any) => {
+    
     setSelectedEvent(event);
     setInfoLoading(true);
     setRouteCoords([]); 
@@ -378,55 +380,66 @@ export default function JoinedEventsScreen() {
                 </>
               )}
             </ScrollView>
-          </View>
-        </View>
-      </Modal>
 
-      {/* Participants Modal */}
-      <Modal visible={showParticipants} animationType="slide" transparent={true}>
-        <View style={[styles.modalOverlay, { backgroundColor: isDark ? 'rgba(0,0,0,0.7)' : 'rgba(0,0,0,0.45)' }]}>
+             {/* Participants Modal */}
+      <Modal visible={showParticipants} animationType="slide" transparent={true} onRequestClose={() => setShowParticipants(false)}>
+        <View style={[styles.modalOverlay, { backgroundColor: isDark ? 'rgba(0,0,0,0.7)' : 'rgba(0,0,0,0.5)' }]}>
           <View style={[styles.participantsModalContent, { backgroundColor: themeColors.inputBackground }]}>
-            <View style={[styles.modalHeader, { borderBottomColor: themeColors.border, borderBottomWidth: 1 }]}>
-              <Text style={[styles.modalTitle, { color: themeColors.text }]}>Katılımcılar ({participants.length})</Text>
+            <View style={[styles.participantsModalHeader, { borderBottomColor: themeColors.border }]}>
+              <View>
+                <Text style={[styles.modalTitle, { color: themeColors.text }]}>Katılımcılar</Text>
+                <Text style={[styles.modalSubtitle, { color: themeColors.placeholder }]}>
+                  {participants.length} katılımcı bulunuyor
+                </Text>
+              </View>
               <TouchableOpacity onPress={() => setShowParticipants(false)}>
                 <Ionicons name="close-circle" size={32} color={themeColors.placeholder} />
               </TouchableOpacity>
             </View>
             
-            <FlatList
-              data={participants}
-              keyExtractor={(item) => item.userId}
-              renderItem={({ item }) => (
-                <View style={[styles.participantItem, { borderBottomColor: themeColors.border }]}>
-                  <View style={[styles.participantAvatar, { backgroundColor: themeColors.tint }]}>
-                    <Text style={styles.participantAvatarText}>
-                      {item.firstName?.[0]}{item.lastName?.[0]}
-                    </Text>
+            {participantsLoading ? (
+              <ActivityIndicator size="large" color={themeColors.tint} style={{ marginTop: 50 }} />
+            ) : (
+              <FlatList
+                data={participants}
+                keyExtractor={(item) => item.userId}
+                renderItem={({ item }) => (
+                  <View style={[styles.participantItem, { borderBottomColor: themeColors.border }]}>
+                    <View style={[styles.participantAvatar, { backgroundColor: themeColors.tint }]}>
+                      <Text style={styles.participantAvatarText}>
+                        {item.firstName?.[0]}{item.lastName?.[0]}
+                      </Text>
+                    </View>
+                    <View style={styles.participantInfo}>
+                      <Text style={[styles.participantName, { color: themeColors.text }]}>
+                        {item.firstName} {item.lastName}
+                      </Text>
+                      <Text style={[styles.participantUsername, { color: themeColors.placeholder }]}>
+                        @{item.username}
+                      </Text>
+                    </View>
+                    <View style={[styles.completionBadge, { backgroundColor: item.hasCompleted ? '#4CAF50' : '#FF9800' }]}>
+                      <Text style={styles.completionText}>
+                        {item.hasCompleted ? 'Tamamladı' : 'Devam Ediyor'}
+                      </Text>
+                    </View>
                   </View>
-                  <View style={styles.participantInfo}>
-                    <Text style={[styles.participantName, { color: themeColors.text }]}>
-                      {item.firstName} {item.lastName}
-                    </Text>
-                    <Text style={[styles.participantUsername, { color: themeColors.placeholder }]}>
-                      @{item.username}
-                    </Text>
-                  </View>
-                  <View style={[styles.completionBadge, { backgroundColor: item.hasCompleted ? '#4CAF50' : '#FF9800' }]}>
-                    <Text style={styles.completionText}>
-                      {item.hasCompleted ? 'Tamamladı' : 'Devam Ediyor'}
-                    </Text>
-                  </View>
-                </View>
-              )}
-              ListEmptyComponent={
-                <Text style={[styles.emptyText, { color: themeColors.placeholder }]}>
-                  Henüz katılımcı yok.
-                </Text>
-              }
-            />
+                )}
+                ListEmptyComponent={
+                  <Text style={[styles.emptyText, { color: themeColors.placeholder }]}>
+                    Henüz katılımcı yok.
+                  </Text>
+                }
+              />
+            )}
           </View>
         </View>
       </Modal>
+          </View>
+        </View>
+      </Modal>
+
+     
 
       {/* Rapor Modalı duruyor ancak buton kalktığı için tetiklenmeyecektir */}
     </View>
@@ -520,13 +533,23 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   participantsBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+  participantsModalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   participantsModalContent: { 
-    backgroundColor: '#fff', 
     borderTopLeftRadius: 25, 
     borderTopRightRadius: 25, 
-    height: '60%', 
-    padding: 20 
+    height: '70%', 
+    padding: 20
   },
+  participantsModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+    paddingBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  modalSubtitle: { fontSize: 13, marginTop: 2, color: '#888' },
   participantItem: {
     flexDirection: 'row',
     alignItems: 'center',

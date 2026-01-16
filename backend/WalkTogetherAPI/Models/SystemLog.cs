@@ -15,7 +15,7 @@ namespace WalkTogether.Domain.Entities
         [Required]
         [MaxLength(10)]
         [Column("action_type")]
-        public string ActionType { get; set; } = string.Empty; // 'INSERT', 'UPDATE', 'DELETE'
+        public string ActionType { get; set; } = string.Empty; 
 
         [Required]
         [MaxLength(50)]

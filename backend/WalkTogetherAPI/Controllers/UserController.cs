@@ -52,7 +52,7 @@ namespace WalkTogetherAPI.Controllers
             }
             catch (Exception ex)
             {
-                // Returns 401 Unauthorized for login failures
+                
                 return Unauthorized(new { message = ex.Message });
             }
         }

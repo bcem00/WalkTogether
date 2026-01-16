@@ -27,7 +27,7 @@ namespace WalkTogetherAPI.Services
                     .Select(w => new RouteLocation { Location = new LocationDetail { LatLng = w } })
                     .ToList(),
                 TravelMode = "WALK",
-                RoutingPreference = null // CRITICAL: Must be null for WALKING
+                RoutingPreference = null 
             };
 
             var jsonContent = new StringContent(
@@ -44,7 +44,7 @@ namespace WalkTogetherAPI.Services
 
             if (!response.IsSuccessStatusCode)
             {
-                // DEBUGGING: Read the actual error message from Google
+              
                 var errorBody = await response.Content.ReadAsStringAsync();
                 Console.WriteLine($"GOOGLE API ERROR: {errorBody}"); // Check your console/logs for this!
                 throw new Exception($"Google Routes API Failed ({response.StatusCode}): {errorBody}");

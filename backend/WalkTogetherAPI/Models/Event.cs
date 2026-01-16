@@ -38,7 +38,7 @@ namespace WalkTogether.Domain.Entities
         [Column("route_polyline")]
         public string? RoutePolyline { get; set; }
 
-        // JSON string storing the list of stops (Lat/Lng) for editing later
+        
         [Column("waypoints_json")]
         public string? WaypointsJson { get; set; }
 
