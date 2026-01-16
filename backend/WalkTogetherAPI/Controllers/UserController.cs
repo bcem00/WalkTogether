@@ -123,6 +123,21 @@ namespace WalkTogetherAPI.Controllers
             }
         }
 
+        [HttpGet("inactive")]
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> GetInactiveUsers()
+        {
+            try
+            {
+                var users = await _authService.GetInactiveUsersAsync();
+                return Ok(users);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
 
         private Guid GetUserIdFromToken()
         {

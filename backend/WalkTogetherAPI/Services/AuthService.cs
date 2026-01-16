@@ -129,4 +129,14 @@ public class AuthService
             HasBadge = user.HasBadge
         };
     }
+
+    // 5. GET INACTIVE USERS (Admin only)
+    public async Task<List<InactiveUserDto>> GetInactiveUsersAsync()
+    {
+        var sql = "SELECT * FROM get_inactive_users()";
+
+        return await _context.Database
+            .SqlQueryRaw<InactiveUserDto>(sql)
+            .ToListAsync();
+    }
 }
