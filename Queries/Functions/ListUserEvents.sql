@@ -32,6 +32,6 @@ BEGIN
         e.waypoints_json::text AS "WaypointsJson"
     FROM events e
     JOIN users u ON u.user_id = e.creator_id
-    JOIN attendances a ON a.event_id = e.event_id AND a.user_id = v_user_id;
+    JOIN attendances a ON a.event_id = e.event_id AND a.user_id = v_user_id AND a.has_completed = false;
 END;
 $$;

@@ -33,7 +33,7 @@ BEGIN
         v_role_id,
         p_first_name,
         p_last_name,
-        p_username,
+        LOWER(p_username),
         p_email,
         p_password_hash
     )

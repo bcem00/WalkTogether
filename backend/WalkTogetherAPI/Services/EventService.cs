@@ -81,10 +81,13 @@ public class EventService
             // Store the RouteId before deleting the event
             var routeId = eventEntity.RouteId;
 
-            // Delete all attendances for this event
+            // Mark all attendances as completed instead of deleting
             if (eventEntity.Attendances != null && eventEntity.Attendances.Any())
             {
-                _context.Attendances.RemoveRange(eventEntity.Attendances);
+                foreach (var attendance in eventEntity.Attendances)
+                {
+                    attendance.HasCompleted = true;
+                }
             }
 
             // Delete the event
