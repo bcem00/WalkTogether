@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { 
   ActivityIndicator, Alert, FlatList, StyleSheet, 
@@ -13,6 +14,7 @@ export default function AdminDashboard() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const themeColors = isDark ? Colors.dark : Colors.light;
+  const router = useRouter();
   
   const [allEvents, setAllEvents] = useState<any[]>([]); // Orijinal veri
   const [filteredEvents, setFilteredEvents] = useState<any[]>([]); // Filtrelenmiş veri
@@ -119,10 +121,16 @@ export default function AdminDashboard() {
           <Text style={[styles.header, { color: themeColors.text }]}>Admin Paneli</Text>
           <Text style={styles.subHeader}>Yönetim ve İstatistikler</Text>
         </View>
-        <TouchableOpacity style={styles.reportBtn} onPress={generateReport}>
-          <Ionicons name="document-text-outline" size={20} color="#fff" />
-          <Text style={styles.reportBtnText}>Rapor</Text>
-        </TouchableOpacity>
+        <View style={styles.headerButtons}>
+          <TouchableOpacity style={styles.logsBtn} onPress={() => router.push('/admin/system-logs')}>
+            <Ionicons name="list-outline" size={20} color="#fff" />
+            <Text style={styles.logsBtnText}>Loglar</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.reportBtn} onPress={generateReport}>
+            <Ionicons name="document-text-outline" size={20} color="#fff" />
+            <Text style={styles.reportBtnText}>Rapor</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* ARAMA BÖLÜMÜ */}
@@ -167,6 +175,9 @@ const styles = StyleSheet.create({
   headerContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 50, paddingBottom: 15 },
   header: { fontSize: 22, fontWeight: 'bold' },
   subHeader: { fontSize: 13, color: '#888' },
+  headerButtons: { flexDirection: 'row', gap: 8 },
+  logsBtn: { backgroundColor: '#6c757d', flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 15, borderRadius: 8 },
+  logsBtnText: { color: '#fff', fontWeight: 'bold' },
   reportBtn: { backgroundColor: '#28a745', flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 15, borderRadius: 8 },
   reportBtnText: { color: '#fff', fontWeight: 'bold' },
   searchBox: { paddingHorizontal: 20, gap: 10, marginBottom: 10 },

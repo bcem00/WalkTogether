@@ -262,6 +262,23 @@ export const eventsApi = {
   getTotalEventCount: async () => {
     return apiRequest<{ totalEventCount: number }>('/api/events/admin/total-count');
   },
+
+  getSystemLogs: async (limit: number = 100, severity?: string, tableName?: string) => {
+    let url = `/api/events/admin/system-logs?limit=${limit}`;
+    if (severity) url += `&severity=${severity}`;
+    if (tableName) url += `&tableName=${tableName}`;
+    return apiRequest<{
+      logId: string;
+      userId: string | null;
+      actionType: string;
+      tableName: string;
+      recordId: string | null;
+      oldData: any;
+      newData: any;
+      severity: string;
+      createdAt: string;
+    }[]>(url);
+  },
 };
 
 export default { auth: authApi, events: eventsApi };
