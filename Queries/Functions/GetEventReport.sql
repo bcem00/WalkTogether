@@ -18,7 +18,7 @@ BEGIN
         FETCH cur_attendees INTO rec_attendee;
         EXIT WHEN NOT FOUND;
         v_output := v_output || rec_attendee.username || ': ' || 
-                    CASE WHEN rec_attendee.has_completed THEN 'Tamamladı' ELSE 'Sürüyor' END || ' | ';
+                    CASE WHEN rec_attendee.has_completed THEN 'Tamamladı' ELSE 'Sürüyor' END;
     END LOOP;
     CLOSE cur_attendees;
     IF v_output = '' THEN

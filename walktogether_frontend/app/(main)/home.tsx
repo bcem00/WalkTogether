@@ -404,7 +404,7 @@ export default function HomeScreen() {
                 </View>
                 <View style={styles.detailRow}>
                    <Text style={[styles.detailLabel, { color: themeColors.lightText }]}>Mesafe:</Text>
-                   <Text style={[styles.detailValue, { color: themeColors.text }]}>{(selectedEvent?.route_distance_meters / 1000).toFixed(2)} km</Text>
+                   <Text style={[styles.detailValue, { color: themeColors.text }]}>{(selectedEvent?.route_distance_meters / 1000000).toFixed(2)} km</Text>
                 </View>
                 <View style={styles.detailRow}>
                    <Text style={[styles.detailLabel, { color: themeColors.lightText }]}>Davet Kodu:</Text>
