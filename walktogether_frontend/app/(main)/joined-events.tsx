@@ -133,7 +133,9 @@ export default function JoinedEventsScreen() {
             if (result.data) {
               Alert.alert("Başarılı", "Etkinlikten ayrıldınız.");
               setEvents(prev => prev.filter(e => (e.id || e.event_id || e.eventId) !== eventId));
-              setSelectedEvent(null); 
+              setSelectedEvent(null);
+              setShowParticipants(false);
+              setParticipants([]);
             } else {
               Alert.alert("Hata", result.error || "Ayrılma işlemi başarısız oldu.");
             }
@@ -188,7 +190,9 @@ export default function JoinedEventsScreen() {
     setSelectedEvent(event);
     setInfoLoading(true);
     setRouteCoords([]); 
-    setDestinations([]); 
+    setDestinations([]);
+    setShowParticipants(false);
+    setParticipants([]); 
 
     if (event.waypointsJson && event.routePolyline) {
         try {
@@ -273,7 +277,7 @@ export default function JoinedEventsScreen() {
           <View style={[styles.modalContent, { backgroundColor: themeColors.inputBackground, borderColor: themeColors.border }]}>            
             <View style={[styles.modalHeader, { backgroundColor: themeColors.inputBackground, borderBottomColor: themeColors.border, borderBottomWidth: 1 }]}>
               <Text style={[styles.modalTitle, { color: themeColors.text }]}>{selectedEvent?.title}</Text>
-              <TouchableOpacity onPress={() => { setSelectedEvent(null); setDestinations([]); setRouteCoords([]); }}>
+              <TouchableOpacity onPress={() => { setSelectedEvent(null); setDestinations([]); setRouteCoords([]); setShowParticipants(false); setParticipants([]); }}>
                 <Ionicons name="close-circle" size={32} color={themeColors.placeholder} />
               </TouchableOpacity>
             </View>

@@ -16,7 +16,7 @@ AS $$
 DECLARE
     v_user_id uuid;
 BEGIN
-    SELECT user_id INTO v_user_id FROM users WHERE username = p_username;
+    SELECT user_id INTO v_user_id FROM users WHERE username = LOWER(p_username);
     
     RETURN QUERY
     SELECT 

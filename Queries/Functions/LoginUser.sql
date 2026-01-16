@@ -24,6 +24,6 @@ BEGIN
         u.last_name
     FROM users u
     JOIN roles r ON r.role_id = u.role_id
-    WHERE u.email = p_identifier OR u.username = p_identifier;
+    WHERE u.email = LOWER(p_identifier) OR u.username = LOWER(p_identifier);
 END;
 $$;
