@@ -221,7 +221,7 @@ export default function HomeScreen() {
          <View style={styles.statItem}>
             <Ionicons name="walk" size={14} color="#28a745" />
             <Text style={[styles.statText, { color: themeColors.text }]}>
-                {(item.route_distance_meters / 1000).toFixed(1)} km
+                {(item.route_distance_meters / 1000000).toFixed(1)} km
             </Text>
          </View>
          <View style={styles.statItem}>

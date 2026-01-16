@@ -167,7 +167,7 @@ export default function ProfileScreen() {
               <Ionicons name="trophy" size={24} color="#FFD700" />
               <View style={{marginLeft: 12}}>
                 <Text style={styles.badgeName}>Usta Yürüyüşçü</Text>
-                <Text style={styles.badgeDesc}>Uygulamada ilk etkinliğini tamamladın!</Text>
+                <Text style={styles.badgeDesc}>Uzun mesafe yürüyerek bu rozeti kazandın!</Text>
               </View>
             </View>
           </View>
